@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+.env
+
+# Go local caches when running sandbox-friendly commands.
+.gocache/
+.gomodcache/

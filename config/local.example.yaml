@@ -1,0 +1,9 @@
+redis_url: redis://localhost:6379/0
+
+bots:
+  king_crimson:
+    host: 192.168.31.170
+    port: 64735
+    username: king_crimson_bot
+    auth: offline
+    version: 1.21.11

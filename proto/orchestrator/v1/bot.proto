@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package orchestrator.v1;
+
+option go_package = "minecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1";
+
+message BotCommand {
+  string bot_id = 1;
+  string message_id = 2;
+  string correlation_id = 3;
+
+  oneof payload {
+    ConnectCommand connect = 10;
+    DisconnectCommand disconnect = 11;
+    StatusCommand status = 12;
+    SendChatCommand send_chat = 13;
+  }
+}
+
+message ConnectCommand {
+  string host = 1;
+  uint32 port = 2;
+  string username = 3;
+  string auth = 4;
+  string version = 5;
+}
+
+message DisconnectCommand {}
+
+message StatusCommand {}
+
+message SendChatCommand {
+  string message = 1;
+}
+
+message BotEvent {
+  string bot_id = 1;
+  string message_id = 2;
+  string correlation_id = 3;
+
+  oneof payload {
+    StatusChangedEvent status_changed = 10;
+    SpawnedEvent spawned = 11;
+    ChatReceivedEvent chat_received = 12;
+    KickedEvent kicked = 13;
+    ErrorEvent error = 14;
+  }
+}
+
+message StatusChangedEvent {
+  string state = 1;
+  string detail = 2;
+}
+
+message SpawnedEvent {}
+
+message ChatReceivedEvent {
+  string username = 1;
+  string message = 2;
+}
+
+message KickedEvent {
+  string reason = 1;
+}
+
+message ErrorEvent {
+  string message = 1;
+}
