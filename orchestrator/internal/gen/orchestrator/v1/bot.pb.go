@@ -352,10 +352,13 @@ func (x *SendChatCommand) GetMessage() string {
 }
 
 type BotEvent struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	MessageId     string                 `protobuf:"bytes,2,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
-	CorrelationId string                 `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	BotId            string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	MessageId        string                 `protobuf:"bytes,2,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	CorrelationId    string                 `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	SessionId        string                 `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Sequence         uint64                 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	ObservedAtUnixMs int64                  `protobuf:"varint,6,opt,name=observed_at_unix_ms,json=observedAtUnixMs,proto3" json:"observed_at_unix_ms,omitempty"`
 	// Types that are valid to be assigned to Payload:
 	//
 	//	*BotEvent_StatusChanged
@@ -363,6 +366,11 @@ type BotEvent struct {
 	//	*BotEvent_ChatReceived
 	//	*BotEvent_Kicked
 	//	*BotEvent_Error
+	//	*BotEvent_StateSnapshot
+	//	*BotEvent_VitalsChanged
+	//	*BotEvent_EffectsChanged
+	//	*BotEvent_PositionChanged
+	//	*BotEvent_InventoryChanged
 	Payload       isBotEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -419,6 +427,27 @@ func (x *BotEvent) GetCorrelationId() string {
 	return ""
 }
 
+func (x *BotEvent) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *BotEvent) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *BotEvent) GetObservedAtUnixMs() int64 {
+	if x != nil {
+		return x.ObservedAtUnixMs
+	}
+	return 0
+}
+
 func (x *BotEvent) GetPayload() isBotEvent_Payload {
 	if x != nil {
 		return x.Payload
@@ -471,6 +500,51 @@ func (x *BotEvent) GetError() *ErrorEvent {
 	return nil
 }
 
+func (x *BotEvent) GetStateSnapshot() *StateSnapshotEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*BotEvent_StateSnapshot); ok {
+			return x.StateSnapshot
+		}
+	}
+	return nil
+}
+
+func (x *BotEvent) GetVitalsChanged() *VitalsChangedEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*BotEvent_VitalsChanged); ok {
+			return x.VitalsChanged
+		}
+	}
+	return nil
+}
+
+func (x *BotEvent) GetEffectsChanged() *EffectsChangedEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*BotEvent_EffectsChanged); ok {
+			return x.EffectsChanged
+		}
+	}
+	return nil
+}
+
+func (x *BotEvent) GetPositionChanged() *PositionChangedEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*BotEvent_PositionChanged); ok {
+			return x.PositionChanged
+		}
+	}
+	return nil
+}
+
+func (x *BotEvent) GetInventoryChanged() *InventoryChangedEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*BotEvent_InventoryChanged); ok {
+			return x.InventoryChanged
+		}
+	}
+	return nil
+}
+
 type isBotEvent_Payload interface {
 	isBotEvent_Payload()
 }
@@ -495,6 +569,26 @@ type BotEvent_Error struct {
 	Error *ErrorEvent `protobuf:"bytes,14,opt,name=error,proto3,oneof"`
 }
 
+type BotEvent_StateSnapshot struct {
+	StateSnapshot *StateSnapshotEvent `protobuf:"bytes,15,opt,name=state_snapshot,json=stateSnapshot,proto3,oneof"`
+}
+
+type BotEvent_VitalsChanged struct {
+	VitalsChanged *VitalsChangedEvent `protobuf:"bytes,16,opt,name=vitals_changed,json=vitalsChanged,proto3,oneof"`
+}
+
+type BotEvent_EffectsChanged struct {
+	EffectsChanged *EffectsChangedEvent `protobuf:"bytes,17,opt,name=effects_changed,json=effectsChanged,proto3,oneof"`
+}
+
+type BotEvent_PositionChanged struct {
+	PositionChanged *PositionChangedEvent `protobuf:"bytes,18,opt,name=position_changed,json=positionChanged,proto3,oneof"`
+}
+
+type BotEvent_InventoryChanged struct {
+	InventoryChanged *InventoryChangedEvent `protobuf:"bytes,19,opt,name=inventory_changed,json=inventoryChanged,proto3,oneof"`
+}
+
 func (*BotEvent_StatusChanged) isBotEvent_Payload() {}
 
 func (*BotEvent_Spawned) isBotEvent_Payload() {}
@@ -504,6 +598,16 @@ func (*BotEvent_ChatReceived) isBotEvent_Payload() {}
 func (*BotEvent_Kicked) isBotEvent_Payload() {}
 
 func (*BotEvent_Error) isBotEvent_Payload() {}
+
+func (*BotEvent_StateSnapshot) isBotEvent_Payload() {}
+
+func (*BotEvent_VitalsChanged) isBotEvent_Payload() {}
+
+func (*BotEvent_EffectsChanged) isBotEvent_Payload() {}
+
+func (*BotEvent_PositionChanged) isBotEvent_Payload() {}
+
+func (*BotEvent_InventoryChanged) isBotEvent_Payload() {}
 
 type StatusChangedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -733,6 +837,726 @@ func (x *ErrorEvent) GetMessage() string {
 	return ""
 }
 
+type StateSnapshotEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	State         *BotState              `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StateSnapshotEvent) Reset() {
+	*x = StateSnapshotEvent{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StateSnapshotEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StateSnapshotEvent) ProtoMessage() {}
+
+func (x *StateSnapshotEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StateSnapshotEvent.ProtoReflect.Descriptor instead.
+func (*StateSnapshotEvent) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *StateSnapshotEvent) GetState() *BotState {
+	if x != nil {
+		return x.State
+	}
+	return nil
+}
+
+type VitalsChangedEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vitals        *Vitals                `protobuf:"bytes,1,opt,name=vitals,proto3" json:"vitals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VitalsChangedEvent) Reset() {
+	*x = VitalsChangedEvent{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VitalsChangedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VitalsChangedEvent) ProtoMessage() {}
+
+func (x *VitalsChangedEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VitalsChangedEvent.ProtoReflect.Descriptor instead.
+func (*VitalsChangedEvent) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *VitalsChangedEvent) GetVitals() *Vitals {
+	if x != nil {
+		return x.Vitals
+	}
+	return nil
+}
+
+type EffectsChangedEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Effects       []*PotionEffect        `protobuf:"bytes,1,rep,name=effects,proto3" json:"effects,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EffectsChangedEvent) Reset() {
+	*x = EffectsChangedEvent{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EffectsChangedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EffectsChangedEvent) ProtoMessage() {}
+
+func (x *EffectsChangedEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EffectsChangedEvent.ProtoReflect.Descriptor instead.
+func (*EffectsChangedEvent) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *EffectsChangedEvent) GetEffects() []*PotionEffect {
+	if x != nil {
+		return x.Effects
+	}
+	return nil
+}
+
+type PositionChangedEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Position      *Position              `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PositionChangedEvent) Reset() {
+	*x = PositionChangedEvent{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PositionChangedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PositionChangedEvent) ProtoMessage() {}
+
+func (x *PositionChangedEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PositionChangedEvent.ProtoReflect.Descriptor instead.
+func (*PositionChangedEvent) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *PositionChangedEvent) GetPosition() *Position {
+	if x != nil {
+		return x.Position
+	}
+	return nil
+}
+
+type InventoryChangedEvent struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	Slots                     []*InventorySlot       `protobuf:"bytes,1,rep,name=slots,proto3" json:"slots,omitempty"`
+	SelectedHotbarSlot        int32                  `protobuf:"varint,2,opt,name=selected_hotbar_slot,json=selectedHotbarSlot,proto3" json:"selected_hotbar_slot,omitempty"`
+	SelectedHotbarSlotChanged bool                   `protobuf:"varint,3,opt,name=selected_hotbar_slot_changed,json=selectedHotbarSlotChanged,proto3" json:"selected_hotbar_slot_changed,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *InventoryChangedEvent) Reset() {
+	*x = InventoryChangedEvent{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InventoryChangedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryChangedEvent) ProtoMessage() {}
+
+func (x *InventoryChangedEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryChangedEvent.ProtoReflect.Descriptor instead.
+func (*InventoryChangedEvent) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *InventoryChangedEvent) GetSlots() []*InventorySlot {
+	if x != nil {
+		return x.Slots
+	}
+	return nil
+}
+
+func (x *InventoryChangedEvent) GetSelectedHotbarSlot() int32 {
+	if x != nil {
+		return x.SelectedHotbarSlot
+	}
+	return 0
+}
+
+func (x *InventoryChangedEvent) GetSelectedHotbarSlotChanged() bool {
+	if x != nil {
+		return x.SelectedHotbarSlotChanged
+	}
+	return false
+}
+
+type BotState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vitals        *Vitals                `protobuf:"bytes,1,opt,name=vitals,proto3" json:"vitals,omitempty"`
+	Effects       []*PotionEffect        `protobuf:"bytes,2,rep,name=effects,proto3" json:"effects,omitempty"`
+	Position      *Position              `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
+	Inventory     *Inventory             `protobuf:"bytes,4,opt,name=inventory,proto3" json:"inventory,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BotState) Reset() {
+	*x = BotState{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BotState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BotState) ProtoMessage() {}
+
+func (x *BotState) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BotState.ProtoReflect.Descriptor instead.
+func (*BotState) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *BotState) GetVitals() *Vitals {
+	if x != nil {
+		return x.Vitals
+	}
+	return nil
+}
+
+func (x *BotState) GetEffects() []*PotionEffect {
+	if x != nil {
+		return x.Effects
+	}
+	return nil
+}
+
+func (x *BotState) GetPosition() *Position {
+	if x != nil {
+		return x.Position
+	}
+	return nil
+}
+
+func (x *BotState) GetInventory() *Inventory {
+	if x != nil {
+		return x.Inventory
+	}
+	return nil
+}
+
+type Vitals struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Health        float64                `protobuf:"fixed64,1,opt,name=health,proto3" json:"health,omitempty"`
+	Food          int32                  `protobuf:"varint,2,opt,name=food,proto3" json:"food,omitempty"`
+	Saturation    float64                `protobuf:"fixed64,3,opt,name=saturation,proto3" json:"saturation,omitempty"`
+	Oxygen        int32                  `protobuf:"varint,4,opt,name=oxygen,proto3" json:"oxygen,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Vitals) Reset() {
+	*x = Vitals{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Vitals) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Vitals) ProtoMessage() {}
+
+func (x *Vitals) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Vitals.ProtoReflect.Descriptor instead.
+func (*Vitals) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *Vitals) GetHealth() float64 {
+	if x != nil {
+		return x.Health
+	}
+	return 0
+}
+
+func (x *Vitals) GetFood() int32 {
+	if x != nil {
+		return x.Food
+	}
+	return 0
+}
+
+func (x *Vitals) GetSaturation() float64 {
+	if x != nil {
+		return x.Saturation
+	}
+	return 0
+}
+
+func (x *Vitals) GetOxygen() int32 {
+	if x != nil {
+		return x.Oxygen
+	}
+	return 0
+}
+
+type PotionEffect struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Amplifier     int32                  `protobuf:"varint,3,opt,name=amplifier,proto3" json:"amplifier,omitempty"`
+	DurationTicks int32                  `protobuf:"varint,4,opt,name=duration_ticks,json=durationTicks,proto3" json:"duration_ticks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PotionEffect) Reset() {
+	*x = PotionEffect{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PotionEffect) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PotionEffect) ProtoMessage() {}
+
+func (x *PotionEffect) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PotionEffect.ProtoReflect.Descriptor instead.
+func (*PotionEffect) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *PotionEffect) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *PotionEffect) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PotionEffect) GetAmplifier() int32 {
+	if x != nil {
+		return x.Amplifier
+	}
+	return 0
+}
+
+func (x *PotionEffect) GetDurationTicks() int32 {
+	if x != nil {
+		return x.DurationTicks
+	}
+	return 0
+}
+
+type Position struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dimension     string                 `protobuf:"bytes,1,opt,name=dimension,proto3" json:"dimension,omitempty"`
+	X             float64                `protobuf:"fixed64,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float64                `protobuf:"fixed64,3,opt,name=y,proto3" json:"y,omitempty"`
+	Z             float64                `protobuf:"fixed64,4,opt,name=z,proto3" json:"z,omitempty"`
+	Yaw           float64                `protobuf:"fixed64,5,opt,name=yaw,proto3" json:"yaw,omitempty"`
+	Pitch         float64                `protobuf:"fixed64,6,opt,name=pitch,proto3" json:"pitch,omitempty"`
+	VelocityX     float64                `protobuf:"fixed64,7,opt,name=velocity_x,json=velocityX,proto3" json:"velocity_x,omitempty"`
+	VelocityY     float64                `protobuf:"fixed64,8,opt,name=velocity_y,json=velocityY,proto3" json:"velocity_y,omitempty"`
+	VelocityZ     float64                `protobuf:"fixed64,9,opt,name=velocity_z,json=velocityZ,proto3" json:"velocity_z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Position) Reset() {
+	*x = Position{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Position) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Position) ProtoMessage() {}
+
+func (x *Position) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Position.ProtoReflect.Descriptor instead.
+func (*Position) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *Position) GetDimension() string {
+	if x != nil {
+		return x.Dimension
+	}
+	return ""
+}
+
+func (x *Position) GetX() float64 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *Position) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *Position) GetZ() float64 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+func (x *Position) GetYaw() float64 {
+	if x != nil {
+		return x.Yaw
+	}
+	return 0
+}
+
+func (x *Position) GetPitch() float64 {
+	if x != nil {
+		return x.Pitch
+	}
+	return 0
+}
+
+func (x *Position) GetVelocityX() float64 {
+	if x != nil {
+		return x.VelocityX
+	}
+	return 0
+}
+
+func (x *Position) GetVelocityY() float64 {
+	if x != nil {
+		return x.VelocityY
+	}
+	return 0
+}
+
+func (x *Position) GetVelocityZ() float64 {
+	if x != nil {
+		return x.VelocityZ
+	}
+	return 0
+}
+
+type Inventory struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	SelectedHotbarSlot int32                  `protobuf:"varint,1,opt,name=selected_hotbar_slot,json=selectedHotbarSlot,proto3" json:"selected_hotbar_slot,omitempty"`
+	Slots              []*InventorySlot       `protobuf:"bytes,2,rep,name=slots,proto3" json:"slots,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *Inventory) Reset() {
+	*x = Inventory{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Inventory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Inventory) ProtoMessage() {}
+
+func (x *Inventory) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Inventory.ProtoReflect.Descriptor instead.
+func (*Inventory) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *Inventory) GetSelectedHotbarSlot() int32 {
+	if x != nil {
+		return x.SelectedHotbarSlot
+	}
+	return 0
+}
+
+func (x *Inventory) GetSlots() []*InventorySlot {
+	if x != nil {
+		return x.Slots
+	}
+	return nil
+}
+
+type InventorySlot struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Slot          int32                  `protobuf:"varint,1,opt,name=slot,proto3" json:"slot,omitempty"`
+	Item          *ItemStack             `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InventorySlot) Reset() {
+	*x = InventorySlot{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InventorySlot) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventorySlot) ProtoMessage() {}
+
+func (x *InventorySlot) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventorySlot.ProtoReflect.Descriptor instead.
+func (*InventorySlot) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *InventorySlot) GetSlot() int32 {
+	if x != nil {
+		return x.Slot
+	}
+	return 0
+}
+
+func (x *InventorySlot) GetItem() *ItemStack {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type ItemStack struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Metadata      int32                  `protobuf:"varint,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Count         int32                  `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemStack) Reset() {
+	*x = ItemStack{}
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemStack) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemStack) ProtoMessage() {}
+
+func (x *ItemStack) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_bot_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemStack.ProtoReflect.Descriptor instead.
+func (*ItemStack) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_bot_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ItemStack) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ItemStack) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ItemStack) GetMetadata() int32 {
+	if x != nil {
+		return x.Metadata
+	}
+	return 0
+}
+
+func (x *ItemStack) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
 var File_orchestrator_v1_bot_proto protoreflect.FileDescriptor
 
 const file_orchestrator_v1_bot_proto_rawDesc = "" +
@@ -761,18 +1585,27 @@ const file_orchestrator_v1_bot_proto_rawDesc = "" +
 	"\x11DisconnectCommand\"\x0f\n" +
 	"\rStatusCommand\"+\n" +
 	"\x0fSendChatCommand\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\xb3\x03\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xb5\a\n" +
 	"\bBotEvent\x12\x15\n" +
 	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x02 \x01(\tR\tmessageId\x12%\n" +
-	"\x0ecorrelation_id\x18\x03 \x01(\tR\rcorrelationId\x12L\n" +
+	"\x0ecorrelation_id\x18\x03 \x01(\tR\rcorrelationId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x04 \x01(\tR\tsessionId\x12\x1a\n" +
+	"\bsequence\x18\x05 \x01(\x04R\bsequence\x12-\n" +
+	"\x13observed_at_unix_ms\x18\x06 \x01(\x03R\x10observedAtUnixMs\x12L\n" +
 	"\x0estatus_changed\x18\n" +
 	" \x01(\v2#.orchestrator.v1.StatusChangedEventH\x00R\rstatusChanged\x129\n" +
 	"\aspawned\x18\v \x01(\v2\x1d.orchestrator.v1.SpawnedEventH\x00R\aspawned\x12I\n" +
 	"\rchat_received\x18\f \x01(\v2\".orchestrator.v1.ChatReceivedEventH\x00R\fchatReceived\x126\n" +
 	"\x06kicked\x18\r \x01(\v2\x1c.orchestrator.v1.KickedEventH\x00R\x06kicked\x123\n" +
-	"\x05error\x18\x0e \x01(\v2\x1b.orchestrator.v1.ErrorEventH\x00R\x05errorB\t\n" +
+	"\x05error\x18\x0e \x01(\v2\x1b.orchestrator.v1.ErrorEventH\x00R\x05error\x12L\n" +
+	"\x0estate_snapshot\x18\x0f \x01(\v2#.orchestrator.v1.StateSnapshotEventH\x00R\rstateSnapshot\x12L\n" +
+	"\x0evitals_changed\x18\x10 \x01(\v2#.orchestrator.v1.VitalsChangedEventH\x00R\rvitalsChanged\x12O\n" +
+	"\x0feffects_changed\x18\x11 \x01(\v2$.orchestrator.v1.EffectsChangedEventH\x00R\x0eeffectsChanged\x12R\n" +
+	"\x10position_changed\x18\x12 \x01(\v2%.orchestrator.v1.PositionChangedEventH\x00R\x0fpositionChanged\x12U\n" +
+	"\x11inventory_changed\x18\x13 \x01(\v2&.orchestrator.v1.InventoryChangedEventH\x00R\x10inventoryChangedB\t\n" +
 	"\apayload\"B\n" +
 	"\x12StatusChangedEvent\x12\x14\n" +
 	"\x05state\x18\x01 \x01(\tR\x05state\x12\x16\n" +
@@ -785,7 +1618,60 @@ const file_orchestrator_v1_bot_proto_rawDesc = "" +
 	"\x06reason\x18\x01 \x01(\tR\x06reason\"&\n" +
 	"\n" +
 	"ErrorEvent\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessageBDZBminecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1b\x06proto3"
+	"\amessage\x18\x01 \x01(\tR\amessage\"E\n" +
+	"\x12StateSnapshotEvent\x12/\n" +
+	"\x05state\x18\x01 \x01(\v2\x19.orchestrator.v1.BotStateR\x05state\"E\n" +
+	"\x12VitalsChangedEvent\x12/\n" +
+	"\x06vitals\x18\x01 \x01(\v2\x17.orchestrator.v1.VitalsR\x06vitals\"N\n" +
+	"\x13EffectsChangedEvent\x127\n" +
+	"\aeffects\x18\x01 \x03(\v2\x1d.orchestrator.v1.PotionEffectR\aeffects\"M\n" +
+	"\x14PositionChangedEvent\x125\n" +
+	"\bposition\x18\x01 \x01(\v2\x19.orchestrator.v1.PositionR\bposition\"\xc0\x01\n" +
+	"\x15InventoryChangedEvent\x124\n" +
+	"\x05slots\x18\x01 \x03(\v2\x1e.orchestrator.v1.InventorySlotR\x05slots\x120\n" +
+	"\x14selected_hotbar_slot\x18\x02 \x01(\x05R\x12selectedHotbarSlot\x12?\n" +
+	"\x1cselected_hotbar_slot_changed\x18\x03 \x01(\bR\x19selectedHotbarSlotChanged\"\xe5\x01\n" +
+	"\bBotState\x12/\n" +
+	"\x06vitals\x18\x01 \x01(\v2\x17.orchestrator.v1.VitalsR\x06vitals\x127\n" +
+	"\aeffects\x18\x02 \x03(\v2\x1d.orchestrator.v1.PotionEffectR\aeffects\x125\n" +
+	"\bposition\x18\x03 \x01(\v2\x19.orchestrator.v1.PositionR\bposition\x128\n" +
+	"\tinventory\x18\x04 \x01(\v2\x1a.orchestrator.v1.InventoryR\tinventory\"l\n" +
+	"\x06Vitals\x12\x16\n" +
+	"\x06health\x18\x01 \x01(\x01R\x06health\x12\x12\n" +
+	"\x04food\x18\x02 \x01(\x05R\x04food\x12\x1e\n" +
+	"\n" +
+	"saturation\x18\x03 \x01(\x01R\n" +
+	"saturation\x12\x16\n" +
+	"\x06oxygen\x18\x04 \x01(\x05R\x06oxygen\"w\n" +
+	"\fPotionEffect\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1c\n" +
+	"\tamplifier\x18\x03 \x01(\x05R\tamplifier\x12%\n" +
+	"\x0eduration_ticks\x18\x04 \x01(\x05R\rdurationTicks\"\xd7\x01\n" +
+	"\bPosition\x12\x1c\n" +
+	"\tdimension\x18\x01 \x01(\tR\tdimension\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x01R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x01R\x01y\x12\f\n" +
+	"\x01z\x18\x04 \x01(\x01R\x01z\x12\x10\n" +
+	"\x03yaw\x18\x05 \x01(\x01R\x03yaw\x12\x14\n" +
+	"\x05pitch\x18\x06 \x01(\x01R\x05pitch\x12\x1d\n" +
+	"\n" +
+	"velocity_x\x18\a \x01(\x01R\tvelocityX\x12\x1d\n" +
+	"\n" +
+	"velocity_y\x18\b \x01(\x01R\tvelocityY\x12\x1d\n" +
+	"\n" +
+	"velocity_z\x18\t \x01(\x01R\tvelocityZ\"s\n" +
+	"\tInventory\x120\n" +
+	"\x14selected_hotbar_slot\x18\x01 \x01(\x05R\x12selectedHotbarSlot\x124\n" +
+	"\x05slots\x18\x02 \x03(\v2\x1e.orchestrator.v1.InventorySlotR\x05slots\"S\n" +
+	"\rInventorySlot\x12\x12\n" +
+	"\x04slot\x18\x01 \x01(\x05R\x04slot\x12.\n" +
+	"\x04item\x18\x02 \x01(\v2\x1a.orchestrator.v1.ItemStackR\x04item\"a\n" +
+	"\tItemStack\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
+	"\bmetadata\x18\x03 \x01(\x05R\bmetadata\x12\x14\n" +
+	"\x05count\x18\x04 \x01(\x05R\x05countBDZBminecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1b\x06proto3"
 
 var (
 	file_orchestrator_v1_bot_proto_rawDescOnce sync.Once
@@ -799,19 +1685,31 @@ func file_orchestrator_v1_bot_proto_rawDescGZIP() []byte {
 	return file_orchestrator_v1_bot_proto_rawDescData
 }
 
-var file_orchestrator_v1_bot_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_orchestrator_v1_bot_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_orchestrator_v1_bot_proto_goTypes = []any{
-	(*BotCommand)(nil),         // 0: orchestrator.v1.BotCommand
-	(*ConnectCommand)(nil),     // 1: orchestrator.v1.ConnectCommand
-	(*DisconnectCommand)(nil),  // 2: orchestrator.v1.DisconnectCommand
-	(*StatusCommand)(nil),      // 3: orchestrator.v1.StatusCommand
-	(*SendChatCommand)(nil),    // 4: orchestrator.v1.SendChatCommand
-	(*BotEvent)(nil),           // 5: orchestrator.v1.BotEvent
-	(*StatusChangedEvent)(nil), // 6: orchestrator.v1.StatusChangedEvent
-	(*SpawnedEvent)(nil),       // 7: orchestrator.v1.SpawnedEvent
-	(*ChatReceivedEvent)(nil),  // 8: orchestrator.v1.ChatReceivedEvent
-	(*KickedEvent)(nil),        // 9: orchestrator.v1.KickedEvent
-	(*ErrorEvent)(nil),         // 10: orchestrator.v1.ErrorEvent
+	(*BotCommand)(nil),            // 0: orchestrator.v1.BotCommand
+	(*ConnectCommand)(nil),        // 1: orchestrator.v1.ConnectCommand
+	(*DisconnectCommand)(nil),     // 2: orchestrator.v1.DisconnectCommand
+	(*StatusCommand)(nil),         // 3: orchestrator.v1.StatusCommand
+	(*SendChatCommand)(nil),       // 4: orchestrator.v1.SendChatCommand
+	(*BotEvent)(nil),              // 5: orchestrator.v1.BotEvent
+	(*StatusChangedEvent)(nil),    // 6: orchestrator.v1.StatusChangedEvent
+	(*SpawnedEvent)(nil),          // 7: orchestrator.v1.SpawnedEvent
+	(*ChatReceivedEvent)(nil),     // 8: orchestrator.v1.ChatReceivedEvent
+	(*KickedEvent)(nil),           // 9: orchestrator.v1.KickedEvent
+	(*ErrorEvent)(nil),            // 10: orchestrator.v1.ErrorEvent
+	(*StateSnapshotEvent)(nil),    // 11: orchestrator.v1.StateSnapshotEvent
+	(*VitalsChangedEvent)(nil),    // 12: orchestrator.v1.VitalsChangedEvent
+	(*EffectsChangedEvent)(nil),   // 13: orchestrator.v1.EffectsChangedEvent
+	(*PositionChangedEvent)(nil),  // 14: orchestrator.v1.PositionChangedEvent
+	(*InventoryChangedEvent)(nil), // 15: orchestrator.v1.InventoryChangedEvent
+	(*BotState)(nil),              // 16: orchestrator.v1.BotState
+	(*Vitals)(nil),                // 17: orchestrator.v1.Vitals
+	(*PotionEffect)(nil),          // 18: orchestrator.v1.PotionEffect
+	(*Position)(nil),              // 19: orchestrator.v1.Position
+	(*Inventory)(nil),             // 20: orchestrator.v1.Inventory
+	(*InventorySlot)(nil),         // 21: orchestrator.v1.InventorySlot
+	(*ItemStack)(nil),             // 22: orchestrator.v1.ItemStack
 }
 var file_orchestrator_v1_bot_proto_depIdxs = []int32{
 	1,  // 0: orchestrator.v1.BotCommand.connect:type_name -> orchestrator.v1.ConnectCommand
@@ -823,11 +1721,27 @@ var file_orchestrator_v1_bot_proto_depIdxs = []int32{
 	8,  // 6: orchestrator.v1.BotEvent.chat_received:type_name -> orchestrator.v1.ChatReceivedEvent
 	9,  // 7: orchestrator.v1.BotEvent.kicked:type_name -> orchestrator.v1.KickedEvent
 	10, // 8: orchestrator.v1.BotEvent.error:type_name -> orchestrator.v1.ErrorEvent
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	11, // 9: orchestrator.v1.BotEvent.state_snapshot:type_name -> orchestrator.v1.StateSnapshotEvent
+	12, // 10: orchestrator.v1.BotEvent.vitals_changed:type_name -> orchestrator.v1.VitalsChangedEvent
+	13, // 11: orchestrator.v1.BotEvent.effects_changed:type_name -> orchestrator.v1.EffectsChangedEvent
+	14, // 12: orchestrator.v1.BotEvent.position_changed:type_name -> orchestrator.v1.PositionChangedEvent
+	15, // 13: orchestrator.v1.BotEvent.inventory_changed:type_name -> orchestrator.v1.InventoryChangedEvent
+	16, // 14: orchestrator.v1.StateSnapshotEvent.state:type_name -> orchestrator.v1.BotState
+	17, // 15: orchestrator.v1.VitalsChangedEvent.vitals:type_name -> orchestrator.v1.Vitals
+	18, // 16: orchestrator.v1.EffectsChangedEvent.effects:type_name -> orchestrator.v1.PotionEffect
+	19, // 17: orchestrator.v1.PositionChangedEvent.position:type_name -> orchestrator.v1.Position
+	21, // 18: orchestrator.v1.InventoryChangedEvent.slots:type_name -> orchestrator.v1.InventorySlot
+	17, // 19: orchestrator.v1.BotState.vitals:type_name -> orchestrator.v1.Vitals
+	18, // 20: orchestrator.v1.BotState.effects:type_name -> orchestrator.v1.PotionEffect
+	19, // 21: orchestrator.v1.BotState.position:type_name -> orchestrator.v1.Position
+	20, // 22: orchestrator.v1.BotState.inventory:type_name -> orchestrator.v1.Inventory
+	21, // 23: orchestrator.v1.Inventory.slots:type_name -> orchestrator.v1.InventorySlot
+	22, // 24: orchestrator.v1.InventorySlot.item:type_name -> orchestrator.v1.ItemStack
+	25, // [25:25] is the sub-list for method output_type
+	25, // [25:25] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_orchestrator_v1_bot_proto_init() }
@@ -847,6 +1761,11 @@ func file_orchestrator_v1_bot_proto_init() {
 		(*BotEvent_ChatReceived)(nil),
 		(*BotEvent_Kicked)(nil),
 		(*BotEvent_Error)(nil),
+		(*BotEvent_StateSnapshot)(nil),
+		(*BotEvent_VitalsChanged)(nil),
+		(*BotEvent_EffectsChanged)(nil),
+		(*BotEvent_PositionChanged)(nil),
+		(*BotEvent_InventoryChanged)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -854,7 +1773,7 @@ func file_orchestrator_v1_bot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_orchestrator_v1_bot_proto_rawDesc), len(file_orchestrator_v1_bot_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

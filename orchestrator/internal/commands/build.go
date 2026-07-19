@@ -18,49 +18,20 @@ type ConnectConfig struct {
 }
 
 func NewConnect(botID string, config ConnectConfig) *orchestratorv1.BotCommand {
-	command := baseCommand(botID)
-	command.Payload = &orchestratorv1.BotCommand_Connect{
-		Connect: &orchestratorv1.ConnectCommand{
-			Host:     config.Host,
-			Port:     config.Port,
-			Username: config.Username,
-			Auth:     config.Auth,
-			Version:  config.Version,
-		},
-	}
-	return command
-}
-
-func NewDisconnect(botID string) *orchestratorv1.BotCommand {
-	command := baseCommand(botID)
-	command.Payload = &orchestratorv1.BotCommand_Disconnect{
-		Disconnect: &orchestratorv1.DisconnectCommand{},
-	}
-	return command
-}
-
-func NewStatus(botID string) *orchestratorv1.BotCommand {
-	command := baseCommand(botID)
-	command.Payload = &orchestratorv1.BotCommand_Status{
-		Status: &orchestratorv1.StatusCommand{},
-	}
-	return command
-}
-
-func NewChat(botID string, message string) *orchestratorv1.BotCommand {
-	command := baseCommand(botID)
-	command.Payload = &orchestratorv1.BotCommand_SendChat{
-		SendChat: &orchestratorv1.SendChatCommand{Message: message},
-	}
-	return command
-}
-
-func baseCommand(botID string) *orchestratorv1.BotCommand {
 	id := newID()
 	return &orchestratorv1.BotCommand{
 		BotId:         botID,
 		MessageId:     id,
 		CorrelationId: id,
+		Payload: &orchestratorv1.BotCommand_Connect{
+			Connect: &orchestratorv1.ConnectCommand{
+				Host:     config.Host,
+				Port:     config.Port,
+				Username: config.Username,
+				Auth:     config.Auth,
+				Version:  config.Version,
+			},
+		},
 	}
 }
 

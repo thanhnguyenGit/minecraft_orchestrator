@@ -2,138 +2,132 @@ package main
 
 import (
 	"context"
-	"flag"
+	"errors"
 	"fmt"
+	"io"
 	"os"
-	"strconv"
+	"os/signal"
+	"syscall"
 
-	"github.com/joho/godotenv"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"minecraft_orchestrator/internal/bus"
 	"minecraft_orchestrator/internal/commands"
+	config "minecraft_orchestrator/internal/config"
+
 	orchestratorv1 "minecraft_orchestrator/internal/gen/orchestrator/v1"
 )
 
+const eventChannelSize = 100
+
+type eventReader interface {
+	ReadEvents(context.Context, string) ([]bus.StreamEvent, error)
+}
+
+type commandPublisher interface {
+	PublishCommand(context.Context, *orchestratorv1.BotCommand) (string, error)
+}
+
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := run(ctx, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func run(args []string) error {
-	loadDotenv()
+func run(ctx context.Context, output io.Writer) error {
+	cfg := config.LoadConfig()
 
-	if len(args) == 0 {
-		return fmt.Errorf("usage: orchestrator <connect|disconnect|status|chat> --bot-id <id> [flags]")
-	}
-
-	command, err := buildCommand(args)
-	if err != nil {
-		return err
-	}
-
-	redisURL := getenv("REDIS_URL", "redis://localhost:6379/0")
-	redisBus, err := bus.NewRedisBus(redisURL)
+	redisBus, err := bus.NewRedisBus(cfg.RedisUrl)
 	if err != nil {
 		return fmt.Errorf("create redis bus: %w", err)
 	}
 	defer redisBus.Close()
 
-	id, err := redisBus.PublishCommand(context.Background(), command)
-	if err != nil {
-		return fmt.Errorf("publish command: %w", err)
+	if err := bootstrap(ctx, redisBus, cfg); err != nil {
+		return fmt.Errorf("bootstrap bot: %w", err)
 	}
 
-	fmt.Printf("published %s to %s\n", id, bus.CommandStream(command.GetBotId()))
+	return consumeEvents(ctx, redisBus, output)
+}
+
+func bootstrap(ctx context.Context, publisher commandPublisher, cfg *config.Config) error {
+	_, err := publisher.PublishCommand(ctx, commands.NewConnect("king_crimson", commands.ConnectConfig{
+		Host:     cfg.Host,
+		Port:     uint32(cfg.Port),
+		Username: cfg.Username,
+		Auth:     cfg.AuthRequired,
+		Version:  cfg.Version,
+	}))
+	return err
+}
+
+func consumeEvents(ctx context.Context, reader eventReader, output io.Writer) error {
+	workerCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	events := make(chan bus.StreamEvent, eventChannelSize)
+	readerDone := make(chan error, 1)
+	printerDone := make(chan error, 1)
+
+	go func() {
+		defer close(events)
+		readerDone <- streamEvents(workerCtx, reader, events)
+	}()
+	go func() {
+		printerDone <- printEvents(output, events)
+	}()
+
+	select {
+	case err := <-readerDone:
+		cancel()
+		printerErr := <-printerDone
+		return errors.Join(err, printerErr)
+	case err := <-printerDone:
+		cancel()
+		readerErr := <-readerDone
+		return errors.Join(err, readerErr)
+	case <-ctx.Done():
+		cancel()
+		return errors.Join(<-readerDone, <-printerDone)
+	}
+}
+
+func streamEvents(ctx context.Context, reader eventReader, output chan<- bus.StreamEvent) error {
+	position := "$"
+	for {
+		events, err := reader.ReadEvents(ctx, position)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				return nil
+			}
+			return fmt.Errorf("read Redis events: %w", err)
+		}
+
+		for _, event := range events {
+			select {
+			case <-ctx.Done():
+				return nil
+			case output <- event:
+				position = event.ID
+			}
+		}
+	}
+}
+
+func printEvents(output io.Writer, events <-chan bus.StreamEvent) error {
+	marshaller := protojson.MarshalOptions{UseProtoNames: true}
+	for event := range events {
+		payload, err := marshaller.Marshal(event.Event)
+		if err != nil {
+			return fmt.Errorf("marshal event %s: %w", event.ID, err)
+		}
+		if _, err := fmt.Fprintf(output, "%s %s\n", event.ID, payload); err != nil {
+			return fmt.Errorf("write event %s: %w", event.ID, err)
+		}
+	}
 	return nil
-}
-
-func buildCommand(args []string) (*orchestratorv1.BotCommand, error) {
-	switch args[0] {
-	case "connect":
-		flags := flag.NewFlagSet("connect", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		host := flags.String("host", getenv("MINECRAFT_HOST", "192.168.31.170"), "Minecraft server host")
-		port := flags.Uint("port", getenvUint("MINECRAFT_PORT", 64735), "Minecraft server port")
-		username := flags.String("username", getenv("MINECRAFT_USERNAME", "king_crimson_bot"), "Minecraft username")
-		auth := flags.String("auth", getenv("MINECRAFT_AUTH", "offline"), "Mineflayer auth mode")
-		version := flags.String("version", getenv("MINECRAFT_VERSION", "1.21.11"), "Minecraft version")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		if *port > 65535 {
-			return nil, fmt.Errorf("--port must fit uint16: %s", strconv.FormatUint(uint64(*port), 10))
-		}
-		return commands.NewConnect(*botID, commands.ConnectConfig{
-			Host:     *host,
-			Port:     uint32(*port),
-			Username: *username,
-			Auth:     *auth,
-			Version:  *version,
-		}), nil
-	case "disconnect":
-		flags := flag.NewFlagSet("disconnect", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		return commands.NewDisconnect(*botID), nil
-	case "status":
-		flags := flag.NewFlagSet("status", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		return commands.NewStatus(*botID), nil
-	case "chat":
-		flags := flag.NewFlagSet("chat", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		message := flags.String("message", "", "chat message")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		if *message == "" {
-			return nil, fmt.Errorf("--message is required")
-		}
-		return commands.NewChat(*botID, *message), nil
-	default:
-		return nil, fmt.Errorf("unknown command %q", args[0])
-	}
-}
-
-func getenv(key string, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-	return value
-}
-
-func getenvUint(key string, fallback uint) uint {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-	parsed, err := strconv.ParseUint(value, 10, 0)
-	if err != nil {
-		return fallback
-	}
-	return uint(parsed)
-}
-
-func loadDotenv() {
-	_ = godotenv.Load("../.env", ".env")
 }

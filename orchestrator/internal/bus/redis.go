@@ -2,6 +2,8 @@ package bus
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 
@@ -11,6 +13,11 @@ import (
 
 type RedisBus struct {
 	client *redis.Client
+}
+
+type StreamEvent struct {
+	ID    string
+	Event *orchestratorv1.BotEvent
 }
 
 func NewRedisBus(redisURL string) (*RedisBus, error) {
@@ -42,3 +49,34 @@ func (b *RedisBus) PublishCommand(ctx context.Context, command *orchestratorv1.B
 		},
 	}).Result()
 }
+
+func (b *RedisBus) ReadEvents(ctx context.Context, from string) ([]StreamEvent, error) {
+	streams, err := b.client.XRead(ctx, &redis.XReadArgs{
+		Streams: []string{EventStream(), from},
+		Count:   100,
+		Block:   5 * time.Second,
+	}).Result()
+	if err == redis.Nil {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	events := make([]StreamEvent, 0)
+	for _, stream := range streams {
+		for _, message := range stream.Messages {
+			fields := make(codec.StreamFields, len(message.Values))
+			for key, value := range message.Values {
+				fields[key] = fmt.Sprint(value)
+			}
+			event, err := codec.DecodeEvent(fields)
+			if err != nil {
+				return nil, fmt.Errorf("decode event %s: %w", message.ID, err)
+			}
+			events = append(events, StreamEvent{ID: message.ID, Event: event})
+		}
+	}
+	return events, nil
+}
+

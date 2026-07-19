@@ -9,27 +9,31 @@ import (
 	orchestratorv1 "minecraft_orchestrator/internal/gen/orchestrator/v1"
 )
 
-func TestCommandEnvelopeRoundTripsProtobufPayload(t *testing.T) {
-	command := &orchestratorv1.BotCommand{
-		BotId:         "king_crimson",
-		MessageId:     "msg-1",
-		CorrelationId: "corr-1",
-		Payload: &orchestratorv1.BotCommand_SendChat{
-			SendChat: &orchestratorv1.SendChatCommand{Message: "hello"},
+func TestEventEnvelopeRoundTripsTelemetryPayload(t *testing.T) {
+	event := &orchestratorv1.BotEvent{
+		BotId:            "king_crimson",
+		MessageId:        "event-1",
+		SessionId:        "session-1",
+		Sequence:         1,
+		ObservedAtUnixMs: 1700000000000,
+		Payload: &orchestratorv1.BotEvent_VitalsChanged{
+			VitalsChanged: &orchestratorv1.VitalsChangedEvent{
+				Vitals: &orchestratorv1.Vitals{Health: 20, Food: 18, Saturation: 4.5, Oxygen: 20},
+			},
 		},
 	}
 
-	fields, err := codec.EncodeCommand(command)
+	fields, err := codec.EncodeEvent(event)
 	if err != nil {
-		t.Fatalf("EncodeCommand() error = %v", err)
+		t.Fatalf("EncodeEvent() error = %v", err)
 	}
 
-	decoded, err := codec.DecodeCommand(fields)
+	decoded, err := codec.DecodeEvent(fields)
 	if err != nil {
-		t.Fatalf("DecodeCommand() error = %v", err)
+		t.Fatalf("DecodeEvent() error = %v", err)
 	}
 
-	if !proto.Equal(command, decoded) {
-		t.Fatalf("decoded command mismatch:\n got: %#v\nwant: %#v", decoded, command)
+	if !proto.Equal(event, decoded) {
+		t.Fatalf("decoded event mismatch:\n got: %#v\nwant: %#v", decoded, event)
 	}
 }
