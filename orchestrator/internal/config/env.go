@@ -1,86 +1,43 @@
+// Package config reads the direct Minecraft client configuration from the environment.
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
-type MCServerConfig struct {
-	Host    string
-	Port    int
-	Version string
+// Minecraft contains the connection settings required by one direct client.
+type Minecraft struct {
+	Host     string
+	Port     int
+	Username string
 }
 
-func loadMCServerConfig() *MCServerConfig {
-	fallbackPort := 54074
-	port := int(getEnvNumber("MINECRAFT_PORT", uint(fallbackPort)))
-
-	if port > 65545 {
-		log.Printf("Invalid port: Port exceed maximun number of ports, fallback to %d", fallbackPort)
-		port = fallbackPort
+// LoadMinecraft reads the required direct-client settings from the environment.
+func LoadMinecraft() (Minecraft, error) {
+	host := strings.TrimSpace(os.Getenv("MINECRAFT_HOST"))
+	if host == "" {
+		return Minecraft{}, fmt.Errorf("MINECRAFT_HOST is required")
 	}
 
-	return &MCServerConfig{
-		Host:    getEnvString("MINECRAFT_HOST", "localhost"),
-		Port:    port,
-		Version: getEnvString("MINECRAFT_VERSION", "1.21.11"),
+	portValue := strings.TrimSpace(os.Getenv("MINECRAFT_PORT"))
+	if portValue == "" {
+		return Minecraft{}, fmt.Errorf("MINECRAFT_PORT is required")
 	}
-}
-
-type MCAccountConfig struct {
-	Username     string
-	AuthRequired string
-}
-
-func loadMCAccountConfig() *MCAccountConfig {
-	return &MCAccountConfig{
-		Username:     getEnvString("MINECRAFT_USERNAME", "king_crimson_bot"),
-		AuthRequired: getEnvString("MINECRAFT_AUTH", "offline") ,
-	}
-}
-
-type SystemConfig struct {
-	RedisUrl string
-}
-
-func loadSystemConfig() *SystemConfig {
-	return &SystemConfig{
-		RedisUrl: getEnvString("REDIS_URL", "redis://localhost:6379/0"),
-	}
-}
-
-type Config struct {
-	*MCServerConfig
-	*MCAccountConfig
-	*SystemConfig
-}
-
-func LoadConfig() *Config {
-	return &Config{
-		MCServerConfig:  loadMCServerConfig(),
-		MCAccountConfig: loadMCAccountConfig(),
-		SystemConfig:    loadSystemConfig(),
-	}
-}
-
-func getEnvString(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
-}
-
-func getEnvNumber(key string, fallback uint) uint {
-	value := os.Getenv(key)
-
-	if value == "" {
-		return fallback
-	}
-	parsed, err := strconv.ParseUint(value, 10, 20)
+	port, err := strconv.Atoi(portValue)
 	if err != nil {
-		return fallback
+		return Minecraft{}, fmt.Errorf("MINECRAFT_PORT must be a valid port: %w", err)
+	}
+	if port < 1 || port > 65535 {
+		return Minecraft{}, fmt.Errorf("MINECRAFT_PORT must be between 1 and 65535: %d", port)
 	}
 
-	return uint(parsed)
+	username := strings.TrimSpace(os.Getenv("MINECRAFT_USERNAME"))
+	if username == "" {
+		return Minecraft{}, fmt.Errorf("MINECRAFT_USERNAME is required")
+	}
+
+	return Minecraft{Host: host, Port: port, Username: username}, nil
 }
