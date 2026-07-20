@@ -39,7 +39,11 @@ func run(ctx context.Context, output io.Writer) error {
 	if err := loadDotenv(); err != nil {
 		return err
 	}
-	return runWithConfig(ctx, output, config.LoadConfig(), newManagedSession)
+	minecraft, err := config.LoadMinecraft()
+	if err != nil {
+		return fmt.Errorf("load Minecraft configuration: %w", err)
+	}
+	return runWithConfig(ctx, output, minecraft, newManagedSession)
 }
 
 func loadDotenv() error {
@@ -84,21 +88,7 @@ func newManagedSession(cfg client.Config) (managedSession, error) {
 	return client.NewSession(cfg)
 }
 
-func clientConfig(cfg *config.Config) (client.Config, error) {
-	if cfg == nil || cfg.MCServerConfig == nil || cfg.MCAccountConfig == nil {
-		return client.Config{}, errors.New("Minecraft configuration is required")
-	}
-	if cfg.AuthRequired != "offline" {
-		return client.Config{}, errors.New("only offline Minecraft authentication is supported")
-	}
-	return client.Config{
-		Host:     cfg.Host,
-		Port:     cfg.Port,
-		Username: cfg.Username,
-	}, nil
-}
-
-func runWithConfig(ctx context.Context, output io.Writer, cfg *config.Config, makeSession sessionFactory) error {
+func runWithConfig(ctx context.Context, output io.Writer, minecraft config.Minecraft, makeSession sessionFactory) error {
 	if ctx == nil {
 		return errors.New("listener context is required")
 	}
@@ -109,11 +99,11 @@ func runWithConfig(ctx context.Context, output io.Writer, cfg *config.Config, ma
 		return errors.New("Minecraft session factory is required")
 	}
 
-	protocolConfig, err := clientConfig(cfg)
-	if err != nil {
-		return err
-	}
-	session, err := makeSession(protocolConfig)
+	session, err := makeSession(client.Config{
+		Host:     minecraft.Host,
+		Port:     minecraft.Port,
+		Username: minecraft.Username,
+	})
 	if err != nil {
 		return fmt.Errorf("create Minecraft session: %w", err)
 	}
