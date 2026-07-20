@@ -7,26 +7,23 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/joho/godotenv"
 
-	"minecraft_orchestrator/internal/bus"
-	"minecraft_orchestrator/internal/commands"
-	config "minecraft_orchestrator/internal/config"
-
-	orchestratorv1 "minecraft_orchestrator/internal/gen/orchestrator/v1"
+	"minecraft_orchestrator/internal/config"
+	"minecraft_orchestrator/internal/mc_protocol/client"
 )
 
-const eventChannelSize = 100
-
-type eventReader interface {
-	ReadEvents(context.Context, string) ([]bus.StreamEvent, error)
+type managedSession interface {
+	Start(context.Context) error
+	Events() <-chan client.Event
+	Wait() error
+	Close() error
 }
 
-type commandPublisher interface {
-	PublishCommand(context.Context, *orchestratorv1.BotCommand) (string, error)
-}
+type sessionFactory func(client.Config) (managedSession, error)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -39,95 +36,143 @@ func main() {
 }
 
 func run(ctx context.Context, output io.Writer) error {
-	cfg := config.LoadConfig()
+	if err := loadDotenv(); err != nil {
+		return err
+	}
+	return runWithConfig(ctx, output, config.LoadConfig(), newManagedSession)
+}
 
-	redisBus, err := bus.NewRedisBus(cfg.RedisUrl)
+func loadDotenv() error {
+	workingDirectory, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("create redis bus: %w", err)
+		return fmt.Errorf("get working directory: %w", err)
 	}
-	defer redisBus.Close()
-
-	if err := bootstrap(ctx, redisBus, cfg); err != nil {
-		return fmt.Errorf("bootstrap bot: %w", err)
+	path, err := findDotenv(workingDirectory)
+	if err != nil {
+		return err
 	}
-
-	return consumeEvents(ctx, redisBus, output)
+	if path == "" {
+		return nil
+	}
+	if err := godotenv.Load(path); err != nil {
+		return fmt.Errorf("load %s: %w", path, err)
+	}
+	return nil
 }
 
-func bootstrap(ctx context.Context, publisher commandPublisher, cfg *config.Config) error {
-	_, err := publisher.PublishCommand(ctx, commands.NewConnect("king_crimson", commands.ConnectConfig{
-		Host:     cfg.Host,
-		Port:     uint32(cfg.Port),
-		Username: cfg.Username,
-		Auth:     cfg.AuthRequired,
-		Version:  cfg.Version,
-	}))
-	return err
-}
-
-func consumeEvents(ctx context.Context, reader eventReader, output io.Writer) error {
-	workerCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	events := make(chan bus.StreamEvent, eventChannelSize)
-	readerDone := make(chan error, 1)
-	printerDone := make(chan error, 1)
-
-	go func() {
-		defer close(events)
-		readerDone <- streamEvents(workerCtx, reader, events)
-	}()
-	go func() {
-		printerDone <- printEvents(output, events)
-	}()
-
-	select {
-	case err := <-readerDone:
-		cancel()
-		printerErr := <-printerDone
-		return errors.Join(err, printerErr)
-	case err := <-printerDone:
-		cancel()
-		readerErr := <-readerDone
-		return errors.Join(err, readerErr)
-	case <-ctx.Done():
-		cancel()
-		return errors.Join(<-readerDone, <-printerDone)
+func findDotenv(start string) (string, error) {
+	directory, err := filepath.Abs(start)
+	if err != nil {
+		return "", fmt.Errorf("resolve dotenv search path: %w", err)
 	}
-}
-
-func streamEvents(ctx context.Context, reader eventReader, output chan<- bus.StreamEvent) error {
-	position := "$"
 	for {
-		events, err := reader.ReadEvents(ctx, position)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				return nil
-			}
-			return fmt.Errorf("read Redis events: %w", err)
+		path := filepath.Join(directory, ".env")
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("stat %s: %w", path, err)
 		}
-
-		for _, event := range events {
-			select {
-			case <-ctx.Done():
-				return nil
-			case output <- event:
-				position = event.ID
-			}
+		parent := filepath.Dir(directory)
+		if parent == directory {
+			return "", nil
 		}
+		directory = parent
 	}
 }
 
-func printEvents(output io.Writer, events <-chan bus.StreamEvent) error {
-	marshaller := protojson.MarshalOptions{UseProtoNames: true}
+func newManagedSession(cfg client.Config) (managedSession, error) {
+	return client.NewSession(cfg)
+}
+
+func clientConfig(cfg *config.Config) (client.Config, error) {
+	if cfg == nil || cfg.MCServerConfig == nil || cfg.MCAccountConfig == nil {
+		return client.Config{}, errors.New("Minecraft configuration is required")
+	}
+	if cfg.AuthRequired != "offline" {
+		return client.Config{}, errors.New("only offline Minecraft authentication is supported")
+	}
+	return client.Config{
+		Host:     cfg.Host,
+		Port:     cfg.Port,
+		Username: cfg.Username,
+	}, nil
+}
+
+func runWithConfig(ctx context.Context, output io.Writer, cfg *config.Config, makeSession sessionFactory) error {
+	if ctx == nil {
+		return errors.New("listener context is required")
+	}
+	if output == nil {
+		return errors.New("listener output is required")
+	}
+	if makeSession == nil {
+		return errors.New("Minecraft session factory is required")
+	}
+
+	protocolConfig, err := clientConfig(cfg)
+	if err != nil {
+		return err
+	}
+	session, err := makeSession(protocolConfig)
+	if err != nil {
+		return fmt.Errorf("create Minecraft session: %w", err)
+	}
+	defer session.Close()
+
+	if err := session.Start(ctx); err != nil {
+		return fmt.Errorf("start Minecraft session: %w", err)
+	}
+	printDone := make(chan error, 1)
+	go func() { printDone <- printEvents(output, session.Events()) }()
+
+	waitErr := session.Wait()
+	printErr := <-printDone
+	if ctx.Err() != nil && errors.Is(waitErr, ctx.Err()) {
+		return printErr
+	}
+	return errors.Join(waitErr, printErr)
+}
+
+func printEvents(output io.Writer, events <-chan client.Event) error {
 	for event := range events {
-		payload, err := marshaller.Marshal(event.Event)
-		if err != nil {
-			return fmt.Errorf("marshal event %s: %w", event.ID, err)
-		}
-		if _, err := fmt.Fprintf(output, "%s %s\n", event.ID, payload); err != nil {
-			return fmt.Errorf("write event %s: %w", event.ID, err)
+		if _, err := io.WriteString(output, formatEvent(event)); err != nil {
+			return fmt.Errorf("write Minecraft event: %w", err)
 		}
 	}
 	return nil
+}
+
+func formatEvent(event client.Event) string {
+	message := describeMessage(event.Message)
+	return fmt.Sprintf("phase=%s packet_id=0x%02x body_bytes=%d message=%s\n", phaseName(event.Phase), event.Raw.ID, len(event.Raw.Body), message)
+}
+
+func phaseName(phase client.Phase) string {
+	switch phase {
+	case client.PhaseLogin:
+		return "login"
+	case client.PhaseConfiguration:
+		return "configuration"
+	case client.PhasePlay:
+		return "play"
+	default:
+		return "unknown"
+	}
+}
+
+func describeMessage(message client.ClientboundMessage) string {
+	switch message.(type) {
+	case nil:
+		return "decode_error"
+	case client.UnknownClientbound:
+		return "unknown"
+	case client.EncryptionRequest:
+		request := message.(client.EncryptionRequest)
+		return fmt.Sprintf("client.EncryptionRequest{ShouldAuthenticate:%t PublicKeyBytes:%d VerifyTokenBytes:%d}", request.ShouldAuthenticate, len(request.PublicKey), len(request.VerifyToken))
+	case client.LoginSuccess, client.LoginPluginRequest,
+		client.ConfigurationDisconnect, client.ResourcePackRequest, client.PlayDisconnect:
+		return fmt.Sprintf("%T", message)
+	default:
+		return fmt.Sprintf("%T%+v", message, message)
+	}
 }
