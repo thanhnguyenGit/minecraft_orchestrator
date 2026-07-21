@@ -130,6 +130,13 @@ func TestSessionCompletesOfflineEncryptedLoginWhenServerRequestsAuthentication(t
 	}
 }
 
+func TestSessionAcceptsTypedPlayDataMessage(t *testing.T) {
+	session := new(Session)
+	if err := session.handlePlayMessage(SetCenterChunk{X: 0, Z: -1}); err != nil {
+		t.Fatalf("handlePlayMessage(SetCenterChunk) error = %v", err)
+	}
+}
+
 func encryptionRequestPacket(t *testing.T, shouldAuthenticate bool, publicKey, verifyToken []byte) wire.Packet {
 	t.Helper()
 	var body bytes.Buffer

@@ -415,7 +415,9 @@ func (s *Session) handlePlayMessage(message ClientboundMessage) error {
 	case UnknownClientbound:
 		return nil
 	default:
-		return fmt.Errorf("unexpected play message %T", message)
+		// Typed packets without an explicit case are data updates for the event
+		// consumer. Only control packets above require session-level handling.
+		return nil
 	}
 	return nil
 }
