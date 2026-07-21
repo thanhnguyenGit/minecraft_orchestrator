@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 
 	"minecraft_orchestrator/internal/config"
 	"minecraft_orchestrator/internal/mc_protocol/client"
+	"minecraft_orchestrator/internal/observability"
 )
 
 type managedSession interface {
@@ -43,7 +45,13 @@ func run(ctx context.Context, output io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("load Minecraft configuration: %w", err)
 	}
-	return runWithConfig(ctx, output, minecraft, newManagedSession)
+	logging, err := config.LoadLogging()
+	if err != nil {
+		return fmt.Errorf("load logging configuration: %w", err)
+	}
+	logger, closeLogger := newLogger(output, logging)
+	logger.Info("orchestrator.start")
+	return errors.Join(runWithConfig(ctx, minecraft, logger, newManagedSession), closeLogger())
 }
 
 func loadDotenv() error {
@@ -88,12 +96,25 @@ func newManagedSession(cfg client.Config) (managedSession, error) {
 	return client.NewSession(cfg)
 }
 
-func runWithConfig(ctx context.Context, output io.Writer, minecraft config.Minecraft, makeSession sessionFactory) error {
+func newLogger(output io.Writer, logging config.Logging) (*slog.Logger, func() error) {
+	options := &slog.HandlerOptions{Level: logging.Level}
+	var handler slog.Handler
+	switch logging.Format {
+	case config.LogFormatJSON:
+		handler = slog.NewJSONHandler(output, options)
+	default:
+		handler = slog.NewTextHandler(output, options)
+	}
+	async := observability.NewAsyncHandler(handler, 1024)
+	return slog.New(async), async.Close
+}
+
+func runWithConfig(ctx context.Context, minecraft config.Minecraft, logger *slog.Logger, makeSession sessionFactory) error {
 	if ctx == nil {
 		return errors.New("listener context is required")
 	}
-	if output == nil {
-		return errors.New("listener output is required")
+	if logger == nil {
+		return errors.New("logger is required")
 	}
 	if makeSession == nil {
 		return errors.New("Minecraft session factory is required")
@@ -103,6 +124,7 @@ func runWithConfig(ctx context.Context, output io.Writer, minecraft config.Minec
 		Host:     minecraft.Host,
 		Port:     minecraft.Port,
 		Username: minecraft.Username,
+		Logger:   logger.With("component", "minecraft_protocol"),
 	})
 	if err != nil {
 		return fmt.Errorf("create Minecraft session: %w", err)
@@ -112,57 +134,19 @@ func runWithConfig(ctx context.Context, output io.Writer, minecraft config.Minec
 	if err := session.Start(ctx); err != nil {
 		return fmt.Errorf("start Minecraft session: %w", err)
 	}
-	printDone := make(chan error, 1)
-	go func() { printDone <- printEvents(output, session.Events()) }()
+	drainDone := make(chan error, 1)
+	go func() { drainDone <- drainEvents(session.Events()) }()
 
 	waitErr := session.Wait()
-	printErr := <-printDone
+	drainErr := <-drainDone
 	if ctx.Err() != nil && errors.Is(waitErr, ctx.Err()) {
-		return printErr
+		return drainErr
 	}
-	return errors.Join(waitErr, printErr)
+	return errors.Join(waitErr, drainErr)
 }
 
-func printEvents(output io.Writer, events <-chan client.Event) error {
-	for event := range events {
-		if _, err := io.WriteString(output, formatEvent(event)); err != nil {
-			return fmt.Errorf("write Minecraft event: %w", err)
-		}
+func drainEvents(events <-chan client.Event) error {
+	for range events {
 	}
 	return nil
-}
-
-func formatEvent(event client.Event) string {
-	message := describeMessage(event.Message)
-	return fmt.Sprintf("phase=%s packet_id=0x%02x body_bytes=%d message=%s\n", phaseName(event.Phase), event.Raw.ID, len(event.Raw.Body), message)
-}
-
-func phaseName(phase client.Phase) string {
-	switch phase {
-	case client.PhaseLogin:
-		return "login"
-	case client.PhaseConfiguration:
-		return "configuration"
-	case client.PhasePlay:
-		return "play"
-	default:
-		return "unknown"
-	}
-}
-
-func describeMessage(message client.ClientboundMessage) string {
-	switch message.(type) {
-	case nil:
-		return "decode_error"
-	case client.UnknownClientbound:
-		return "unknown"
-	case client.EncryptionRequest:
-		request := message.(client.EncryptionRequest)
-		return fmt.Sprintf("client.EncryptionRequest{ShouldAuthenticate:%t PublicKeyBytes:%d VerifyTokenBytes:%d}", request.ShouldAuthenticate, len(request.PublicKey), len(request.VerifyToken))
-	case client.LoginSuccess, client.LoginPluginRequest,
-		client.ConfigurationDisconnect, client.ResourcePackRequest, client.PlayDisconnect:
-		return fmt.Sprintf("%T", message)
-	default:
-		return fmt.Sprintf("%T%+v", message, message)
-	}
 }

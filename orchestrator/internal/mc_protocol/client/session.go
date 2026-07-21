@@ -9,9 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"minecraft_orchestrator/internal/mc_protocol/wire"
@@ -57,6 +59,7 @@ type Config struct {
 	ViewDistance    int8
 	InboundBuffer   int
 	DialTimeout     time.Duration
+	Logger          *slog.Logger
 }
 
 type dialContextFunc func(context.Context, string, string) (net.Conn, error)
@@ -79,6 +82,9 @@ type Session struct {
 	terminalErr         error
 	readySent           bool
 	playerLoadedPending bool
+	traceSessionID      string
+	traceSequence       atomic.Uint64
+	traceCause          atomic.Uint64
 
 	events chan Event
 	ready  chan error
@@ -108,13 +114,14 @@ func newSessionWithNormalizedConfig(cfg Config, dial dialContextFunc) (*Session,
 		return nil, errors.New("Minecraft server dialer is not configured")
 	}
 	return &Session{
-		cfg:         cfg,
-		codec:       wire.NewCodec(),
-		dialContext: dial,
-		phase:       PhaseLogin,
-		events:      make(chan Event, cfg.InboundBuffer),
-		ready:       make(chan error, 1),
-		done:        make(chan struct{}),
+		cfg:            cfg,
+		codec:          wire.NewCodec(),
+		dialContext:    dial,
+		phase:          PhaseLogin,
+		events:         make(chan Event, cfg.InboundBuffer),
+		ready:          make(chan error, 1),
+		done:           make(chan struct{}),
+		traceSessionID: nextTraceSessionID(cfg.Username),
 	}, nil
 }
 
@@ -249,7 +256,7 @@ func (s *Session) run() {
 			}
 			return
 		}
-		if err := s.handlePacket(message); err != nil {
+		if err := s.handleInbound(packet, message); err != nil {
 			if publishErr := s.publish(event); publishErr != nil {
 				s.finish(publishErr)
 			} else {
@@ -452,7 +459,11 @@ func (s *Session) send(message ServerboundMessage) error {
 	if err != nil {
 		return err
 	}
-	return s.writePacket(packet)
+	if err := s.writePacket(packet); err != nil {
+		return err
+	}
+	s.traceOutbound(packet, message)
+	return nil
 }
 
 func (s *Session) writePacket(packet wire.Packet) error {

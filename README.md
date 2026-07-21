@@ -33,6 +33,13 @@ The process fails before dialing if any of these values is missing or invalid.
 The Go client does not read `MINECRAFT_AUTH`, `MINECRAFT_VERSION`, or
 `REDIS_URL`.
 
+Packet tracing uses structured logs. Set `MINECRAFT_LOG_LEVEL=debug` to emit
+both `direction=inbound` server packets and `direction=outbound` client
+packets. Each record includes a per-session sequence; automatic replies also
+include `caused_by` pointing to the packet that triggered them. Use
+`MINECRAFT_LOG_FORMAT=json` for JSON instead of the default text format.
+Packet bodies and encryption material are never included in these logs.
+
 ### Run
 
 ```bash
@@ -40,8 +47,8 @@ cd orchestrator
 go run ./cmd/orchestrator
 ```
 
-It searches parent directories for `.env`, then prints incoming packets until
-you stop it with `Ctrl-C`.
+It searches parent directories for `.env`, then emits structured lifecycle and
+packet logs until you stop it with `Ctrl-C`.
 
 ### Verify
 
