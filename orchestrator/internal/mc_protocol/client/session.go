@@ -65,19 +65,20 @@ type dialContextFunc func(context.Context, string, string) (net.Conn, error)
 type Session struct {
 	cfg Config
 
-	mu          sync.Mutex
-	writeMu     sync.Mutex
-	conn        net.Conn
-	reader      *bufio.Reader
-	writer      io.Writer
-	codec       *wire.Codec
-	dialContext dialContextFunc
-	phase       Phase
-	started     bool
-	finished    bool
-	stopErr     error
-	terminalErr error
-	readySent   bool
+	mu                  sync.Mutex
+	writeMu             sync.Mutex
+	conn                net.Conn
+	reader              *bufio.Reader
+	writer              io.Writer
+	codec               *wire.Codec
+	dialContext         dialContextFunc
+	phase               Phase
+	started             bool
+	finished            bool
+	stopErr             error
+	terminalErr         error
+	readySent           bool
+	playerLoadedPending bool
 
 	events chan Event
 	ready  chan error
@@ -365,6 +366,7 @@ func (s *Session) handleConfigurationMessage(message ClientboundMessage) error {
 			return fmt.Errorf("write finish configuration acknowledgement: %w", err)
 		}
 		s.phase = PhasePlay
+		s.playerLoadedPending = true
 		s.resolveReady(nil)
 	case KeepAlive:
 		if err := s.send(message); err != nil {
@@ -406,6 +408,14 @@ func (s *Session) handlePlayMessage(message ClientboundMessage) error {
 		if err := s.send(TeleportConfirm{ID: message.TeleportID}); err != nil {
 			return fmt.Errorf("write teleport confirmation: %w", err)
 		}
+		if s.playerLoadedPending {
+			if err := s.send(PlayerLoaded{}); err != nil {
+				return fmt.Errorf("write player loaded: %w", err)
+			}
+			s.playerLoadedPending = false
+		}
+	case Respawn:
+		s.playerLoadedPending = true
 	case ChunkBatchFinished:
 		if err := s.send(ChunkBatchReceived{DesiredChunksPerTick: 1}); err != nil {
 			return fmt.Errorf("write chunk batch acknowledgement: %w", err)

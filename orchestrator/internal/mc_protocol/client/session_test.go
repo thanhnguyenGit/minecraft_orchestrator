@@ -137,6 +137,70 @@ func TestSessionAcceptsTypedPlayDataMessage(t *testing.T) {
 	}
 }
 
+func TestSessionSendsPlayerLoadedOnceAfterInitialPosition(t *testing.T) {
+	var output bytes.Buffer
+	session := &Session{phase: PhaseConfiguration, codec: wire.NewCodec(), writer: &output}
+	if err := session.handleConfigurationMessage(FinishConfiguration{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.handlePlayMessage(SynchronizePlayerPosition{TeleportID: 7}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.handlePlayMessage(SynchronizePlayerPosition{TeleportID: 8}); err != nil {
+		t.Fatal(err)
+	}
+
+	wantPackets(t, &output, []wire.Packet{{ID: 0x03}, {ID: 0x00, Body: []byte{7}}, {ID: 0x2b}, {ID: 0x00, Body: []byte{8}}})
+}
+
+func TestSessionSendsPlayerLoadedAfterRespawnPosition(t *testing.T) {
+	var output bytes.Buffer
+	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output}
+	if err := session.handlePlayMessage(Respawn{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.handlePlayMessage(SynchronizePlayerPosition{TeleportID: 9}); err != nil {
+		t.Fatal(err)
+	}
+
+	wantPackets(t, &output, []wire.Packet{{ID: 0x00, Body: []byte{9}}, {ID: 0x2b}})
+}
+
+func TestSessionRearmsPlayerLoadedAfterReconfiguration(t *testing.T) {
+	var output bytes.Buffer
+	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output}
+	if err := session.handlePlayMessage(StartConfiguration{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.handleConfigurationMessage(FinishConfiguration{}); err != nil {
+		t.Fatal(err)
+	}
+	output.Reset()
+	if err := session.handlePlayMessage(SynchronizePlayerPosition{TeleportID: 10}); err != nil {
+		t.Fatal(err)
+	}
+
+	wantPackets(t, &output, []wire.Packet{{ID: 0x00, Body: []byte{10}}, {ID: 0x2b}})
+}
+
+func wantPackets(t *testing.T, output *bytes.Buffer, want []wire.Packet) {
+	t.Helper()
+	codec := wire.NewCodec()
+	reader := bufio.NewReader(output)
+	for index, expected := range want {
+		packet, err := codec.ReadPacket(reader)
+		if err != nil {
+			t.Fatalf("packet %d: %v", index, err)
+		}
+		if packet.ID != expected.ID || !bytes.Equal(packet.Body, expected.Body) {
+			t.Fatalf("packet %d = %#v, want %#v", index, packet, expected)
+		}
+	}
+	if output.Len() != 0 {
+		t.Fatalf("unexpected %d trailing bytes", output.Len())
+	}
+}
+
 func encryptionRequestPacket(t *testing.T, shouldAuthenticate bool, publicKey, verifyToken []byte) wire.Packet {
 	t.Helper()
 	var body bytes.Buffer
