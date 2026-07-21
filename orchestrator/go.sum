@@ -1,2 +1,4 @@
+github.com/Tnze/go-mc v1.20.2 h1:arHCE/WxLCxY73C/4ZNLdOymRYtdwoXE05ohB7HVN6Q=
+github.com/Tnze/go-mc v1.20.2/go.mod h1:geoRj2HsXSkB3FJBuhr7wCzXegRlzWsVXd7h7jiJ6aQ=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
