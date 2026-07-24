@@ -41,7 +41,7 @@ func run(ctx context.Context, output io.Writer) error {
 	if err := loadDotenv(); err != nil {
 		return err
 	}
-	minecraft, err := config.LoadMinecraft()
+	minecraft, err := config.LoadMinecraftConfig()
 	if err != nil {
 		return fmt.Errorf("load Minecraft configuration: %w", err)
 	}
@@ -120,10 +120,12 @@ func runWithConfig(ctx context.Context, minecraft config.Minecraft, logger *slog
 		return errors.New("Minecraft session factory is required")
 	}
 
+	username := client.GenRandomUserName()
+	
 	session, err := makeSession(client.Config{
 		Host:     minecraft.Host,
 		Port:     minecraft.Port,
-		Username: minecraft.Username,
+		Username: username,
 		Logger:   logger.With("component", "minecraft_protocol"),
 	})
 	if err != nil {

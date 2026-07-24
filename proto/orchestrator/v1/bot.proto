@@ -37,6 +37,9 @@ message BotEvent {
   string bot_id = 1;
   string message_id = 2;
   string correlation_id = 3;
+  string session_id = 4;
+  uint64 sequence = 5;
+  int64 observed_at_unix_ms = 6;
 
   oneof payload {
     StatusChangedEvent status_changed = 10;
@@ -44,6 +47,11 @@ message BotEvent {
     ChatReceivedEvent chat_received = 12;
     KickedEvent kicked = 13;
     ErrorEvent error = 14;
+    StateSnapshotEvent state_snapshot = 15;
+    VitalsChangedEvent vitals_changed = 16;
+    EffectsChangedEvent effects_changed = 17;
+    PositionChangedEvent position_changed = 18;
+    InventoryChangedEvent inventory_changed = 19;
   }
 }
 
@@ -65,4 +73,76 @@ message KickedEvent {
 
 message ErrorEvent {
   string message = 1;
+}
+
+message StateSnapshotEvent {
+  BotState state = 1;
+}
+
+message VitalsChangedEvent {
+  Vitals vitals = 1;
+}
+
+message EffectsChangedEvent {
+  repeated PotionEffect effects = 1;
+}
+
+message PositionChangedEvent {
+  Position position = 1;
+}
+
+message InventoryChangedEvent {
+  repeated InventorySlot slots = 1;
+  int32 selected_hotbar_slot = 2;
+  bool selected_hotbar_slot_changed = 3;
+}
+
+message BotState {
+  Vitals vitals = 1;
+  repeated PotionEffect effects = 2;
+  Position position = 3;
+  Inventory inventory = 4;
+}
+
+message Vitals {
+  double health = 1;
+  int32 food = 2;
+  double saturation = 3;
+  int32 oxygen = 4;
+}
+
+message PotionEffect {
+  int32 id = 1;
+  string name = 2;
+  int32 amplifier = 3;
+  int32 duration_ticks = 4;
+}
+
+message Position {
+  string dimension = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+  double pitch = 6;
+  double velocity_x = 7;
+  double velocity_y = 8;
+  double velocity_z = 9;
+}
+
+message Inventory {
+  int32 selected_hotbar_slot = 1;
+  repeated InventorySlot slots = 2;
+}
+
+message InventorySlot {
+  int32 slot = 1;
+  ItemStack item = 2;
+}
+
+message ItemStack {
+  int32 id = 1;
+  string name = 2;
+  int32 metadata = 3;
+  int32 count = 4;
 }

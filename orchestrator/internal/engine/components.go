@@ -1,25 +1,30 @@
 package engine
 
-type Position struct {
-	DX, DY, DZ float64
-}
+import "fmt"
 
-
-
-type Vital struct {
-	Health, Hunger, Oxygen uint32
-}
-
-type LifecycleState int
+type Component uint8
 
 const (
-	Spawn LifecycleState = iota 
-	Respawn
-	Kicked
-	End
-	Error
+	CPosition Component = iota
+	CVelocity
+	CHealth
+	CConnection
+	CDisconnection
+	componentCount
 )
 
-type LifeCycle struct {
-	
+var componentNames = [...]string {
+	"Position",
+	"Velocity",
+	"Health",
+	"Connection",
+	"Disconnection",
+}
+
+func (c Component) String() string {
+	if c >= componentCount {
+		return fmt.Sprintf("Component(%d)", c)
+	}
+
+	return componentNames[c]
 }

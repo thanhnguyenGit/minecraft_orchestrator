@@ -30,8 +30,8 @@ type Logging struct {
 	Format LogFormat
 }
 
-// LoadMinecraft reads the required direct-client settings from the environment.
-func LoadMinecraft() (Minecraft, error) {
+// LoadMinecraftConfig reads the required direct-client settings from the environment.
+func LoadMinecraftConfig() (Minecraft, error) {
 	host := strings.TrimSpace(os.Getenv("MINECRAFT_HOST"))
 	if host == "" {
 		return Minecraft{}, fmt.Errorf("MINECRAFT_HOST is required")

@@ -11,7 +11,7 @@ func TestLoadMinecraftReadsRequiredConnectionSettings(t *testing.T) {
 	t.Setenv("MINECRAFT_PORT", "25565")
 	t.Setenv("MINECRAFT_USERNAME", "orchestrator_bot")
 
-	got, err := LoadMinecraft()
+	got, err := LoadMinecraftConfig()
 	if err != nil {
 		t.Fatalf("LoadMinecraft() error = %v", err)
 	}
@@ -81,7 +81,7 @@ func TestLoadMinecraftRejectsMissingOrInvalidSettings(t *testing.T) {
 			t.Setenv("MINECRAFT_PORT", test.port)
 			t.Setenv("MINECRAFT_USERNAME", test.username)
 
-			_, err := LoadMinecraft()
+			_, err := LoadMinecraftConfig()
 			if err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("LoadMinecraft() error = %v, want %q", err, test.want)
 			}

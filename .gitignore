@@ -6,3 +6,7 @@ dist/
 # Go local caches when running sandbox-friendly commands.
 .gocache/
 .gomodcache/
+.worktrees/
+
+# IDE/text editor 
+.zed 
