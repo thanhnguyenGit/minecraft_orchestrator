@@ -137,9 +137,49 @@ func TestSessionAcceptsTypedPlayDataMessage(t *testing.T) {
 	}
 }
 
+func TestSessionRequestsRespawnOnceForZeroHealth(t *testing.T) {
+	var output bytes.Buffer
+	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output}
+	for range 2 {
+		if err := session.handlePlayMessage(SetHealth{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	wantPackets(t, &output, []wire.Packet{{ID: 0x0b, Body: []byte{0x00}}})
+}
+
+func TestSessionRequestsRespawnAgainAfterRespawn(t *testing.T) {
+	var output bytes.Buffer
+	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output}
+	if err := session.handlePlayMessage(SetHealth{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.handlePlayMessage(Respawn{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.handlePlayMessage(SetHealth{}); err != nil {
+		t.Fatal(err)
+	}
+
+	wantPackets(t, &output, []wire.Packet{{ID: 0x0b, Body: []byte{0x00}}, {ID: 0x0b, Body: []byte{0x00}}})
+}
+
+func TestSessionRequestsRespawnAgainAfterHealthRecovers(t *testing.T) {
+	var output bytes.Buffer
+	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output}
+	for _, message := range []SetHealth{{}, {Health: 20}, {}} {
+		if err := session.handlePlayMessage(message); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	wantPackets(t, &output, []wire.Packet{{ID: 0x0b, Body: []byte{0x00}}, {ID: 0x0b, Body: []byte{0x00}}})
+}
+
 func TestSessionSendsPlayerLoadedOnceAfterInitialPosition(t *testing.T) {
 	var output bytes.Buffer
-	session := &Session{phase: PhaseConfiguration, codec: wire.NewCodec(), writer: &output}
+	session := &Session{phase: PhaseConfiguration, codec: wire.NewCodec(), writer: &output, ready: make(chan error, 1)}
 	if err := session.handleConfigurationMessage(FinishConfiguration{}); err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +208,7 @@ func TestSessionSendsPlayerLoadedAfterRespawnPosition(t *testing.T) {
 
 func TestSessionRearmsPlayerLoadedAfterReconfiguration(t *testing.T) {
 	var output bytes.Buffer
-	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output}
+	session := &Session{phase: PhasePlay, codec: wire.NewCodec(), writer: &output, ready: make(chan error, 1)}
 	if err := session.handlePlayMessage(StartConfiguration{}); err != nil {
 		t.Fatal(err)
 	}

@@ -67,6 +67,7 @@ type UseItem struct {
 	Yaw, Pitch float32
 }
 type PlayerInput struct{ Flags uint8 }
+type PerformRespawn struct{}
 type PlayerLoaded struct{}
 type ArmSwing struct{ Hand int32 }
 type HeldItemSlot struct{ Slot int16 }
@@ -88,6 +89,7 @@ func (PlayerDigging) serverboundMessage()         {}
 func (UseItemOnBlock) serverboundMessage()        {}
 func (UseItem) serverboundMessage()               {}
 func (PlayerInput) serverboundMessage()           {}
+func (PerformRespawn) serverboundMessage()        {}
 func (PlayerLoaded) serverboundMessage()          {}
 func (ArmSwing) serverboundMessage()              {}
 func (HeldItemSlot) serverboundMessage()          {}
@@ -241,6 +243,11 @@ func encodePlayAction(message ServerboundMessage) (wire.Packet, bool, error) {
 			return wire.Packet{}, true, err
 		}
 		return wire.Packet{ID: 0x2a, Body: b.Bytes()}, true, nil
+	case PerformRespawn:
+		if err := wire.WriteVarInt(&b, 0); err != nil {
+			return wire.Packet{}, true, err
+		}
+		return wire.Packet{ID: 0x0b, Body: b.Bytes()}, true, nil
 	case PlayerLoaded:
 		return wire.Packet{ID: 0x2b}, true, nil
 	case ArmSwing:

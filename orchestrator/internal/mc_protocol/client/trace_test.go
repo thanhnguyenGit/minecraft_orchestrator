@@ -48,6 +48,34 @@ func TestSessionTracesInboundPacketAndAutomaticReplies(t *testing.T) {
 	}
 }
 
+func TestSessionTracesAutomaticRespawnRequest(t *testing.T) {
+	recorder := newTraceHandler()
+	var output bytes.Buffer
+	session := &Session{
+		cfg:    Config{Logger: slog.New(recorder)},
+		phase:  PhasePlay,
+		codec:  wire.NewCodec(),
+		writer: &output,
+	}
+
+	if err := session.handleInbound(wire.Packet{ID: 0x66}, SetHealth{}); err != nil {
+		t.Fatal(err)
+	}
+
+	records := recorder.records()
+	if len(records) != 2 {
+		t.Fatalf("record count = %d, want 2", len(records))
+	}
+	wantTraceRecord(t, records[0], map[string]any{
+		"direction": "inbound", "sequence": uint64(1), "phase": "play", "packet_id": "0x66", "body_bytes": int64(0),
+		"message_type": "client.SetHealth", "health": float64(0),
+	})
+	wantTraceRecord(t, records[1], map[string]any{
+		"direction": "outbound", "sequence": uint64(2), "caused_by": uint64(1), "phase": "play", "packet_id": "0xb", "body_bytes": int64(1),
+		"message_type": "client.PerformRespawn",
+	})
+}
+
 func TestTraceSessionIDDoesNotExposeUsername(t *testing.T) {
 	if got := nextTraceSessionID("private_bot_name"); strings.Contains(got, "private_bot_name") {
 		t.Fatalf("session ID %q exposes the username", got)
