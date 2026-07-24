@@ -18,6 +18,9 @@ TypeScript bot playground.
 
 The current client is offline-only and fixed to Minecraft Java protocol `774`.
 It does not use Microsoft authentication.
+When the server reports that the player has zero health, the client
+automatically requests a respawn and completes the server's subsequent respawn
+handshake.
 
 ### Configuration
 

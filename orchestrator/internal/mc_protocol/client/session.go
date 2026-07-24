@@ -82,6 +82,7 @@ type Session struct {
 	terminalErr         error
 	readySent           bool
 	playerLoadedPending bool
+	respawnRequested    bool
 	traceSessionID      string
 	traceSequence       atomic.Uint64
 	traceCause          atomic.Uint64
@@ -421,7 +422,19 @@ func (s *Session) handlePlayMessage(message ClientboundMessage) error {
 			}
 			s.playerLoadedPending = false
 		}
+	case SetHealth:
+		if message.Health > 0 {
+			s.respawnRequested = false
+			return nil
+		}
+		if !s.respawnRequested {
+			if err := s.send(PerformRespawn{}); err != nil {
+				return fmt.Errorf("request player respawn: %w", err)
+			}
+			s.respawnRequested = true
+		}
 	case Respawn:
+		s.respawnRequested = false
 		s.playerLoadedPending = true
 	case ChunkBatchFinished:
 		if err := s.send(ChunkBatchReceived{DesiredChunksPerTick: 1}); err != nil {

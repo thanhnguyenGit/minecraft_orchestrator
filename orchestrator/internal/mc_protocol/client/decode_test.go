@@ -271,6 +271,7 @@ func TestEncodePlayMovementAndActionPackets(t *testing.T) {
 	}{
 		{PlayerPosition{X: 1, Y: 2, Z: 3, Flags: MovementOnGround}, 0x1d, []byte{0x3f, 0xf0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0, 0, 0, 0, 0, 0x40, 0x08, 0, 0, 0, 0, 0, 0, 0x01}},
 		{AttackEntity{TargetID: 42, Sneaking: true}, 0x19, []byte{0x2a, 0x01, 0x01}},
+		{PerformRespawn{}, 0x0b, []byte{0x00}},
 		{PlayerLoaded{}, 0x2b, nil},
 	}
 	for _, test := range tests {
