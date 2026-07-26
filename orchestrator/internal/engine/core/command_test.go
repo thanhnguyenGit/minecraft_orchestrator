@@ -340,7 +340,7 @@ func TestDisconnectCommand_Validate_ClientMismatch(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	e := mustCreateEntityInWorld(t, w, makeBundle(model.ConnecedBotMask, 1))
+	e := mustCreateEntityInWorld(t, w, makeBundle(model.ConnectedBotMask, 1))
 
 	cmd := DisconnectedCommand{
 		Entity:   e,
@@ -359,7 +359,7 @@ func TestDisconnectCommand_Validate_EmptyClientID(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	e := mustCreateEntityInWorld(t, w, makeBundle(model.ConnecedBotMask, 1))
+	e := mustCreateEntityInWorld(t, w, makeBundle(model.ConnectedBotMask, 1))
 
 	cmd := DisconnectedCommand{
 		Entity:   e,
@@ -386,7 +386,7 @@ func TestDisconnectCommand_Validate_Success(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	b := makeBundle(model.ConnecedBotMask, 1)
+	b := makeBundle(model.ConnectedBotMask, 1)
 	b.Set(model.CConnection, model.Connection{ClientId: "client_abc"})
 	e := mustCreateEntityInWorld(t, w, b)
 
@@ -430,7 +430,7 @@ func TestDisconnectCommand_DeclaredAffected(t *testing.T) {
 	if len(masks) != 2 {
 		t.Fatalf("DeclaredAffected len = %d, want 2", len(masks))
 	}
-	if masks[0] != model.ConnecedBotMask {
+	if masks[0] != model.ConnectedBotMask {
 		t.Fatalf("DeclaredAffected[0] = %v, want ConnecedBotMask", masks[0])
 	}
 	if masks[1] != model.DisconnectedBotMask {
@@ -481,7 +481,7 @@ func TestReconnectCommand_Validate_WrongMask(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	e := mustCreateEntityInWorld(t, w, makeBundle(model.ConnecedBotMask, 1))
+	e := mustCreateEntityInWorld(t, w, makeBundle(model.ConnectedBotMask, 1))
 
 	cmd := ReconnectedCommand{
 		Entity:   e,
@@ -497,7 +497,7 @@ func TestReconnectCommand_Validate_Success(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	b := makeBundle(model.ConnecedBotMask, 1)
+	b := makeBundle(model.ConnectedBotMask, 1)
 	b.Set(model.CConnection, model.Connection{ClientId: "old_client", SessionId: "sess_123"})
 	e := mustCreateEntityInWorld(t, w, b)
 
@@ -548,7 +548,7 @@ func TestReconnectCommand_DeclaredAffected(t *testing.T) {
 	if masks[0] != model.DisconnectedBotMask {
 		t.Fatalf("DeclaredAffected[0] = %v, want DisconnectedBotMask", masks[0])
 	}
-	if masks[1] != model.ConnecedBotMask {
+	if masks[1] != model.ConnectedBotMask {
 		t.Fatalf("DeclaredAffected[1] = %v, want ConnecedBotMask", masks[1])
 	}
 }
@@ -624,7 +624,7 @@ func TestValidate_CreateThenDisconnect(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	b := makeBundle(model.ConnecedBotMask, 1)
+	b := makeBundle(model.ConnectedBotMask, 1)
 	b.Set(model.CConnection, model.Connection{ClientId: "c1"})
 	e := mustCreateEntityInWorld(t, w, b)
 
@@ -682,7 +682,7 @@ func TestValidate_DisconnectThenReconnect(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
 
-	b := makeBundle(model.ConnecedBotMask, 1)
+	b := makeBundle(model.ConnectedBotMask, 1)
 	b.Set(model.CConnection, model.Connection{ClientId: "c1", SessionId: "sess_abc"})
 	e := mustCreateEntityInWorld(t, w, b)
 

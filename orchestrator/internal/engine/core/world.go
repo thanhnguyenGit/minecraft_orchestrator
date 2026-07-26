@@ -32,7 +32,7 @@ type World struct {
 	botIndex map[uint64]Entity
 
 	// deferred effects and declared affected archetypes
-	queue []Command
+	queue []Envelop
 	dirty map[model.Mask]struct{}
 }
 

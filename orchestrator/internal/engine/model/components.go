@@ -69,7 +69,7 @@ type Health struct {
 }
 
 var (
-	ConnecedBotMask = Components(
+	ConnectedBotMask = Components(
 		CPosition,
 		CVelocity,
 		CHealth,

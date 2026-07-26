@@ -2,15 +2,10 @@ package core
 
 import (
 	"fmt"
+	"maps"
 
 	"minecraft_orchestrator/internal/engine/model"
 )
-
-type Envelop struct {
-	SystemOrder int
-	Sequence    uint64
-	Command     Command
-}
 
 type shadowEntity struct {
 	alive  bool
@@ -20,6 +15,16 @@ type shadowEntity struct {
 type shadowState struct {
 	entities map[Entity]*shadowEntity
 	bots     map[uint64]Entity
+}
+
+func NewShadowState(w *World) *shadowState {
+	bots := make(map[uint64]Entity, len(w.botIndex))
+	maps.Copy(bots, w.botIndex)
+
+	return &shadowState{
+		entities: make(map[Entity]*shadowEntity),
+		bots: bots,
+	}
 }
 
 func (s *shadowState) entity(w *World, entity Entity) (*shadowEntity, error) {
@@ -93,6 +98,12 @@ type Command interface {
 	fmt.Stringer
 	DeclaredAffected() []model.Mask
 	validate(*World, *shadowState) (validatedCommand, error)
+}
+
+type Envelop struct {
+	SystemOrder int
+	Sequence    uint64
+	Command     Command
 }
 
 type CommandBuffer struct {
@@ -208,7 +219,7 @@ func (c DisconnectedCommand) String() string {
 
 func (c DisconnectedCommand) DeclaredAffected() []model.Mask {
 	return []model.Mask{
-		model.ConnecedBotMask, model.DisconnectedBotMask,
+		model.ConnectedBotMask, model.DisconnectedBotMask,
 	}
 }
 
@@ -218,8 +229,8 @@ func (c DisconnectedCommand) validate(w *World, shadow *shadowState) (validatedC
 		return nil, fmt.Errorf("validate disconnect: %w", err)
 	}
 
-	if !state.bundle.Mask.Equals(model.ConnecedBotMask) {
-		return nil, fmt.Errorf("validate disconnect: entity %s is in %s, expected %s", c.Entity, state.bundle.Mask, model.ConnecedBotMask)
+	if !state.bundle.Mask.Equals(model.ConnectedBotMask) {
+		return nil, fmt.Errorf("validate disconnect: entity %s is in %s, expected %s", c.Entity, state.bundle.Mask, model.ConnectedBotMask)
 	}
 
 	connectionData, ok := state.bundle.Get(model.CConnection).(model.Connection)
@@ -234,7 +245,7 @@ func (c DisconnectedCommand) validate(w *World, shadow *shadowState) (validatedC
 	source := state.bundle.Mask
 	state.bundle.Mask &^= model.Bit(model.CConnection)
 	state.bundle.Mask |= model.Bit(model.CDisconnected)
-	
+
 	state.bundle.Set(model.CDisconnected, model.Disconnected{
 		SinceTick: c.SinceTick,
 	})
@@ -257,7 +268,7 @@ func (c ReconnectedCommand) String() string {
 
 func (c ReconnectedCommand) DeclaredAffected() []model.Mask {
 	return []model.Mask{
-		model.DisconnectedBotMask, model.ConnecedBotMask,
+		model.DisconnectedBotMask, model.ConnectedBotMask,
 	}
 }
 
