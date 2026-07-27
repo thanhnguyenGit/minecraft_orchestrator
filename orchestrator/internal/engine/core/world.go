@@ -250,16 +250,36 @@ func (w *World) migrateNow(entity Entity, expectedSource model.Mask, dest Bundle
 	return nil
 }
 
+func (w *World) QueryTouchesDirty(required model.Mask) (model.Mask, bool) {
+	for dirty := range w.dirty {
+		if dirty.Contains(required) {
+			return dirty, true
+		}
+	}
 
-// func (w *World) Sync() error {
-// 	if len(w.queue) == 0 {
-// 		clear(w.dirty)
-// 		return nil
-// 	}
+	return 0,false
+} 
 
-// 	slices.SortFunc(w.queue, func(a,b int) bool {
-// 		if w.queue[a].SystemOrder != w.queue[j].SystemOrder {
-// 			return 
-// 		}
-// 	})
-// }
+func (w *World) IsDirty(mask model.Mask) bool {
+	_, found := w.dirty[mask]
+	return found
+}
+
+func (w *World) Stage(envelops []Envelop, declaredDirty []model.Mask) {
+	w.queue = append(w.queue, envelops...)
+	for _, mask := range declaredDirty {
+		w.dirty[mask] = struct{}{}
+	}
+}
+
+func (w *World) BotEntity(e Entity) (model.Mask, error) {
+	loc, err := w.resolve(e)
+	if err != nil {
+		return 0, err
+	}
+	return loc.mask, nil
+}
+
+func (w *World) PendingCommands() int {
+	return len(w.queue)
+}
