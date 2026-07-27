@@ -1,108 +1,84 @@
 # Minecraft Orchestrator
 
-Skeleton for a Go orchestrator that talks to a Node.js Mineflayer worker through Redis Streams with protobuf payloads.
+The Go orchestrator is a direct, headless Minecraft Java client. It connects to
+one server over TCP, completes the offline login lifecycle, and prints inbound
+protocol packets as readable console events.
 
-## Layout
+## Go direct client
 
-- `orchestrator/cmd/orchestrator`: Go CLI that publishes bot commands.
-- `orchestrator/internal/bus`: Redis stream names and publisher.
-- `orchestrator/internal/commands`: protobuf command builders.
-- `proto/orchestrator/v1`: shared protobuf contract.
-- `bots/src`: TypeScript Mineflayer worker that consumes commands and emits events.
+The active Go code is deliberately independent of Redis, protobuf, and the
+TypeScript bot playground.
 
-## Local Setup
+- `orchestrator/cmd/orchestrator`: executable that connects and prints events.
+- `orchestrator/internal/config`: required connection settings from the
+  environment.
+- `orchestrator/internal/mc_protocol`: protocol framing, encryption, session
+  lifecycle, and typed packet messages.
+- `orchestrator/internal/engine`: simulation engine work in progress.
+
+The current client is offline-only and fixed to Minecraft Java protocol `774`.
+It does not use Microsoft authentication.
+When the server reports that the player has zero health, the client
+automatically requests a respawn and completes the server's subsequent respawn
+handshake.
+
+### Configuration
+
+Copy `.env.example` to `.env` and set these required direct-client values:
+
+```bash
+MINECRAFT_HOST=192.168.31.170
+MINECRAFT_PORT=64735
+MINECRAFT_USERNAME=king_crimson_bot
+```
+
+The process fails before dialing if any of these values is missing or invalid.
+The Go client does not read `MINECRAFT_AUTH`, `MINECRAFT_VERSION`, or
+`REDIS_URL`.
+
+Packet tracing uses structured logs. Set `MINECRAFT_LOG_LEVEL=debug` to emit
+both `direction=inbound` server packets and `direction=outbound` client
+packets. Each record includes a per-session sequence; automatic replies also
+include `caused_by` pointing to the packet that triggered them. Use
+`MINECRAFT_LOG_FORMAT=json` for JSON instead of the default text format.
+Packet bodies and encryption material are never included in these logs.
+
+### Run
+
+```bash
+cd orchestrator
+go run ./cmd/orchestrator
+```
+
+It searches parent directories for `.env`, then emits structured lifecycle and
+packet logs until you stop it with `Ctrl-C`.
+
+### Verify
+
+```bash
+cd orchestrator
+go test ./...
+go test -race ./...
+go vet ./...
+go build ./cmd/orchestrator
+```
+
+In the sandbox, set `GOCACHE=/private/tmp/minecraft_orchestrator_go_cache` for
+Go commands.
+
+## Legacy Mineflayer/Redis playground
+
+The TypeScript Mineflayer worker, Redis Streams contract, and protobuf schema
+remain available as a separate testing playground. They are not used by the Go
+direct client.
 
 ```bash
 docker compose up -d redis
 cd bots
 npm install
-cd ..
-buf generate
-```
-
-The current Mineflayer target is Minecraft Java `1.21.11`. A LAN server returning `26.2` / protocol `776` is intentionally out of scope until Mineflayer upstream supports it.
-
-## Configuration
-
-Copy `.env.example` to `.env` and update the current LAN port:
-
-```bash
-cp .env.example .env
-```
-
-Supported keys:
-
-```bash
-REDIS_URL=redis://localhost:6379/0
-BOT_ID=king_crimson
-MINECRAFT_HOST=192.168.31.170
-MINECRAFT_PORT=64735
-MINECRAFT_USERNAME=king_crimson_bot
-MINECRAFT_AUTH=offline
-MINECRAFT_VERSION=1.21.11
-```
-
-CLI flags override shell environment values, shell environment values override `.env`, and `.env` overrides built-in defaults.
-
-## Run Local
-
-Use the Python runner to start Redis, start one Mineflayer worker, and send the initial connect command:
-
-```bash
-python3 scripts/run_local.py
-```
-
-Press `Ctrl+C` to send disconnect, stop the worker, and stop Redis.
-
-Useful options:
-
-```bash
-python3 scripts/run_local.py \
-  --bot-id king_crimson \
-  --host 192.168.31.170 \
-  --port 64735 \
-  --username king_crimson_bot \
-  --auth offline \
-  --version 1.21.11
-```
-
-## Run One Bot Worker
-
-```bash
-cd bots
 npm run worker
 ```
 
-The worker listens on `mc:bot:king_crimson:commands` and publishes events to `mc:events`.
-
-## Send Commands
-
-From the Go module directory:
-
-```bash
-cd orchestrator
-
-go run ./cmd/orchestrator connect
-
-go run ./cmd/orchestrator chat --message "hello from go"
-go run ./cmd/orchestrator status
-go run ./cmd/orchestrator disconnect
-```
-
-## Verify
-
-```bash
-cd orchestrator
-go test ./cmd/... ./internal/...
-
-cd bots
-npm test
-npm run build
-```
-
-In this sandbox, Go tests may need cache paths under `/private/tmp`:
-
-```bash
-cd orchestrator
-GOCACHE=/private/tmp/mc-go-build GOPATH=/private/tmp/mc-go go test ./cmd/... ./internal/...
-```
+`REDIS_URL`, `BOT_ID`, `MINECRAFT_AUTH`, and `MINECRAFT_VERSION` in
+`.env.example` belong to this playground. The protobuf generator now produces
+only the TypeScript bindings consumed by `bots`.

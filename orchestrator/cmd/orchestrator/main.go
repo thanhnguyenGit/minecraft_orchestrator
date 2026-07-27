@@ -2,138 +2,153 @@ package main
 
 import (
 	"context"
-	"flag"
+	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
-	"strconv"
+	"os/signal"
+	"path/filepath"
+	"syscall"
 
 	"github.com/joho/godotenv"
 
-	"minecraft_orchestrator/internal/bus"
-	"minecraft_orchestrator/internal/commands"
-	orchestratorv1 "minecraft_orchestrator/internal/gen/orchestrator/v1"
+	"minecraft_orchestrator/internal/config"
+	"minecraft_orchestrator/internal/mc_protocol/client"
+	"minecraft_orchestrator/internal/observability"
 )
 
+type managedSession interface {
+	Start(context.Context) error
+	Events() <-chan client.Event
+	Wait() error
+	Close() error
+}
+
+type sessionFactory func(client.Config) (managedSession, error)
+
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := run(ctx, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func run(args []string) error {
-	loadDotenv()
-
-	if len(args) == 0 {
-		return fmt.Errorf("usage: orchestrator <connect|disconnect|status|chat> --bot-id <id> [flags]")
+func run(ctx context.Context, output io.Writer) error {
+	if err := loadDotenv(); err != nil {
+		return err
 	}
+	minecraft, err := config.LoadMinecraftConfig()
+	if err != nil {
+		return fmt.Errorf("load Minecraft configuration: %w", err)
+	}
+	logging, err := config.LoadLogging()
+	if err != nil {
+		return fmt.Errorf("load logging configuration: %w", err)
+	}
+	logger, closeLogger := newLogger(output, logging)
+	logger.Info("orchestrator.start")
+	return errors.Join(runWithConfig(ctx, minecraft, logger, newManagedSession), closeLogger())
+}
 
-	command, err := buildCommand(args)
+func loadDotenv() error {
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working directory: %w", err)
+	}
+	path, err := findDotenv(workingDirectory)
 	if err != nil {
 		return err
 	}
-
-	redisURL := getenv("REDIS_URL", "redis://localhost:6379/0")
-	redisBus, err := bus.NewRedisBus(redisURL)
-	if err != nil {
-		return fmt.Errorf("create redis bus: %w", err)
+	if path == "" {
+		return nil
 	}
-	defer redisBus.Close()
-
-	id, err := redisBus.PublishCommand(context.Background(), command)
-	if err != nil {
-		return fmt.Errorf("publish command: %w", err)
+	if err := godotenv.Load(path); err != nil {
+		return fmt.Errorf("load %s: %w", path, err)
 	}
-
-	fmt.Printf("published %s to %s\n", id, bus.CommandStream(command.GetBotId()))
 	return nil
 }
 
-func buildCommand(args []string) (*orchestratorv1.BotCommand, error) {
-	switch args[0] {
-	case "connect":
-		flags := flag.NewFlagSet("connect", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		host := flags.String("host", getenv("MINECRAFT_HOST", "192.168.31.170"), "Minecraft server host")
-		port := flags.Uint("port", getenvUint("MINECRAFT_PORT", 64735), "Minecraft server port")
-		username := flags.String("username", getenv("MINECRAFT_USERNAME", "king_crimson_bot"), "Minecraft username")
-		auth := flags.String("auth", getenv("MINECRAFT_AUTH", "offline"), "Mineflayer auth mode")
-		version := flags.String("version", getenv("MINECRAFT_VERSION", "1.21.11"), "Minecraft version")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		if *port > 65535 {
-			return nil, fmt.Errorf("--port must fit uint16: %s", strconv.FormatUint(uint64(*port), 10))
-		}
-		return commands.NewConnect(*botID, commands.ConnectConfig{
-			Host:     *host,
-			Port:     uint32(*port),
-			Username: *username,
-			Auth:     *auth,
-			Version:  *version,
-		}), nil
-	case "disconnect":
-		flags := flag.NewFlagSet("disconnect", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		return commands.NewDisconnect(*botID), nil
-	case "status":
-		flags := flag.NewFlagSet("status", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		return commands.NewStatus(*botID), nil
-	case "chat":
-		flags := flag.NewFlagSet("chat", flag.ContinueOnError)
-		botID := flags.String("bot-id", getenv("BOT_ID", "king_crimson"), "bot id")
-		message := flags.String("message", "", "chat message")
-		if err := flags.Parse(args[1:]); err != nil {
-			return nil, err
-		}
-		if *botID == "" {
-			return nil, fmt.Errorf("--bot-id is required")
-		}
-		if *message == "" {
-			return nil, fmt.Errorf("--message is required")
-		}
-		return commands.NewChat(*botID, *message), nil
-	default:
-		return nil, fmt.Errorf("unknown command %q", args[0])
-	}
-}
-
-func getenv(key string, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-	return value
-}
-
-func getenvUint(key string, fallback uint) uint {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-	parsed, err := strconv.ParseUint(value, 10, 0)
+func findDotenv(start string) (string, error) {
+	directory, err := filepath.Abs(start)
 	if err != nil {
-		return fallback
+		return "", fmt.Errorf("resolve dotenv search path: %w", err)
 	}
-	return uint(parsed)
+	for {
+		path := filepath.Join(directory, ".env")
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("stat %s: %w", path, err)
+		}
+		parent := filepath.Dir(directory)
+		if parent == directory {
+			return "", nil
+		}
+		directory = parent
+	}
 }
 
-func loadDotenv() {
-	_ = godotenv.Load("../.env", ".env")
+func newManagedSession(cfg client.Config) (managedSession, error) {
+	return client.NewSession(cfg)
+}
+
+func newLogger(output io.Writer, logging config.Logging) (*slog.Logger, func() error) {
+	options := &slog.HandlerOptions{Level: logging.Level}
+	var handler slog.Handler
+	switch logging.Format {
+	case config.LogFormatJSON:
+		handler = slog.NewJSONHandler(output, options)
+	default:
+		handler = slog.NewTextHandler(output, options)
+	}
+	async := observability.NewAsyncHandler(handler, 1024)
+	return slog.New(async), async.Close
+}
+
+func runWithConfig(ctx context.Context, minecraft config.Minecraft, logger *slog.Logger, makeSession sessionFactory) error {
+	if ctx == nil {
+		return errors.New("listener context is required")
+	}
+	if logger == nil {
+		return errors.New("logger is required")
+	}
+	if makeSession == nil {
+		return errors.New("Minecraft session factory is required")
+	}
+
+	username := client.GenRandomUserName()
+	
+	session, err := makeSession(client.Config{
+		Host:     minecraft.Host,
+		Port:     minecraft.Port,
+		Username: username,
+		Logger:   logger.With("component", "minecraft_protocol"),
+	})
+	if err != nil {
+		return fmt.Errorf("create Minecraft session: %w", err)
+	}
+	defer session.Close()
+
+	if err := session.Start(ctx); err != nil {
+		return fmt.Errorf("start Minecraft session: %w", err)
+	}
+	drainDone := make(chan error, 1)
+	go func() { drainDone <- drainEvents(session.Events()) }()
+
+	waitErr := session.Wait()
+	drainErr := <-drainDone
+	if ctx.Err() != nil && errors.Is(waitErr, ctx.Err()) {
+		return drainErr
+	}
+	return errors.Join(waitErr, drainErr)
+}
+
+func drainEvents(events <-chan client.Event) error {
+	for range events {
+	}
+	return nil
 }
