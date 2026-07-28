@@ -34,18 +34,26 @@ type Runtime struct {
 	runner *SessionRunner
 }
 
-func NewRuntime(config client.Config, bots []BotSpec, factory SessionFactory, clock Clock) (*Runtime, error) {
+func NewRuntime(
+	config client.Config, 
+	bots []BotSpec, 
+	factory SessionFactory, 
+	clock Clock,
+) (*Runtime, error) {
 	if factory == nil {
 		return nil, errors.New("runtime session factory is required")
 	}
+	
 	plan, err := enginesystem.BuildScheduler()
 	if err != nil {
 		return nil, fmt.Errorf("build engine scheduler: %w", err)
 	}
+	
 	pool, err := scheduler.NewWorkerPool(0, 16)
 	if err != nil {
 		return nil, fmt.Errorf("create engine worker pool: %w", err)
 	}
+	
 	executor, err := scheduler.NewExecutor(plan, pool)
 	if err != nil {
 		pool.Close()
@@ -89,7 +97,9 @@ func (r *Runtime) Run(ctx context.Context) error {
 		bootstrap[index] = model.Bot{ProfileID: bot.ProfileID, Username: bot.Username}
 	}
 
-	loop := FixedLoop{Clock: r.clock}
+	loop := FixedLoop{
+		Clock: r.clock,
+	}
 	return loop.Run(ctx, func(tick uint64, delta time.Duration) error {
 		data := &enginesystem.TickData{
 			Bootstrap: bootstrap,

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Mincraft serer run at 20Hz resolution, that 50ms per tick, 20 tick per seconds. 
 const defaultStep = 50 * time.Millisecond
 
 type Clock interface {
