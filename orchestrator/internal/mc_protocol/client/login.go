@@ -11,7 +11,7 @@ import (
 
 const loginState = 2
 
-func offlineUUID(username string) [16]byte {
+func OfflineUUID(username string) [16]byte {
 	uuid := md5.Sum([]byte("OfflinePlayer:" + username))
 	uuid[6] = uuid[6]&0x0f | 0x30
 	uuid[8] = uuid[8]&0x3f | 0x80
@@ -19,7 +19,7 @@ func offlineUUID(username string) [16]byte {
 }
 
 func GenRandomUserName() string {
-	prefixList := []string {
+	prefixList := []string{
 		"King",
 		"Star",
 		"Card",
@@ -28,7 +28,7 @@ func GenRandomUserName() string {
 		"Monk",
 		"Zen",
 	}
-	surfixList := []string {
+	surfixList := []string{
 		"Steve",
 		"Doom",
 		"Ram",
@@ -43,5 +43,5 @@ func GenRandomUserName() string {
 	ranNum := r.Intn(1000) + 100
 
 	return fmt.Sprintf("%s%s%d", prefix, surfix, ranNum)
-	
+
 }

@@ -44,7 +44,17 @@ type EncryptionRequest struct {
 	VerifyToken        []byte
 	ShouldAuthenticate bool
 }
-type LoginSuccess struct{ Raw wire.Packet }
+type LoginProperty struct {
+	Name      string
+	Value     string
+	Signature string
+}
+
+type LoginSuccess struct {
+	UUID       [16]byte
+	Username   string
+	Properties []LoginProperty
+}
 type SetCompression struct{ Threshold int32 }
 type LoginPluginRequest struct{ Raw wire.Packet }
 type CookieRequest struct{ Key string }
@@ -128,7 +138,7 @@ func decodeLogin(packet wire.Packet) (ClientboundMessage, error) {
 		}
 		return EncryptionRequest{ServerID: serverID, PublicKey: publicKey, VerifyToken: verifyToken, ShouldAuthenticate: shouldAuthenticate}, wire.RequireEmpty(r)
 	case loginClientboundSuccessID:
-		return LoginSuccess{Raw: packet}, nil
+		return readLoginSuccess(r)
 	case loginClientboundCompressionID:
 		threshold, err := wire.ReadVarInt(r)
 		if err != nil {
@@ -146,4 +156,50 @@ func decodeLogin(packet wire.Packet) (ClientboundMessage, error) {
 	default:
 		return UnknownClientbound{Raw: packet}, nil
 	}
+}
+
+func readLoginSuccess(r *bytes.Reader) (ClientboundMessage, error) {
+	uuid, err := wire.ReadUUID(r)
+	if err != nil {
+		return nil, err
+	}
+	username, err := wire.ReadString(r)
+	if err != nil {
+		return nil, err
+	}
+	count, err := wire.ReadVarInt(r)
+	if err != nil {
+		return nil, err
+	}
+	if count < 0 || count > 1<<20 {
+		return nil, fmt.Errorf("invalid login property count: %d", count)
+	}
+
+	var properties []LoginProperty
+	if count > 0 {
+		properties = make([]LoginProperty, 0, count)
+	}
+	for range count {
+		name, err := wire.ReadString(r)
+		if err != nil {
+			return nil, err
+		}
+		value, err := wire.ReadString(r)
+		if err != nil {
+			return nil, err
+		}
+		hasSignature, err := wire.ReadBool(r)
+		if err != nil {
+			return nil, err
+		}
+		property := LoginProperty{Name: name, Value: value}
+		if hasSignature {
+			if property.Signature, err = wire.ReadString(r); err != nil {
+				return nil, err
+			}
+		}
+		properties = append(properties, property)
+	}
+
+	return LoginSuccess{UUID: uuid, Username: username, Properties: properties}, wire.RequireEmpty(r)
 }

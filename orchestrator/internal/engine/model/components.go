@@ -19,6 +19,9 @@ const (
 	CInputState
 	CConnection
 	CDisconnected
+	CRotation
+	CGameMode
+	CSession
 	ComponentCount
 )
 
@@ -31,19 +34,24 @@ func ParseComponent(v uint8) (Component, error) {
 }
 
 var componentNames = [...]string{
-	"Meta",
 	"Position",
 	"Velocity",
-	"Bot",
 	"Health",
+	"Bot",
 	"Hunger",
 	"InputState",
 	"Connection",
 	"Disconnected",
+	"Rotation",
+	"GameMode",
+	"Session",
 }
 
+type ProfileID [16]byte
+
 type Bot struct {
-	ID uint64
+	ProfileID ProfileID
+	Username  string
 }
 
 type Position struct {
@@ -54,8 +62,38 @@ type Velocity struct {
 	X, Y, Z float64
 }
 
+type Rotation struct {
+	Yaw, Pitch float32
+}
+
+type GameMode uint8
+
+const (
+	GameModeSurvival GameMode = iota
+	GameModeCreative
+	GameModeAdventure
+	GameModeSpectator
+)
+
+type SessionPhase uint8
+
+const (
+	SessionStopped SessionPhase = iota
+	SessionConnecting
+	SessionPlayReady
+	SessionRetryWaiting
+	SessionFailed
+)
+
+type Session struct {
+	Phase          SessionPhase
+	AttemptID      uint64
+	PlayerEntityID int32
+	Failure        string
+}
+
 type Connection struct {
-	ClientId string
+	ClientId  string
 	SessionId string
 }
 
@@ -65,7 +103,7 @@ type Disconnected struct {
 
 type Health struct {
 	Current float64
-	Max float64
+	Max     float64
 }
 
 var (
@@ -77,13 +115,22 @@ var (
 		// CInputState,
 		CConnection,
 	)
-	DisconnectedBotMask = Components( 
+	DisconnectedBotMask = Components(
 		CPosition,
 		CVelocity,
 		CHealth,
 		CBot,
 		// CInputState,
 		CDisconnected,
+	)
+	MirroredBotMask = Components(
+		CPosition,
+		CVelocity,
+		CHealth,
+		CBot,
+		CRotation,
+		CGameMode,
+		CSession,
 	)
 )
 
@@ -144,4 +191,3 @@ func (m Mask) String() string {
 
 	return "{" + strings.Join(parts, ",") + "}"
 }
-

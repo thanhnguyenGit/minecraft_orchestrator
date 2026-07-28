@@ -14,18 +14,12 @@ import (
 	"github.com/joho/godotenv"
 
 	"minecraft_orchestrator/internal/config"
+	engineruntime "minecraft_orchestrator/internal/engine/runtime"
 	"minecraft_orchestrator/internal/mc_protocol/client"
 	"minecraft_orchestrator/internal/observability"
 )
 
-type managedSession interface {
-	Start(context.Context) error
-	Events() <-chan client.Event
-	Wait() error
-	Close() error
-}
-
-type sessionFactory func(client.Config) (managedSession, error)
+type runtimeExecutor func(context.Context, config.Minecraft, *slog.Logger) error
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -51,7 +45,7 @@ func run(ctx context.Context, output io.Writer) error {
 	}
 	logger, closeLogger := newLogger(output, logging)
 	logger.Info("orchestrator.start")
-	return errors.Join(runWithConfig(ctx, minecraft, logger, newManagedSession), closeLogger())
+	return errors.Join(runWithConfig(ctx, minecraft, logger, runRuntime), closeLogger())
 }
 
 func loadDotenv() error {
@@ -92,10 +86,6 @@ func findDotenv(start string) (string, error) {
 	}
 }
 
-func newManagedSession(cfg client.Config) (managedSession, error) {
-	return client.NewSession(cfg)
-}
-
 func newLogger(output io.Writer, logging config.Logging) (*slog.Logger, func() error) {
 	options := &slog.HandlerOptions{Level: logging.Level}
 	var handler slog.Handler
@@ -109,46 +99,32 @@ func newLogger(output io.Writer, logging config.Logging) (*slog.Logger, func() e
 	return slog.New(async), async.Close
 }
 
-func runWithConfig(ctx context.Context, minecraft config.Minecraft, logger *slog.Logger, makeSession sessionFactory) error {
+func runWithConfig(ctx context.Context, minecraft config.Minecraft, logger *slog.Logger, execute runtimeExecutor) error {
 	if ctx == nil {
-		return errors.New("listener context is required")
+		return errors.New("runtime context is required")
 	}
 	if logger == nil {
 		return errors.New("logger is required")
 	}
-	if makeSession == nil {
-		return errors.New("Minecraft session factory is required")
+	if execute == nil {
+		return errors.New("runtime executor is required")
 	}
-
-	username := client.GenRandomUserName()
-	
-	session, err := makeSession(client.Config{
-		Host:     minecraft.Host,
-		Port:     minecraft.Port,
-		Username: username,
-		Logger:   logger.With("component", "minecraft_protocol"),
-	})
-	if err != nil {
-		return fmt.Errorf("create Minecraft session: %w", err)
-	}
-	defer session.Close()
-
-	if err := session.Start(ctx); err != nil {
-		return fmt.Errorf("start Minecraft session: %w", err)
-	}
-	drainDone := make(chan error, 1)
-	go func() { drainDone <- drainEvents(session.Events()) }()
-
-	waitErr := session.Wait()
-	drainErr := <-drainDone
-	if ctx.Err() != nil && errors.Is(waitErr, ctx.Err()) {
-		return drainErr
-	}
-	return errors.Join(waitErr, drainErr)
+	return execute(ctx, minecraft, logger)
 }
 
-func drainEvents(events <-chan client.Event) error {
-	for range events {
+func runRuntime(ctx context.Context, minecraft config.Minecraft, logger *slog.Logger) error {
+	bots, err := engineruntime.BootstrapBots()
+	if err != nil {
+		return fmt.Errorf("bootstrap bot identities: %w", err)
 	}
-	return nil
+	runtime, err := engineruntime.NewRuntime(client.Config{
+		Host:   minecraft.Host,
+		Port:   minecraft.Port,
+		Logger: logger.With("component", "minecraft_protocol"),
+	}, bots, engineruntime.NewClientSession, nil)
+	if err != nil {
+		return fmt.Errorf("create engine runtime: %w", err)
+	}
+	defer runtime.Close()
+	return runtime.Run(ctx)
 }

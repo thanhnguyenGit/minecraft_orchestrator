@@ -14,16 +14,16 @@ type shadowEntity struct {
 
 type shadowState struct {
 	entities map[Entity]*shadowEntity
-	bots     map[uint64]Entity
+	bots     map[model.ProfileID]Entity
 }
 
 func NewShadowState(w *World) *shadowState {
-	bots := make(map[uint64]Entity, len(w.botIndex))
+	bots := make(map[model.ProfileID]Entity, len(w.botIndex))
 	maps.Copy(bots, w.botIndex)
 
 	return &shadowState{
 		entities: make(map[Entity]*shadowEntity),
-		bots: bots,
+		bots:     bots,
 	}
 }
 
@@ -161,13 +161,13 @@ func (c CreateCommand) validate(w *World, shadow *shadowState) (validatedCommand
 		if !ok {
 			return nil, fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		if existing, found := w.botIndex[botData.ID]; found {
-			return nil, fmt.Errorf("validate create: bot %d already mapped to entity %s", botData.ID, existing)
+		if existing, found := w.botIndex[botData.ProfileID]; found {
+			return nil, fmt.Errorf("validate create: bot with profile ID %x already mapped to entity %s", botData.ProfileID, existing)
 		}
-		if _, exists := shadow.bots[botData.ID]; exists {
-			return nil, fmt.Errorf("validate create: bot %d already exists in batch", botData.ID)
+		if _, exists := shadow.bots[botData.ProfileID]; exists {
+			return nil, fmt.Errorf("validate create: bot with profile ID %x already exists in batch", botData.ProfileID)
 		}
-		shadow.bots[botData.ID] = Entity{} // reserved until commit
+		shadow.bots[botData.ProfileID] = Entity{} // reserved until commit
 	}
 
 	return validatedCreate{
@@ -199,7 +199,7 @@ func (c DestroyCommand) validate(w *World, shadow *shadowState) (validatedComman
 		if !ok {
 			return nil, fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		delete(shadow.bots, botData.ID)
+		delete(shadow.bots, botData.ProfileID)
 	}
 	state.alive = false
 	return validatedDestroy{

@@ -38,8 +38,8 @@ func (b *Bundle) Validate() error {
 
 	if b.Mask.Has(model.CBot) {
 		bot := b.Components[model.CBot].(model.Bot)
-		if bot.ID == 0 {
-			return fmt.Errorf("bot id must be non-zero")
+		if bot.ProfileID == (model.ProfileID{}) {
+			return fmt.Errorf("bot profile ID must be non-zero")
 		}
 	}
 
@@ -106,6 +106,9 @@ var columnConstructors = map[model.Component]func() ComponentColumn{
 	model.CBot:          func() ComponentColumn { return NewColumn[model.Bot]() },
 	model.CConnection:   func() ComponentColumn { return NewColumn[model.Connection]() },
 	model.CDisconnected: func() ComponentColumn { return NewColumn[model.Disconnected]() },
+	model.CRotation:     func() ComponentColumn { return NewColumn[model.Rotation]() },
+	model.CGameMode:     func() ComponentColumn { return NewColumn[model.GameMode]() },
+	model.CSession:      func() ComponentColumn { return NewColumn[model.Session]() },
 }
 
 func NewTable(mask model.Mask) *Table {
@@ -153,9 +156,9 @@ func grow[T any](slice []T, extra int) []T {
 	return result
 }
 
-func (tbl *Table) AddEntity(e Entity, b Bundle) (int,error) {
+func (tbl *Table) AddEntity(e Entity, b Bundle) (int, error) {
 	if b.Mask != tbl.mask {
-		return 0,fmt.Errorf("bundle mask %v does not match table mask %v", b.Mask.String(), tbl.mask.String())
+		return 0, fmt.Errorf("bundle mask %v does not match table mask %v", b.Mask.String(), tbl.mask.String())
 	}
 
 	row := len(tbl.entities)

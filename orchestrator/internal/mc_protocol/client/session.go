@@ -217,7 +217,7 @@ func (s *Session) sendInitialPackets() error {
 	if err := s.send(Handshake{ProtocolVersion: s.cfg.ProtocolVersion, Host: s.cfg.Host, Port: uint16(s.cfg.Port), NextState: loginState}); err != nil {
 		return fmt.Errorf("write login handshake: %w", err)
 	}
-	if err := s.send(LoginStart{Username: s.cfg.Username, UUID: offlineUUID(s.cfg.Username)}); err != nil {
+	if err := s.send(LoginStart{Username: s.cfg.Username, UUID: OfflineUUID(s.cfg.Username)}); err != nil {
 		return fmt.Errorf("write login start: %w", err)
 	}
 	return nil

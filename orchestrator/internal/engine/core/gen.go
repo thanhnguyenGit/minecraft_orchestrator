@@ -28,8 +28,15 @@ func main() {
 		{
 			Name: "Health",
 			Mask: "model.ConnectedBotMask",
-			Components: []string {
+			Components: []string{
 				"Health",
+			},
+		},
+		{
+			Name: "MirroredBot",
+			Mask: "model.MirroredBotMask",
+			Components: []string{
+				"Bot", "Session", "Position", "Rotation", "Velocity", "Health", "GameMode",
 			},
 		},
 	}

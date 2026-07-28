@@ -24,6 +24,29 @@ func TestDecodeClientboundPreservesUnknownPacket(t *testing.T) {
 	}
 }
 
+func TestDecodeLoginSuccessProfile(t *testing.T) {
+	profileID := [16]byte{0x01, 0x02, 0x03}
+	var body bytes.Buffer
+	if err := wire.WriteUUID(&body, profileID); err != nil {
+		t.Fatal(err)
+	}
+	if err := wire.WriteString(&body, "king_crimson_bot"); err != nil {
+		t.Fatal(err)
+	}
+	if err := wire.WriteVarInt(&body, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := DecodeClientbound(PhaseLogin, wire.Packet{ID: loginClientboundSuccessID, Body: body.Bytes()})
+	if err != nil {
+		t.Fatalf("DecodeClientbound() error = %v", err)
+	}
+	want := LoginSuccess{UUID: profileID, Username: "king_crimson_bot"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("DecodeClientbound() = %#v, want %#v", got, want)
+	}
+}
+
 func TestDecodePlayBundleDelimiter(t *testing.T) {
 	message, err := DecodeClientbound(PhasePlay, wire.Packet{ID: 0x00})
 	if err != nil {

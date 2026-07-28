@@ -10,7 +10,7 @@ import (
 func newShadowState() *shadowState {
 	return &shadowState{
 		entities: make(map[Entity]*shadowEntity),
-		bots:     make(map[uint64]Entity),
+		bots:     make(map[model.ProfileID]Entity),
 	}
 }
 
@@ -116,8 +116,8 @@ func TestCreateCommand_Validate_Success_WithBot(t *testing.T) {
 	if _, ok := vc.(validatedCreate); !ok {
 		t.Fatalf("expected validatedCreate, got %T", vc)
 	}
-	if _, reserved := shadow.bots[42]; !reserved {
-		t.Fatal("bot ID should be reserved in shadow.bots")
+	if _, reserved := shadow.bots[profileIDForTest(42)]; !reserved {
+		t.Fatal("bot profile ID should be reserved in shadow.bots")
 	}
 }
 
@@ -141,7 +141,7 @@ func TestCreateCommand_Validate_DuplicateBotInWorld(t *testing.T) {
 func TestCreateCommand_Validate_DuplicateBotInShadow(t *testing.T) {
 	w := NewWorld()
 	shadow := newShadowState()
-	shadow.bots[42] = Entity{}
+	shadow.bots[profileIDForTest(42)] = Entity{}
 
 	cmd := CreateCommand{Bundle: makeBundle(model.Components(model.CPosition, model.CBot), 42)}
 	_, err := cmd.validate(w, shadow)
@@ -272,7 +272,7 @@ func TestDestroyCommand_Validate_RemovesBotFromShadow(t *testing.T) {
 	shadow := newShadowState()
 
 	e := mustCreateEntityInWorld(t, w, makeBundle(model.Components(model.CPosition, model.CBot), 1))
-	shadow.bots[1] = Entity{}
+	shadow.bots[profileIDForTest(1)] = Entity{}
 
 	cmd := DestroyCommand{Entity: e}
 	_, err := cmd.validate(w, shadow)
@@ -280,7 +280,7 @@ func TestDestroyCommand_Validate_RemovesBotFromShadow(t *testing.T) {
 		t.Fatalf("validate error = %v", err)
 	}
 
-	if _, exists := shadow.bots[1]; exists {
+	if _, exists := shadow.bots[profileIDForTest(1)]; exists {
 		t.Fatal("bot should be removed from shadow.bots after destroy")
 	}
 }

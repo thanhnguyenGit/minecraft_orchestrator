@@ -48,3 +48,47 @@ func (w *World) HealthViews() []HealthView {
 	}
 	return result
 }
+
+type MirroredBotView struct {
+	Entities []Entity
+
+	Bots []model.Bot
+
+	Sessions []model.Session
+
+	Positions []model.Position
+
+	Rotations []model.Rotation
+
+	Velocitys []model.Velocity
+
+	Healths []model.Health
+
+	GameModes []model.GameMode
+}
+
+func (w *World) MirroredBotViews() []MirroredBotView {
+	tables := w.matching(model.MirroredBotMask)
+	result := make([]MirroredBotView, 0, len(tables))
+
+	for _, table := range tables {
+		result = append(result, MirroredBotView{
+			Entities: table.entities,
+
+			Bots: table.columns[uint8(model.CBot)].(*Column[model.Bot]).Data,
+
+			Sessions: table.columns[uint8(model.CSession)].(*Column[model.Session]).Data,
+
+			Positions: table.columns[uint8(model.CPosition)].(*Column[model.Position]).Data,
+
+			Rotations: table.columns[uint8(model.CRotation)].(*Column[model.Rotation]).Data,
+
+			Velocitys: table.columns[uint8(model.CVelocity)].(*Column[model.Velocity]).Data,
+
+			Healths: table.columns[uint8(model.CHealth)].(*Column[model.Health]).Data,
+
+			GameModes: table.columns[uint8(model.CGameMode)].(*Column[model.GameMode]).Data,
+		})
+	}
+	return result
+}

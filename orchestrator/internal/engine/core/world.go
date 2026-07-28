@@ -9,7 +9,7 @@ import (
 	"minecraft_orchestrator/internal/engine/model"
 )
 
-// World internal record for one entity index 
+// World internal record for one entity index
 type location struct {
 	// archetype mask table which the entity belong to
 	mask       model.Mask
@@ -28,8 +28,8 @@ type World struct {
 	generations []uint32
 	free        []uint32
 
-	// bot ID to live Entity
-	botIndex map[uint64]Entity
+	// Persistent Minecraft profile ID to live Entity.
+	botIndex map[model.ProfileID]Entity
 
 	// deferred effects and declared affected archetypes
 	queue []Envelop
@@ -39,7 +39,7 @@ type World struct {
 func NewWorld() *World {
 	return &World{
 		tables:   make(map[model.Mask]*Table),
-		botIndex: make(map[uint64]Entity),
+		botIndex: make(map[model.ProfileID]Entity),
 		dirty:    make(map[model.Mask]struct{}),
 		// Reserve index 0 so a zero Entity is always invalid.
 		locations:   make([]location, 1),
@@ -126,8 +126,8 @@ func (w *World) createNow(bundle Bundle) (Entity, error) {
 			return Entity{}, fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
 
-		if existing, found := w.botIndex[botData.ID]; found {
-			return existing, fmt.Errorf("bot with ID %d already mapped to entity %s", botData.ID, existing)
+		if existing, found := w.botIndex[botData.ProfileID]; found {
+			return existing, fmt.Errorf("bot with profile ID %x already mapped to entity %s", botData.ProfileID, existing)
 		}
 	}
 
@@ -151,7 +151,7 @@ func (w *World) createNow(bundle Bundle) (Entity, error) {
 			return Entity{}, fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
 
-		w.botIndex[botData.ID] = entity
+		w.botIndex[botData.ProfileID] = entity
 	}
 
 	return entity, nil
@@ -180,7 +180,7 @@ func (w *World) destroyNow(entity Entity) error {
 		if !ok {
 			return fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		delete(w.botIndex, botData.ID)
+		delete(w.botIndex, botData.ProfileID)
 	}
 
 	w.generations[entity.Index]++
@@ -217,7 +217,7 @@ func (w *World) migrateNow(entity Entity, expectedSource model.Mask, dest Bundle
 		if !ok {
 			return fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		delete(w.botIndex, botData.ID)
+		delete(w.botIndex, botData.ProfileID)
 	}
 
 	if didMove {
@@ -244,7 +244,7 @@ func (w *World) migrateNow(entity Entity, expectedSource model.Mask, dest Bundle
 		if !ok {
 			return fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		w.botIndex[botData.ID] = entity
+		w.botIndex[botData.ProfileID] = entity
 	}
 
 	return nil
@@ -257,8 +257,8 @@ func (w *World) QueryTouchesDirty(required model.Mask) (model.Mask, bool) {
 		}
 	}
 
-	return 0,false
-} 
+	return 0, false
+}
 
 func (w *World) IsDirty(mask model.Mask) bool {
 	_, found := w.dirty[mask]

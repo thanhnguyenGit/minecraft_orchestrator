@@ -9,11 +9,11 @@ import (
 	"strings"
 )
 
-// Minecraft contains the connection settings required by one direct client.
+// Minecraft contains the shared server connection settings used by generated
+// headless bots.
 type Minecraft struct {
-	Host     string
-	Port     int
-	Username string
+	Host string
+	Port int
 }
 
 // LogFormat controls the handler used for structured application logs.
@@ -30,7 +30,7 @@ type Logging struct {
 	Format LogFormat
 }
 
-// LoadMinecraftConfig reads the required direct-client settings from the environment.
+// LoadMinecraftConfig reads the shared server connection settings from the environment.
 func LoadMinecraftConfig() (Minecraft, error) {
 	host := strings.TrimSpace(os.Getenv("MINECRAFT_HOST"))
 	if host == "" {
@@ -49,12 +49,7 @@ func LoadMinecraftConfig() (Minecraft, error) {
 		return Minecraft{}, fmt.Errorf("MINECRAFT_PORT must be between 1 and 65535: %d", port)
 	}
 
-	username := strings.TrimSpace(os.Getenv("MINECRAFT_USERNAME"))
-	if username == "" {
-		return Minecraft{}, fmt.Errorf("MINECRAFT_USERNAME is required")
-	}
-
-	return Minecraft{Host: host, Port: port, Username: username}, nil
+	return Minecraft{Host: host, Port: port}, nil
 }
 
 // LoadLogging reads optional structured logging settings from the environment.

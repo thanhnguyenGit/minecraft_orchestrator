@@ -85,7 +85,7 @@ func TestSessionCompletesOfflineEncryptedLoginWhenServerRequestsAuthentication(t
 			return
 		}
 		reader = bufio.NewReader(encryptedReader)
-		if err := codec.WritePacket(encryptedWriter, wire.Packet{ID: 0x02}); err != nil {
+		if err := codec.WritePacket(encryptedWriter, loginSuccessPacketForTest(t, "encrypted_bot")); err != nil {
 			serverErrors <- err
 			return
 		}
@@ -128,6 +128,21 @@ func TestSessionCompletesOfflineEncryptedLoginWhenServerRequestsAuthentication(t
 	if err := session.Wait(); !errors.Is(err, io.EOF) {
 		t.Fatalf("Wait() error = %v, want EOF", err)
 	}
+}
+
+func loginSuccessPacketForTest(t testing.TB, username string) wire.Packet {
+	t.Helper()
+	var body bytes.Buffer
+	if err := wire.WriteUUID(&body, OfflineUUID(username)); err != nil {
+		t.Fatal(err)
+	}
+	if err := wire.WriteString(&body, username); err != nil {
+		t.Fatal(err)
+	}
+	if err := wire.WriteVarInt(&body, 0); err != nil {
+		t.Fatal(err)
+	}
+	return wire.Packet{ID: loginClientboundSuccessID, Body: body.Bytes()}
 }
 
 func TestSessionAcceptsTypedPlayDataMessage(t *testing.T) {
