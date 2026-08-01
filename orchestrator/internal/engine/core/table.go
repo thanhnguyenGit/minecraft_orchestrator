@@ -104,8 +104,6 @@ var columnConstructors = map[model.Component]func() ComponentColumn{
 	model.CVelocity:     func() ComponentColumn { return NewColumn[model.Velocity]() },
 	model.CHealth:       func() ComponentColumn { return NewColumn[model.Health]() },
 	model.CBot:          func() ComponentColumn { return NewColumn[model.Bot]() },
-	model.CConnection:   func() ComponentColumn { return NewColumn[model.Connection]() },
-	model.CDisconnected: func() ComponentColumn { return NewColumn[model.Disconnected]() },
 	model.CRotation:     func() ComponentColumn { return NewColumn[model.Rotation]() },
 	model.CGameMode:     func() ComponentColumn { return NewColumn[model.GameMode]() },
 	model.CSession:      func() ComponentColumn { return NewColumn[model.Session]() },

@@ -285,15 +285,6 @@ func TestNewTable_EmptyMask(t *testing.T) {
 	}
 }
 
-func TestNewTable_PanicsOnMissingConstructor(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic for missing column constructor")
-		}
-	}()
-	NewTable(model.Components(model.CHunger))
-}
-
 func TestTable_AddEntity_MaskMismatch(t *testing.T) {
 	tbl := NewTable(model.Components(model.CPosition, model.CVelocity))
 

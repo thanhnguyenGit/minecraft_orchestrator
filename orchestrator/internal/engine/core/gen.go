@@ -19,20 +19,6 @@ type ViewDef struct {
 func main() {
 	views := []ViewDef{
 		{
-			Name: "Movement",
-			Mask: "model.ConnectedBotMask",
-			Components: []string{
-				"Position", "Velocity",
-			},
-		},
-		{
-			Name: "Health",
-			Mask: "model.ConnectedBotMask",
-			Components: []string{
-				"Health",
-			},
-		},
-		{
 			Name: "MirroredBot",
 			Mask: "model.MirroredBotMask",
 			Components: []string{

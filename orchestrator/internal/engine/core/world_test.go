@@ -39,10 +39,6 @@ func makeBundle(mask model.Mask, botID uint64) Bundle {
 			b.Set(c, model.Health{Current: 20, Max: 20})
 		case model.CBot:
 			b.Set(c, model.Bot{ProfileID: profileIDForTest(botID), Username: "test-bot"})
-		case model.CConnection:
-			b.Set(c, model.Connection{ClientId: "client"})
-		case model.CDisconnected:
-			b.Set(c, model.Disconnected{SinceTick: 1})
 		}
 	}
 	return b

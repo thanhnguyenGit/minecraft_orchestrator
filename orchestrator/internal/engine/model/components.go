@@ -15,10 +15,6 @@ const (
 	CVelocity
 	CHealth
 	CBot
-	CHunger
-	CInputState
-	CConnection
-	CDisconnected
 	CRotation
 	CGameMode
 	CSession
@@ -40,10 +36,6 @@ var componentNames = [...]string{
 	"Velocity",
 	"Health",
 	"Bot",
-	"Hunger",
-	"InputState",
-	"Connection",
-	"Disconnected",
 	"Rotation",
 	"GameMode",
 	"Session",
@@ -104,37 +96,12 @@ type Inventory struct { SelectedHotbarSlot int32; Slots []InventorySlot }
 type Effect struct { ID int32; Name string; Amplifier int32; DurationTicks int32 }
 type Effects struct { Values []Effect }
 
-type Connection struct {
-	ClientId  string
-	SessionId string
-}
-
-type Disconnected struct {
-	SinceTick uint64
-}
-
 type Health struct {
 	Current float64
 	Max     float64
 }
 
 var (
-	ConnectedBotMask = Components(
-		CPosition,
-		CVelocity,
-		CHealth,
-		CBot,
-		// CInputState,
-		CConnection,
-	)
-	DisconnectedBotMask = Components(
-		CPosition,
-		CVelocity,
-		CHealth,
-		CBot,
-		// CInputState,
-		CDisconnected,
-	)
 	MirroredBotMask = Components(
 		CPosition,
 		CVelocity,
