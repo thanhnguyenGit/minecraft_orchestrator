@@ -12,7 +12,6 @@ import (
 	"minecraft_orchestrator/internal/engine/network"
 	"minecraft_orchestrator/internal/engine/scheduler"
 	enginesystem "minecraft_orchestrator/internal/engine/system"
-	"minecraft_orchestrator/internal/mc_protocol/client"
 )
 
 // Runtime is the only owner of the ECS World. Session workers and protocol
@@ -25,23 +24,21 @@ type Runtime struct {
 	inbox    *network.Inbox
 	outbox   *network.Outbox
 
-	config  client.Config
-	bots    []BotSpec
-	factory SessionFactory
-	clock   Clock
+	config HostConfig
+	bots   []BotSpec
+	clock  Clock
 
-	mu     sync.Mutex
-	runner *SessionRunner
+	mu   sync.Mutex
+	host *HostSupervisor
 }
 
 func NewRuntime(
-	config client.Config, 
-	bots []BotSpec, 
-	factory SessionFactory, 
+	config HostConfig,
+	bots []BotSpec,
 	clock Clock,
 ) (*Runtime, error) {
-	if factory == nil {
-		return nil, errors.New("runtime session factory is required")
+	if len(bots) == 0 {
+		return nil, errors.New("runtime requires at least one bot")
 	}
 	
 	plan, err := enginesystem.BuildScheduler()
@@ -68,7 +65,6 @@ func NewRuntime(
 		outbox:   network.NewOutbox(),
 		config:   config,
 		bots:     append([]BotSpec(nil), bots...),
-		factory:  factory,
 		clock:    clock,
 	}, nil
 }
@@ -77,18 +73,17 @@ func (r *Runtime) Run(ctx context.Context) error {
 	if ctx == nil {
 		return errors.New("runtime context is required")
 	}
-	runner, err := NewSessionRunner(ctx, r.config, r.inbox, r.factory, r.bots)
+	host, err := NewHostSupervisor(ctx, r.config, r.inbox, r.bots)
 	if err != nil {
 		return err
 	}
 	r.mu.Lock()
-	r.runner = runner
+	r.host = host
 	r.mu.Unlock()
 	defer func() {
-		runner.Close()
-		runner.Wait()
+		host.Close()
 		r.mu.Lock()
-		r.runner = nil
+		r.host = nil
 		r.mu.Unlock()
 	}()
 
@@ -110,16 +105,16 @@ func (r *Runtime) Run(ctx context.Context) error {
 		if err := r.executor.RunFrame(ctx, r.World, tick, delta, data); err != nil {
 			return err
 		}
-		return runner.Apply(r.outbox.Drain())
+		return host.Apply(ctx, r.outbox.Drain())
 	})
 }
 
 func (r *Runtime) Close() {
 	r.mu.Lock()
-	runner := r.runner
+	host := r.host
 	r.mu.Unlock()
-	if runner != nil {
-		runner.Close()
+	if host != nil {
+		host.Close()
 	}
 	if r.pool != nil {
 		r.pool.Close()

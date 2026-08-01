@@ -9,8 +9,11 @@ import (
 type IntentKind uint8
 
 const (
-	IntentStartSession IntentKind = iota
-	IntentStopSession
+	IntentStartHost IntentKind = iota
+	IntentStopHost
+	// Deprecated compatibility names for the inactive direct-client runner.
+	IntentStartSession = IntentStartHost
+	IntentStopSession  = IntentStopHost
 )
 
 type Intent struct {
@@ -19,7 +22,7 @@ type Intent struct {
 }
 
 // Outbox transports ECS lifecycle intent to the runtime. It has no socket or
-// World access; the SessionRunner consumes drained intents after a frame.
+// World access; the Mineflayer host supervisor consumes drained intents after a frame.
 type Outbox struct {
 	mu      sync.Mutex
 	intents []Intent

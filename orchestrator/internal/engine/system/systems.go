@@ -84,10 +84,12 @@ func (BootstrapSystem) Run(ctx *scheduler.RunContext) error {
 		bundle.Set(model.CVelocity, model.Velocity{})
 		bundle.Set(model.CHealth, model.Health{Current: 20, Max: 20})
 		bundle.Set(model.CGameMode, model.GameModeSurvival)
+		bundle.Set(model.CInventory, model.Inventory{})
+		bundle.Set(model.CEffects, model.Effects{})
 
 		ctx.Commands.Stage(enginecore.CreateCommand{Bundle: bundle})
-		data.Outbox.Publish(network.Intent{ProfileID: bot.ProfileID, Kind: network.IntentStartSession})
 	}
+	data.Outbox.Publish(network.Intent{Kind: network.IntentStartHost})
 	return nil
 }
 
@@ -110,6 +112,8 @@ func (NetworkApplySystem) Access() scheduler.AccessSpec {
 			model.CVelocity,
 			model.CHealth,
 			model.CGameMode,
+			model.CInventory,
+			model.CEffects,
 		),
 	}
 }
@@ -173,7 +177,83 @@ func applyNetworkEvent(view *enginecore.MirroredBotView, index int, event networ
 		if session.Phase == model.SessionPlayReady && session.AttemptID == event.AttemptID && event.Patch != nil {
 			applyStatePatch(view, index, *event.Patch)
 		}
+	case network.EventHostStatus:
+		applyHostStatus(view, index, event)
+	case network.EventHostSnapshot:
+		if acceptHostObservation(view, index, event) && event.Snapshot != nil {
+			applyHostSnapshot(view, index, *event.Snapshot)
+		}
+	case network.EventHostPosition:
+		if acceptHostObservation(view, index, event) && event.Position != nil {
+			applyHostSnapshot(view, index, *event.Position)
+		}
+	case network.EventHostVitals:
+		if acceptHostObservation(view, index, event) && event.Vitals != nil {
+			health := view.Healths[index]
+			health.Current = event.Vitals.Health
+			view.Healths[index] = health
+		}
+	case network.EventHostEffects:
+		if acceptHostObservation(view, index, event) && event.Effects != nil {
+			view.Effectss[index] = *event.Effects
+		}
+	case network.EventHostInventory:
+		if acceptHostObservation(view, index, event) && event.Inventory != nil {
+			view.Inventorys[index] = *event.Inventory
+		}
 	}
+}
+
+func acceptHostObservation(view *enginecore.MirroredBotView, index int, event network.Event) bool {
+	if event.RemoteSessionID == "" {
+		return false
+	}
+	session := view.Sessions[index]
+	if session.RemoteSessionID != event.RemoteSessionID {
+		session.RemoteSessionID = event.RemoteSessionID
+		session.LastSequence = 0
+	}
+	if event.Sequence <= session.LastSequence {
+		return false
+	}
+	session.LastSequence = event.Sequence
+	if session.Phase != model.SessionPlayReady {
+		session.Phase = model.SessionPlayReady
+	}
+	view.Sessions[index] = session
+	return true
+}
+
+func applyHostStatus(view *enginecore.MirroredBotView, index int, event network.Event) {
+	session := view.Sessions[index]
+	if event.RemoteSessionID != "" && session.RemoteSessionID != event.RemoteSessionID {
+		session.RemoteSessionID = event.RemoteSessionID
+		session.LastSequence = 0
+	}
+	if event.Sequence <= session.LastSequence {
+		return
+	}
+	session.LastSequence = event.Sequence
+	switch event.HostStatus {
+	case network.HostConnecting:
+		session.Phase = model.SessionConnecting
+	case network.HostConnected:
+		session.Phase = model.SessionPlayReady
+	case network.HostDisconnected:
+		session.Phase = model.SessionRetryWaiting
+	default:
+		session.Phase = model.SessionRetryWaiting
+		session.Failure = event.Failure
+	}
+	view.Sessions[index] = session
+}
+
+func applyHostSnapshot(view *enginecore.MirroredBotView, index int, snapshot network.HostSnapshot) {
+	view.Positions[index], view.Rotations[index], view.Velocitys[index] = snapshot.Position, snapshot.Rotation, snapshot.Velocity
+	health := view.Healths[index]
+	health.Current = snapshot.Vitals.Health
+	view.Healths[index] = health
+	view.GameModes[index], view.Inventorys[index], view.Effectss[index] = snapshot.GameMode, snapshot.Inventory, snapshot.Effects
 }
 
 func applyPositionCorrection(view *enginecore.MirroredBotView, index int, correction network.PositionCorrection) {

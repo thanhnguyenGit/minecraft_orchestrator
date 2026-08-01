@@ -36,7 +36,7 @@ func main() {
 			Name: "MirroredBot",
 			Mask: "model.MirroredBotMask",
 			Components: []string{
-				"Bot", "Session", "Position", "Rotation", "Velocity", "Health", "GameMode",
+				"Bot", "Session", "Position", "Rotation", "Velocity", "Health", "GameMode", "Inventory", "Effects",
 			},
 		},
 	}

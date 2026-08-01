@@ -22,6 +22,8 @@ const (
 	CRotation
 	CGameMode
 	CSession
+	CInventory
+	CEffects
 	ComponentCount
 )
 
@@ -45,6 +47,8 @@ var componentNames = [...]string{
 	"Rotation",
 	"GameMode",
 	"Session",
+	"Inventory",
+	"Effects",
 }
 
 type ProfileID [16]byte
@@ -90,7 +94,15 @@ type Session struct {
 	AttemptID      uint64
 	PlayerEntityID int32
 	Failure        string
+	RemoteSessionID string
+	LastSequence    uint64
 }
+
+type ItemStack struct { ID int32; Name string; Metadata int32; Count int32 }
+type InventorySlot struct { Slot int32; Item *ItemStack }
+type Inventory struct { SelectedHotbarSlot int32; Slots []InventorySlot }
+type Effect struct { ID int32; Name string; Amplifier int32; DurationTicks int32 }
+type Effects struct { Values []Effect }
 
 type Connection struct {
 	ClientId  string
@@ -131,6 +143,8 @@ var (
 		CRotation,
 		CGameMode,
 		CSession,
+		CInventory,
+		CEffects,
 	)
 )
 

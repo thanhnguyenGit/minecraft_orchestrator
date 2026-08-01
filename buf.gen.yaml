@@ -4,3 +4,7 @@ plugins:
     out: bots/src/gen
     opt:
       - target=ts
+  - remote: buf.build/protocolbuffers/go:v1.36.6
+    out: orchestrator/internal/gen
+    opt:
+      - paths=source_relative

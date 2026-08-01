@@ -7,7 +7,7 @@ import (
 	"minecraft_orchestrator/internal/mc_protocol/client"
 )
 
-func TestBootstrapBotsCreatesTenOfflineProfiles(t *testing.T) {
+func TestBootstrapBotsCreatesSevenOfflineProfiles(t *testing.T) {
 	next := 0
 	bots, err := bootstrapBots(func() string {
 		next++

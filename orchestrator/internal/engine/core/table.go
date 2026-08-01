@@ -109,6 +109,8 @@ var columnConstructors = map[model.Component]func() ComponentColumn{
 	model.CRotation:     func() ComponentColumn { return NewColumn[model.Rotation]() },
 	model.CGameMode:     func() ComponentColumn { return NewColumn[model.GameMode]() },
 	model.CSession:      func() ComponentColumn { return NewColumn[model.Session]() },
+	model.CInventory:    func() ComponentColumn { return NewColumn[model.Inventory]() },
+	model.CEffects:      func() ComponentColumn { return NewColumn[model.Effects]() },
 }
 
 func NewTable(mask model.Mask) *Table {

@@ -14,7 +14,7 @@ func TestLoadMinecraftReadsRequiredConnectionSettings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadMinecraft() error = %v", err)
 	}
-	if want := (Minecraft{Host: "127.0.0.1", Port: 25565}); got != want {
+	if want := (Minecraft{Host: "127.0.0.1", Port: 25565, Auth: "offline", Version: "1.21.11", NodeBinary: "node", HostScript: "bots/src/host.ts"}); got != want {
 		t.Fatalf("LoadMinecraft() = %#v, want %#v", got, want)
 	}
 }

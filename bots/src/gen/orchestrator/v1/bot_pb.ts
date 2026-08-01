@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file orchestrator/v1/bot.proto.
  */
 export const file_orchestrator_v1_bot: GenFile = /*@__PURE__*/
-  fileDesc("ChlvcmNoZXN0cmF0b3IvdjEvYm90LnByb3RvEg9vcmNoZXN0cmF0b3IudjEiqgIKCkJvdENvbW1hbmQSDgoGYm90X2lkGAEgASgJEhIKCm1lc3NhZ2VfaWQYAiABKAkSFgoOY29ycmVsYXRpb25faWQYAyABKAkSMgoHY29ubmVjdBgKIAEoCzIfLm9yY2hlc3RyYXRvci52MS5Db25uZWN0Q29tbWFuZEgAEjgKCmRpc2Nvbm5lY3QYCyABKAsyIi5vcmNoZXN0cmF0b3IudjEuRGlzY29ubmVjdENvbW1hbmRIABIwCgZzdGF0dXMYDCABKAsyHi5vcmNoZXN0cmF0b3IudjEuU3RhdHVzQ29tbWFuZEgAEjUKCXNlbmRfY2hhdBgNIAEoCzIgLm9yY2hlc3RyYXRvci52MS5TZW5kQ2hhdENvbW1hbmRIAEIJCgdwYXlsb2FkIl0KDkNvbm5lY3RDb21tYW5kEgwKBGhvc3QYASABKAkSDAoEcG9ydBgCIAEoDRIQCgh1c2VybmFtZRgDIAEoCRIMCgRhdXRoGAQgASgJEg8KB3ZlcnNpb24YBSABKAkiEwoRRGlzY29ubmVjdENvbW1hbmQiDwoNU3RhdHVzQ29tbWFuZCIiCg9TZW5kQ2hhdENvbW1hbmQSDwoHbWVzc2FnZRgBIAEoCSLdAgoIQm90RXZlbnQSDgoGYm90X2lkGAEgASgJEhIKCm1lc3NhZ2VfaWQYAiABKAkSFgoOY29ycmVsYXRpb25faWQYAyABKAkSPQoOc3RhdHVzX2NoYW5nZWQYCiABKAsyIy5vcmNoZXN0cmF0b3IudjEuU3RhdHVzQ2hhbmdlZEV2ZW50SAASMAoHc3Bhd25lZBgLIAEoCzIdLm9yY2hlc3RyYXRvci52MS5TcGF3bmVkRXZlbnRIABI7Cg1jaGF0X3JlY2VpdmVkGAwgASgLMiIub3JjaGVzdHJhdG9yLnYxLkNoYXRSZWNlaXZlZEV2ZW50SAASLgoGa2lja2VkGA0gASgLMhwub3JjaGVzdHJhdG9yLnYxLktpY2tlZEV2ZW50SAASLAoFZXJyb3IYDiABKAsyGy5vcmNoZXN0cmF0b3IudjEuRXJyb3JFdmVudEgAQgkKB3BheWxvYWQiMwoSU3RhdHVzQ2hhbmdlZEV2ZW50Eg0KBXN0YXRlGAEgASgJEg4KBmRldGFpbBgCIAEoCSIOCgxTcGF3bmVkRXZlbnQiNgoRQ2hhdFJlY2VpdmVkRXZlbnQSEAoIdXNlcm5hbWUYASABKAkSDwoHbWVzc2FnZRgCIAEoCSIdCgtLaWNrZWRFdmVudBIOCgZyZWFzb24YASABKAkiHQoKRXJyb3JFdmVudBIPCgdtZXNzYWdlGAEgASgJQkRaQm1pbmVjcmFmdF9vcmNoZXN0cmF0b3IvaW50ZXJuYWwvZ2VuL29yY2hlc3RyYXRvci92MTtvcmNoZXN0cmF0b3J2MWIGcHJvdG8z");
+  fileDesc("ChlvcmNoZXN0cmF0b3IvdjEvYm90LnByb3RvEg9vcmNoZXN0cmF0b3IudjEiqgIKCkJvdENvbW1hbmQSDgoGYm90X2lkGAEgASgJEhIKCm1lc3NhZ2VfaWQYAiABKAkSFgoOY29ycmVsYXRpb25faWQYAyABKAkSMgoHY29ubmVjdBgKIAEoCzIfLm9yY2hlc3RyYXRvci52MS5Db25uZWN0Q29tbWFuZEgAEjgKCmRpc2Nvbm5lY3QYCyABKAsyIi5vcmNoZXN0cmF0b3IudjEuRGlzY29ubmVjdENvbW1hbmRIABIwCgZzdGF0dXMYDCABKAsyHi5vcmNoZXN0cmF0b3IudjEuU3RhdHVzQ29tbWFuZEgAEjUKCXNlbmRfY2hhdBgNIAEoCzIgLm9yY2hlc3RyYXRvci52MS5TZW5kQ2hhdENvbW1hbmRIAEIJCgdwYXlsb2FkIl0KDkNvbm5lY3RDb21tYW5kEgwKBGhvc3QYASABKAkSDAoEcG9ydBgCIAEoDRIQCgh1c2VybmFtZRgDIAEoCRIMCgRhdXRoGAQgASgJEg8KB3ZlcnNpb24YBSABKAkiEwoRRGlzY29ubmVjdENvbW1hbmQiDwoNU3RhdHVzQ29tbWFuZCIiCg9TZW5kQ2hhdENvbW1hbmQSDwoHbWVzc2FnZRgBIAEoCSLnBQoIQm90RXZlbnQSDgoGYm90X2lkGAEgASgJEhIKCm1lc3NhZ2VfaWQYAiABKAkSFgoOY29ycmVsYXRpb25faWQYAyABKAkSEgoKc2Vzc2lvbl9pZBgEIAEoCRIQCghzZXF1ZW5jZRgFIAEoBBIbChNvYnNlcnZlZF9hdF91bml4X21zGAYgASgDEj0KDnN0YXR1c19jaGFuZ2VkGAogASgLMiMub3JjaGVzdHJhdG9yLnYxLlN0YXR1c0NoYW5nZWRFdmVudEgAEjAKB3NwYXduZWQYCyABKAsyHS5vcmNoZXN0cmF0b3IudjEuU3Bhd25lZEV2ZW50SAASOwoNY2hhdF9yZWNlaXZlZBgMIAEoCzIiLm9yY2hlc3RyYXRvci52MS5DaGF0UmVjZWl2ZWRFdmVudEgAEi4KBmtpY2tlZBgNIAEoCzIcLm9yY2hlc3RyYXRvci52MS5LaWNrZWRFdmVudEgAEiwKBWVycm9yGA4gASgLMhsub3JjaGVzdHJhdG9yLnYxLkVycm9yRXZlbnRIABI9Cg5zdGF0ZV9zbmFwc2hvdBgPIAEoCzIjLm9yY2hlc3RyYXRvci52MS5TdGF0ZVNuYXBzaG90RXZlbnRIABI9Cg52aXRhbHNfY2hhbmdlZBgQIAEoCzIjLm9yY2hlc3RyYXRvci52MS5WaXRhbHNDaGFuZ2VkRXZlbnRIABI/Cg9lZmZlY3RzX2NoYW5nZWQYESABKAsyJC5vcmNoZXN0cmF0b3IudjEuRWZmZWN0c0NoYW5nZWRFdmVudEgAEkEKEHBvc2l0aW9uX2NoYW5nZWQYEiABKAsyJS5vcmNoZXN0cmF0b3IudjEuUG9zaXRpb25DaGFuZ2VkRXZlbnRIABJDChFpbnZlbnRvcnlfY2hhbmdlZBgTIAEoCzImLm9yY2hlc3RyYXRvci52MS5JbnZlbnRvcnlDaGFuZ2VkRXZlbnRIAEIJCgdwYXlsb2FkIjMKElN0YXR1c0NoYW5nZWRFdmVudBINCgVzdGF0ZRgBIAEoCRIOCgZkZXRhaWwYAiABKAkiDgoMU3Bhd25lZEV2ZW50IjYKEUNoYXRSZWNlaXZlZEV2ZW50EhAKCHVzZXJuYW1lGAEgASgJEg8KB21lc3NhZ2UYAiABKAkiHQoLS2lja2VkRXZlbnQSDgoGcmVhc29uGAEgASgJIh0KCkVycm9yRXZlbnQSDwoHbWVzc2FnZRgBIAEoCSI+ChJTdGF0ZVNuYXBzaG90RXZlbnQSKAoFc3RhdGUYASABKAsyGS5vcmNoZXN0cmF0b3IudjEuQm90U3RhdGUiPQoSVml0YWxzQ2hhbmdlZEV2ZW50EicKBnZpdGFscxgBIAEoCzIXLm9yY2hlc3RyYXRvci52MS5WaXRhbHMiRQoTRWZmZWN0c0NoYW5nZWRFdmVudBIuCgdlZmZlY3RzGAEgAygLMh0ub3JjaGVzdHJhdG9yLnYxLlBvdGlvbkVmZmVjdCJDChRQb3NpdGlvbkNoYW5nZWRFdmVudBIrCghwb3NpdGlvbhgBIAEoCzIZLm9yY2hlc3RyYXRvci52MS5Qb3NpdGlvbiKKAQoVSW52ZW50b3J5Q2hhbmdlZEV2ZW50Ei0KBXNsb3RzGAEgAygLMh4ub3JjaGVzdHJhdG9yLnYxLkludmVudG9yeVNsb3QSHAoUc2VsZWN0ZWRfaG90YmFyX3Nsb3QYAiABKAUSJAocc2VsZWN0ZWRfaG90YmFyX3Nsb3RfY2hhbmdlZBgDIAEoCCK/AQoIQm90U3RhdGUSJwoGdml0YWxzGAEgASgLMhcub3JjaGVzdHJhdG9yLnYxLlZpdGFscxIuCgdlZmZlY3RzGAIgAygLMh0ub3JjaGVzdHJhdG9yLnYxLlBvdGlvbkVmZmVjdBIrCghwb3NpdGlvbhgDIAEoCzIZLm9yY2hlc3RyYXRvci52MS5Qb3NpdGlvbhItCglpbnZlbnRvcnkYBCABKAsyGi5vcmNoZXN0cmF0b3IudjEuSW52ZW50b3J5IkoKBlZpdGFscxIOCgZoZWFsdGgYASABKAESDAoEZm9vZBgCIAEoBRISCgpzYXR1cmF0aW9uGAMgASgBEg4KBm94eWdlbhgEIAEoBSJTCgxQb3Rpb25FZmZlY3QSCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIRCglhbXBsaWZpZXIYAyABKAUSFgoOZHVyYXRpb25fdGlja3MYBCABKAUilgEKCFBvc2l0aW9uEhEKCWRpbWVuc2lvbhgBIAEoCRIJCgF4GAIgASgBEgkKAXkYAyABKAESCQoBehgEIAEoARILCgN5YXcYBSABKAESDQoFcGl0Y2gYBiABKAESEgoKdmVsb2NpdHlfeBgHIAEoARISCgp2ZWxvY2l0eV95GAggASgBEhIKCnZlbG9jaXR5X3oYCSABKAEiWAoJSW52ZW50b3J5EhwKFHNlbGVjdGVkX2hvdGJhcl9zbG90GAEgASgFEi0KBXNsb3RzGAIgAygLMh4ub3JjaGVzdHJhdG9yLnYxLkludmVudG9yeVNsb3QiRwoNSW52ZW50b3J5U2xvdBIMCgRzbG90GAEgASgFEigKBGl0ZW0YAiABKAsyGi5vcmNoZXN0cmF0b3IudjEuSXRlbVN0YWNrIkYKCUl0ZW1TdGFjaxIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEhAKCG1ldGFkYXRhGAMgASgFEg0KBWNvdW50GAQgASgFQkRaQm1pbmVjcmFmdF9vcmNoZXN0cmF0b3IvaW50ZXJuYWwvZ2VuL29yY2hlc3RyYXRvci92MTtvcmNoZXN0cmF0b3J2MWIGcHJvdG8z");
 
 /**
  * @generated from message orchestrator.v1.BotCommand
@@ -168,6 +168,21 @@ export type BotEvent = Message<"orchestrator.v1.BotEvent"> & {
   correlationId: string;
 
   /**
+   * @generated from field: string session_id = 4;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 5;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: int64 observed_at_unix_ms = 6;
+   */
+  observedAtUnixMs: bigint;
+
+  /**
    * @generated from oneof orchestrator.v1.BotEvent.payload
    */
   payload: {
@@ -200,6 +215,36 @@ export type BotEvent = Message<"orchestrator.v1.BotEvent"> & {
      */
     value: ErrorEvent;
     case: "error";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.StateSnapshotEvent state_snapshot = 15;
+     */
+    value: StateSnapshotEvent;
+    case: "stateSnapshot";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.VitalsChangedEvent vitals_changed = 16;
+     */
+    value: VitalsChangedEvent;
+    case: "vitalsChanged";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.EffectsChangedEvent effects_changed = 17;
+     */
+    value: EffectsChangedEvent;
+    case: "effectsChanged";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.PositionChangedEvent position_changed = 18;
+     */
+    value: PositionChangedEvent;
+    case: "positionChanged";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.InventoryChangedEvent inventory_changed = 19;
+     */
+    value: InventoryChangedEvent;
+    case: "inventoryChanged";
   } | { case: undefined; value?: undefined };
 };
 
@@ -300,4 +345,328 @@ export type ErrorEvent = Message<"orchestrator.v1.ErrorEvent"> & {
  */
 export const ErrorEventSchema: GenMessage<ErrorEvent> = /*@__PURE__*/
   messageDesc(file_orchestrator_v1_bot, 10);
+
+/**
+ * @generated from message orchestrator.v1.StateSnapshotEvent
+ */
+export type StateSnapshotEvent = Message<"orchestrator.v1.StateSnapshotEvent"> & {
+  /**
+   * @generated from field: orchestrator.v1.BotState state = 1;
+   */
+  state?: BotState;
+};
+
+/**
+ * Describes the message orchestrator.v1.StateSnapshotEvent.
+ * Use `create(StateSnapshotEventSchema)` to create a new message.
+ */
+export const StateSnapshotEventSchema: GenMessage<StateSnapshotEvent> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 11);
+
+/**
+ * @generated from message orchestrator.v1.VitalsChangedEvent
+ */
+export type VitalsChangedEvent = Message<"orchestrator.v1.VitalsChangedEvent"> & {
+  /**
+   * @generated from field: orchestrator.v1.Vitals vitals = 1;
+   */
+  vitals?: Vitals;
+};
+
+/**
+ * Describes the message orchestrator.v1.VitalsChangedEvent.
+ * Use `create(VitalsChangedEventSchema)` to create a new message.
+ */
+export const VitalsChangedEventSchema: GenMessage<VitalsChangedEvent> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 12);
+
+/**
+ * @generated from message orchestrator.v1.EffectsChangedEvent
+ */
+export type EffectsChangedEvent = Message<"orchestrator.v1.EffectsChangedEvent"> & {
+  /**
+   * @generated from field: repeated orchestrator.v1.PotionEffect effects = 1;
+   */
+  effects: PotionEffect[];
+};
+
+/**
+ * Describes the message orchestrator.v1.EffectsChangedEvent.
+ * Use `create(EffectsChangedEventSchema)` to create a new message.
+ */
+export const EffectsChangedEventSchema: GenMessage<EffectsChangedEvent> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 13);
+
+/**
+ * @generated from message orchestrator.v1.PositionChangedEvent
+ */
+export type PositionChangedEvent = Message<"orchestrator.v1.PositionChangedEvent"> & {
+  /**
+   * @generated from field: orchestrator.v1.Position position = 1;
+   */
+  position?: Position;
+};
+
+/**
+ * Describes the message orchestrator.v1.PositionChangedEvent.
+ * Use `create(PositionChangedEventSchema)` to create a new message.
+ */
+export const PositionChangedEventSchema: GenMessage<PositionChangedEvent> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 14);
+
+/**
+ * @generated from message orchestrator.v1.InventoryChangedEvent
+ */
+export type InventoryChangedEvent = Message<"orchestrator.v1.InventoryChangedEvent"> & {
+  /**
+   * @generated from field: repeated orchestrator.v1.InventorySlot slots = 1;
+   */
+  slots: InventorySlot[];
+
+  /**
+   * @generated from field: int32 selected_hotbar_slot = 2;
+   */
+  selectedHotbarSlot: number;
+
+  /**
+   * @generated from field: bool selected_hotbar_slot_changed = 3;
+   */
+  selectedHotbarSlotChanged: boolean;
+};
+
+/**
+ * Describes the message orchestrator.v1.InventoryChangedEvent.
+ * Use `create(InventoryChangedEventSchema)` to create a new message.
+ */
+export const InventoryChangedEventSchema: GenMessage<InventoryChangedEvent> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 15);
+
+/**
+ * @generated from message orchestrator.v1.BotState
+ */
+export type BotState = Message<"orchestrator.v1.BotState"> & {
+  /**
+   * @generated from field: orchestrator.v1.Vitals vitals = 1;
+   */
+  vitals?: Vitals;
+
+  /**
+   * @generated from field: repeated orchestrator.v1.PotionEffect effects = 2;
+   */
+  effects: PotionEffect[];
+
+  /**
+   * @generated from field: orchestrator.v1.Position position = 3;
+   */
+  position?: Position;
+
+  /**
+   * @generated from field: orchestrator.v1.Inventory inventory = 4;
+   */
+  inventory?: Inventory;
+};
+
+/**
+ * Describes the message orchestrator.v1.BotState.
+ * Use `create(BotStateSchema)` to create a new message.
+ */
+export const BotStateSchema: GenMessage<BotState> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 16);
+
+/**
+ * @generated from message orchestrator.v1.Vitals
+ */
+export type Vitals = Message<"orchestrator.v1.Vitals"> & {
+  /**
+   * @generated from field: double health = 1;
+   */
+  health: number;
+
+  /**
+   * @generated from field: int32 food = 2;
+   */
+  food: number;
+
+  /**
+   * @generated from field: double saturation = 3;
+   */
+  saturation: number;
+
+  /**
+   * @generated from field: int32 oxygen = 4;
+   */
+  oxygen: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.Vitals.
+ * Use `create(VitalsSchema)` to create a new message.
+ */
+export const VitalsSchema: GenMessage<Vitals> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 17);
+
+/**
+ * @generated from message orchestrator.v1.PotionEffect
+ */
+export type PotionEffect = Message<"orchestrator.v1.PotionEffect"> & {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id: number;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: int32 amplifier = 3;
+   */
+  amplifier: number;
+
+  /**
+   * @generated from field: int32 duration_ticks = 4;
+   */
+  durationTicks: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.PotionEffect.
+ * Use `create(PotionEffectSchema)` to create a new message.
+ */
+export const PotionEffectSchema: GenMessage<PotionEffect> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 18);
+
+/**
+ * @generated from message orchestrator.v1.Position
+ */
+export type Position = Message<"orchestrator.v1.Position"> & {
+  /**
+   * @generated from field: string dimension = 1;
+   */
+  dimension: string;
+
+  /**
+   * @generated from field: double x = 2;
+   */
+  x: number;
+
+  /**
+   * @generated from field: double y = 3;
+   */
+  y: number;
+
+  /**
+   * @generated from field: double z = 4;
+   */
+  z: number;
+
+  /**
+   * @generated from field: double yaw = 5;
+   */
+  yaw: number;
+
+  /**
+   * @generated from field: double pitch = 6;
+   */
+  pitch: number;
+
+  /**
+   * @generated from field: double velocity_x = 7;
+   */
+  velocityX: number;
+
+  /**
+   * @generated from field: double velocity_y = 8;
+   */
+  velocityY: number;
+
+  /**
+   * @generated from field: double velocity_z = 9;
+   */
+  velocityZ: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.Position.
+ * Use `create(PositionSchema)` to create a new message.
+ */
+export const PositionSchema: GenMessage<Position> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 19);
+
+/**
+ * @generated from message orchestrator.v1.Inventory
+ */
+export type Inventory = Message<"orchestrator.v1.Inventory"> & {
+  /**
+   * @generated from field: int32 selected_hotbar_slot = 1;
+   */
+  selectedHotbarSlot: number;
+
+  /**
+   * @generated from field: repeated orchestrator.v1.InventorySlot slots = 2;
+   */
+  slots: InventorySlot[];
+};
+
+/**
+ * Describes the message orchestrator.v1.Inventory.
+ * Use `create(InventorySchema)` to create a new message.
+ */
+export const InventorySchema: GenMessage<Inventory> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 20);
+
+/**
+ * @generated from message orchestrator.v1.InventorySlot
+ */
+export type InventorySlot = Message<"orchestrator.v1.InventorySlot"> & {
+  /**
+   * @generated from field: int32 slot = 1;
+   */
+  slot: number;
+
+  /**
+   * @generated from field: orchestrator.v1.ItemStack item = 2;
+   */
+  item?: ItemStack;
+};
+
+/**
+ * Describes the message orchestrator.v1.InventorySlot.
+ * Use `create(InventorySlotSchema)` to create a new message.
+ */
+export const InventorySlotSchema: GenMessage<InventorySlot> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 21);
+
+/**
+ * @generated from message orchestrator.v1.ItemStack
+ */
+export type ItemStack = Message<"orchestrator.v1.ItemStack"> & {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id: number;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: int32 metadata = 3;
+   */
+  metadata: number;
+
+  /**
+   * @generated from field: int32 count = 4;
+   */
+  count: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.ItemStack.
+ * Use `create(ItemStackSchema)` to create a new message.
+ */
+export const ItemStackSchema: GenMessage<ItemStack> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_bot, 22);
 

@@ -11,6 +11,12 @@ const (
 	EventSessionFailed
 	EventPositionCorrection
 	EventStatePatch
+	EventHostStatus
+	EventHostSnapshot
+	EventHostPosition
+	EventHostVitals
+	EventHostEffects
+	EventHostInventory
 )
 
 type RelativeFlags uint32
@@ -39,6 +45,17 @@ type StatePatch struct {
 	GameMode      *model.GameMode
 }
 
+type HostStatus uint8
+const (
+	HostConnecting HostStatus = iota
+	HostConnected
+	HostDisconnected
+	HostKicked
+	HostError
+)
+type HostVitals struct { Health float64; Food int32; Saturation float64; Oxygen int32 }
+type HostSnapshot struct { Vitals HostVitals; Position model.Position; Rotation model.Rotation; Velocity model.Velocity; Inventory model.Inventory; Effects model.Effects; GameMode model.GameMode }
+
 // Event is an immutable observation from one Minecraft session attempt. It
 // deliberately carries no ECS Entity or World reference: ECS resolves and
 // validates the profile/attempt identity inside its Input phase.
@@ -49,6 +66,14 @@ type Event struct {
 
 	PlayerEntityID int32
 	Failure        string
+	RemoteSessionID string
+	Sequence        uint64
+	HostStatus      HostStatus
+	Snapshot        *HostSnapshot
+	Vitals          *HostVitals
+	Position        *HostSnapshot
+	Effects         *model.Effects
+	Inventory       *model.Inventory
 	Correction     *PositionCorrection
 	Patch          *StatePatch
 }

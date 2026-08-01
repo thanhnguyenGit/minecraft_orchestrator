@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "node --test --import tsx 'tests/**/*.test.ts'",
-    "worker": "tsx src/worker.ts"
+    "host": "tsx src/host.ts",
+    "worker": "tsx src/host.ts"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.10.1",

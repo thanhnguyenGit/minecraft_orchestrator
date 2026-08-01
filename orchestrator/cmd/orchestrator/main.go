@@ -15,7 +15,6 @@ import (
 
 	"minecraft_orchestrator/internal/config"
 	engineruntime "minecraft_orchestrator/internal/engine/runtime"
-	"minecraft_orchestrator/internal/mc_protocol/client"
 	"minecraft_orchestrator/internal/observability"
 )
 
@@ -117,11 +116,10 @@ func runRuntime(ctx context.Context, minecraft config.Minecraft, logger *slog.Lo
 	if err != nil {
 		return fmt.Errorf("bootstrap bot identities: %w", err)
 	}
-	runtime, err := engineruntime.NewRuntime(client.Config{
-		Host:   minecraft.Host,
-		Port:   minecraft.Port,
-		Logger: logger.With("component", "minecraft_protocol"),
-	}, bots, engineruntime.NewClientSession, nil)
+	runtime, err := engineruntime.NewRuntime(engineruntime.HostConfig{
+		Host: minecraft.Host, Port: minecraft.Port, Auth: minecraft.Auth, Version: minecraft.Version,
+		NodeBinary: minecraft.NodeBinary, HostScript: minecraft.HostScript, Logger: logger.With("component", "mineflayer_host"),
+	}, bots, nil)
 	if err != nil {
 		return fmt.Errorf("create engine runtime: %w", err)
 	}

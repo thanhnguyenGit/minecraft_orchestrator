@@ -65,6 +65,10 @@ type MirroredBotView struct {
 	Healths []model.Health
 
 	GameModes []model.GameMode
+
+	Inventorys []model.Inventory
+
+	Effectss []model.Effects
 }
 
 func (w *World) MirroredBotViews() []MirroredBotView {
@@ -88,6 +92,10 @@ func (w *World) MirroredBotViews() []MirroredBotView {
 			Healths: table.columns[uint8(model.CHealth)].(*Column[model.Health]).Data,
 
 			GameModes: table.columns[uint8(model.CGameMode)].(*Column[model.GameMode]).Data,
+
+			Inventorys: table.columns[uint8(model.CInventory)].(*Column[model.Inventory]).Data,
+
+			Effectss: table.columns[uint8(model.CEffects)].(*Column[model.Effects]).Data,
 		})
 	}
 	return result

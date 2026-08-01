@@ -8,7 +8,7 @@ import (
 	"minecraft_orchestrator/internal/mc_protocol/client"
 )
 
-const BootstrapBotCount = 10
+const BootstrapBotCount = 7
 
 func BootstrapBots() ([]BotSpec, error) {
 	return bootstrapBots(client.GenRandomUserName)

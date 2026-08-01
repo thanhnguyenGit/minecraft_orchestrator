@@ -2,26 +2,25 @@ package runtime
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"minecraft_orchestrator/internal/engine/model"
-	"minecraft_orchestrator/internal/mc_protocol/client"
 )
 
-func TestRuntimeBootstrapsEntityBeforeStartingSessionWorker(t *testing.T) {
+func TestRuntimeBootstrapsEntityBeforeStartingMineflayerHost(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	profileID := model.ProfileID{0x01}
-	started := make(chan client.Config, 1)
 	clock := &runtimeClock{onWait: func() {
-		<-started
 		cancel()
 	}}
-	runtime, err := NewRuntime(client.Config{Host: "127.0.0.1", Port: 25565}, []BotSpec{{ProfileID: profileID, Username: "king_crimson_bot"}}, func(cfg client.Config) (Session, error) {
-		started <- cfg
-		return &contextSession{events: make(chan client.Event)}, nil
-	}, clock)
+	hostScript, err := filepath.Abs(filepath.Join("..", "..", "..", "..", "bots", "src", "host.ts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtime, err := NewRuntime(HostConfig{Host: "127.0.0.1", Port: 25565, Auth: "offline", Version: "1.21.11", NodeBinary: "node", HostScript: hostScript}, []BotSpec{{ProfileID: profileID, Username: "king_crimson_bot"}}, clock)
 	if err != nil {
 		t.Fatalf("NewRuntime() error = %v", err)
 	}
@@ -49,16 +48,3 @@ func (c *runtimeClock) Wait(context.Context, time.Duration) error {
 	}
 	return context.Canceled
 }
-
-type contextSession struct{ events chan client.Event }
-
-func (s *contextSession) Start(ctx context.Context) error {
-	go func() {
-		<-ctx.Done()
-		close(s.events)
-	}()
-	return nil
-}
-func (s *contextSession) Events() <-chan client.Event { return s.events }
-func (*contextSession) Wait() error                   { return context.Canceled }
-func (*contextSession) Close() error                  { return nil }
