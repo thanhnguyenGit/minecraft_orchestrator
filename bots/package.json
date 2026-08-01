@@ -6,14 +6,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "node --test --import tsx 'tests/**/*.test.ts'",
-    "host": "tsx src/host.ts",
-    "worker": "tsx src/host.ts"
+    "host": "tsx src/host.ts"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.10.1",
     "dotenv": "^17.4.2",
-    "mineflayer": "^4.37.1",
-    "redis": "^5.8.3"
+    "mineflayer": "^4.37.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
