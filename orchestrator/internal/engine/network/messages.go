@@ -5,45 +5,13 @@ import "minecraft_orchestrator/internal/engine/model"
 type EventKind uint8
 
 const (
-	EventConnecting EventKind = iota
-	EventPlayReady
-	EventSessionClosed
-	EventSessionFailed
-	EventPositionCorrection
-	EventStatePatch
-	EventHostStatus
+	EventHostStatus EventKind = iota
 	EventHostSnapshot
 	EventHostPosition
 	EventHostVitals
 	EventHostEffects
 	EventHostInventory
 )
-
-type RelativeFlags uint32
-
-const (
-	RelativePositionX RelativeFlags = 1 << iota
-	RelativePositionY
-	RelativePositionZ
-	RelativeYaw
-	RelativePitch
-	RelativeVelocityX
-	RelativeVelocityY
-	RelativeVelocityZ
-)
-
-type PositionCorrection struct {
-	Position model.Position
-	Velocity model.Velocity
-	Rotation model.Rotation
-	Relative RelativeFlags
-}
-
-type StatePatch struct {
-	HealthCurrent *float64
-	Velocity      *model.Velocity
-	GameMode      *model.GameMode
-}
 
 type HostStatus uint8
 const (
@@ -61,11 +29,9 @@ type HostSnapshot struct { Vitals HostVitals; Position model.Position; Rotation 
 // validates the profile/attempt identity inside its Input phase.
 type Event struct {
 	ProfileID model.ProfileID
-	AttemptID uint64
 	Kind      EventKind
 
-	PlayerEntityID int32
-	Failure        string
+	Failure         string
 	RemoteSessionID string
 	Sequence        uint64
 	HostStatus      HostStatus
@@ -74,8 +40,6 @@ type Event struct {
 	Position        *HostSnapshot
 	Effects         *model.Effects
 	Inventory       *model.Inventory
-	Correction     *PositionCorrection
-	Patch          *StatePatch
 }
 
 type Batch struct {

@@ -11,9 +11,6 @@ type IntentKind uint8
 const (
 	IntentStartHost IntentKind = iota
 	IntentStopHost
-	// Deprecated compatibility names for the inactive direct-client runner.
-	IntentStartSession = IntentStartHost
-	IntentStopSession  = IntentStopHost
 )
 
 type Intent struct {

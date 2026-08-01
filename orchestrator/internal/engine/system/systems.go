@@ -10,13 +10,8 @@ import (
 )
 
 const (
-	SystemBootstrap           scheduler.SystemID = "Bootstrap"
-	SystemConnection          scheduler.SystemID = "Connection"
-	SystemNetworkApply        scheduler.SystemID = "NetworkApply"
-	SystemApplyInput          scheduler.SystemID = "ApplyInput"
-	SystemMovement            scheduler.SystemID = "Movement"
-	SystemHealth              scheduler.SystemID = "Health"
-	SystemDisconnectedCleanUp scheduler.SystemID = "DisconnectedCleanup"
+	SystemBootstrap    scheduler.SystemID = "Bootstrap"
+	SystemNetworkApply scheduler.SystemID = "NetworkApply"
 )
 
 type TickData struct {
@@ -32,25 +27,6 @@ func tickData(ctx *scheduler.RunContext) (*TickData, error) {
 	}
 
 	return data, nil
-}
-
-type ConnectionSystem struct{}
-
-func (ConnectionSystem) ID() scheduler.SystemID {
-	return SystemConnection
-}
-
-func (ConnectionSystem) Access() scheduler.AccessSpec {
-	return scheduler.AccessSpec{
-		Structural: []model.Mask{
-			model.ConnectedBotMask,
-			model.DisconnectedBotMask,
-		},
-	}
-}
-
-func (ConnectionSystem) Run(ctx *scheduler.RunContext) error {
-	return nil
 }
 
 type BootstrapSystem struct{}
@@ -140,43 +116,7 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 }
 
 func applyNetworkEvent(view *enginecore.MirroredBotView, index int, event network.Event) {
-	session := view.Sessions[index]
-
 	switch event.Kind {
-	case network.EventConnecting:
-		if session.Phase == model.SessionStopped || session.Phase == model.SessionRetryWaiting {
-			view.Sessions[index] = model.Session{
-				Phase:     model.SessionConnecting,
-				AttemptID: event.AttemptID,
-			}
-		}
-	case network.EventPlayReady:
-		if session.Phase == model.SessionConnecting && session.AttemptID == event.AttemptID {
-			session.Phase = model.SessionPlayReady
-			session.PlayerEntityID = event.PlayerEntityID
-			view.Sessions[index] = session
-		}
-	case network.EventSessionClosed:
-		if session.AttemptID == event.AttemptID && session.Phase != model.SessionStopped {
-			view.Sessions[index] = model.Session{
-				Phase: model.SessionRetryWaiting,
-			}
-		}
-	case network.EventSessionFailed:
-		if session.AttemptID == event.AttemptID {
-			view.Sessions[index] = model.Session{
-				Phase:   model.SessionFailed,
-				Failure: event.Failure,
-			}
-		}
-	case network.EventPositionCorrection:
-		if session.Phase == model.SessionPlayReady && session.AttemptID == event.AttemptID && event.Correction != nil {
-			applyPositionCorrection(view, index, *event.Correction)
-		}
-	case network.EventStatePatch:
-		if session.Phase == model.SessionPlayReady && session.AttemptID == event.AttemptID && event.Patch != nil {
-			applyStatePatch(view, index, *event.Patch)
-		}
 	case network.EventHostStatus:
 		applyHostStatus(view, index, event)
 	case network.EventHostSnapshot:
@@ -254,107 +194,4 @@ func applyHostSnapshot(view *enginecore.MirroredBotView, index int, snapshot net
 	health.Current = snapshot.Vitals.Health
 	view.Healths[index] = health
 	view.GameModes[index], view.Inventorys[index], view.Effectss[index] = snapshot.GameMode, snapshot.Inventory, snapshot.Effects
-}
-
-func applyPositionCorrection(view *enginecore.MirroredBotView, index int, correction network.PositionCorrection) {
-	position := correction.Position
-	velocity := correction.Velocity
-	rotation := correction.Rotation
-	currentPosition := view.Positions[index]
-	currentVelocity := view.Velocitys[index]
-	currentRotation := view.Rotations[index]
-
-	if correction.Relative&network.RelativePositionX != 0 {
-		position.X += currentPosition.X
-	}
-	if correction.Relative&network.RelativePositionY != 0 {
-		position.Y += currentPosition.Y
-	}
-	if correction.Relative&network.RelativePositionZ != 0 {
-		position.Z += currentPosition.Z
-	}
-	if correction.Relative&network.RelativeYaw != 0 {
-		rotation.Yaw += currentRotation.Yaw
-	}
-	if correction.Relative&network.RelativePitch != 0 {
-		rotation.Pitch += currentRotation.Pitch
-	}
-	if correction.Relative&network.RelativeVelocityX != 0 {
-		velocity.X += currentVelocity.X
-	}
-	if correction.Relative&network.RelativeVelocityY != 0 {
-		velocity.Y += currentVelocity.Y
-	}
-	if correction.Relative&network.RelativeVelocityZ != 0 {
-		velocity.Z += currentVelocity.Z
-	}
-
-	view.Positions[index] = position
-	view.Velocitys[index] = velocity
-	view.Rotations[index] = rotation
-}
-
-func applyStatePatch(view *enginecore.MirroredBotView, index int, patch network.StatePatch) {
-	if patch.HealthCurrent != nil {
-		health := view.Healths[index]
-		health.Current = *patch.HealthCurrent
-		view.Healths[index] = health
-	}
-	if patch.Velocity != nil {
-		view.Velocitys[index] = *patch.Velocity
-	}
-	if patch.GameMode != nil {
-		view.GameModes[index] = *patch.GameMode
-	}
-}
-
-type ApplyInputSystem struct {
-	Speed float64
-}
-
-func (ApplyInputSystem) ID() scheduler.SystemID {
-	return SystemApplyInput
-}
-
-func (ApplyInputSystem) Access() scheduler.AccessSpec {
-	return scheduler.AccessSpec{
-		Queries: []model.Mask{
-			model.ConnectedBotMask,
-		},
-		Writes: model.Components(model.CInputState, model.CVelocity),
-	}
-}
-
-func (ApplyInputSystem) Run(ctx *scheduler.RunContext) error {
-	return nil
-}
-
-type MovementSystem struct {
-	Grain int
-}
-
-func (MovementSystem) ID() scheduler.SystemID {
-	return SystemMovement
-}
-
-func (MovementSystem) Access() scheduler.AccessSpec {
-	return scheduler.AccessSpec{}
-}
-
-func (MovementSystem) Run(ctx *scheduler.RunContext) error {
-	return nil
-}
-
-type DisconnectedCleanUpSystem struct{}
-
-func (DisconnectedCleanUpSystem) ID() scheduler.SystemID {
-	return SystemDisconnectedCleanUp
-}
-
-func (DisconnectedCleanUpSystem) Access() scheduler.AccessSpec {
-	return scheduler.AccessSpec{}
-}
-
-func (DisconnectedCleanUpSystem) Run(ctx *scheduler.RunContext) error {
-	return nil
 }
