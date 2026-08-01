@@ -1,4 +1,4 @@
-// Package config reads the direct Minecraft client configuration from the environment.
+// Package config reads Mineflayer host configuration from the environment.
 package config
 
 import (

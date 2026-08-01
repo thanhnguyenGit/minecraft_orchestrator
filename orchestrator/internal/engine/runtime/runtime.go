@@ -14,8 +14,8 @@ import (
 	enginesystem "minecraft_orchestrator/internal/engine/system"
 )
 
-// Runtime is the only owner of the ECS World. Session workers and protocol
-// adapters receive only Inbox/Outbox handles, never a World pointer.
+// Runtime is the only owner of the ECS World. The Mineflayer host receives
+// only Inbox/Outbox handles, never a World pointer.
 type Runtime struct {
 	World *enginecore.World
 

@@ -69,9 +69,8 @@ func (BootstrapSystem) Run(ctx *scheduler.RunContext) error {
 	return nil
 }
 
-// NetworkApplySystem is the only system that turns Minecraft session events
-// into ECS component mutations. The Inbox and session workers never receive a
-// World pointer.
+// NetworkApplySystem is the only system that turns Mineflayer host observations
+// into ECS component mutations. The Inbox and host never receive a World pointer.
 type NetworkApplySystem struct{}
 
 func (NetworkApplySystem) ID() scheduler.SystemID {
