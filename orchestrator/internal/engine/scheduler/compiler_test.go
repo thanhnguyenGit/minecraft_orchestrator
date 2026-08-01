@@ -40,7 +40,6 @@ var (
 	mVel   = model.Components(model.CVelocity)
 	mHealth = model.Components(model.CHealth)
 	mBot   = model.Components(model.CBot)
-	mConn  = model.Components(model.CConnection)
 )
 
 func TestSortPhase_Empty(t *testing.T) {

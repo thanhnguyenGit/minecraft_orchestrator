@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"minecraft_orchestrator/internal/mc_protocol/client"
+	"minecraft_orchestrator/internal/engine/model"
 )
 
-func TestBootstrapBotsCreatesSevenOfflineProfiles(t *testing.T) {
+func TestBootstrapBotsCreatesSevenHostProfileIDs(t *testing.T) {
 	next := 0
-	bots, err := bootstrapBots(func() string {
-		next++
-		return fmt.Sprintf("bot_%d", next)
-	})
+	bots, err := bootstrapBots(
+		func() string { next++; return fmt.Sprintf("bot_%d", next) },
+		func() model.ProfileID { return model.ProfileID{byte(next)} },
+	)
 	if err != nil {
 		t.Fatalf("bootstrapBots() error = %v", err)
 	}
@@ -26,8 +26,8 @@ func TestBootstrapBotsCreatesSevenOfflineProfiles(t *testing.T) {
 			t.Fatalf("duplicate generated username %q", bot.Username)
 		}
 		seen[bot.Username] = struct{}{}
-		if got, want := [16]byte(bot.ProfileID), client.OfflineUUID(bot.Username); got != want {
-			t.Fatalf("profile UUID for %q = %x, want %x", bot.Username, got, want)
+		if bot.ProfileID == (model.ProfileID{}) {
+			t.Fatalf("profile ID for %q is zero", bot.Username)
 		}
 	}
 }

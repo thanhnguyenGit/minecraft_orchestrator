@@ -1,22 +1,28 @@
 package runtime
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"minecraft_orchestrator/internal/engine/model"
-	"minecraft_orchestrator/internal/mc_protocol/client"
 )
 
 const BootstrapBotCount = 7
 
-func BootstrapBots() ([]BotSpec, error) {
-	return bootstrapBots(client.GenRandomUserName)
+type BotSpec struct {
+	ProfileID model.ProfileID
+	Username  string
 }
 
-func bootstrapBots(generateUsername func() string) ([]BotSpec, error) {
-	if generateUsername == nil {
-		return nil, errors.New("bootstrap username generator is required")
+func BootstrapBots() ([]BotSpec, error) {
+	return bootstrapBots(randomUsername, randomProfileID)
+}
+
+func bootstrapBots(generateUsername func() string, generateProfileID func() model.ProfileID) ([]BotSpec, error) {
+	if generateUsername == nil || generateProfileID == nil {
+		return nil, errors.New("bootstrap identity generators are required")
 	}
 
 	bots := make([]BotSpec, 0, BootstrapBotCount)
@@ -34,7 +40,7 @@ func bootstrapBots(generateUsername func() string) ([]BotSpec, error) {
 		}
 		seen[username] = struct{}{}
 		bots = append(bots, BotSpec{
-			ProfileID: model.ProfileID(client.OfflineUUID(username)),
+			ProfileID: generateProfileID(),
 			Username:  username,
 		})
 	}
@@ -45,4 +51,20 @@ func bootstrapBots(generateUsername func() string) ([]BotSpec, error) {
 		}
 	}
 	return bots, nil
+}
+
+func randomUsername() string {
+	raw := make([]byte, 6)
+	if _, err := rand.Read(raw); err != nil {
+		return ""
+	}
+	return "bot_" + hex.EncodeToString(raw)
+}
+
+func randomProfileID() model.ProfileID {
+	var profileID model.ProfileID
+	if _, err := rand.Read(profileID[:]); err != nil {
+		return model.ProfileID{}
+	}
+	return profileID
 }
