@@ -1,12 +1,13 @@
 const DEFAULT_MAX_FRAME_SIZE = 1024 * 1024;
+const LENGTH_PREFIX_BYTES = 4;
 
 export function encodeFrame(payload: Uint8Array): Buffer {
   if (payload.length > DEFAULT_MAX_FRAME_SIZE) {
     throw new Error(`frame exceeds maximum size: ${payload.length}`);
   }
-  const frame = Buffer.allocUnsafe(4 + payload.length);
+  const frame = Buffer.allocUnsafe(LENGTH_PREFIX_BYTES + payload.length);
   frame.writeUInt32BE(payload.length, 0);
-  Buffer.from(payload).copy(frame, 4);
+  frame.set(payload, LENGTH_PREFIX_BYTES);
   return frame;
 }
 
