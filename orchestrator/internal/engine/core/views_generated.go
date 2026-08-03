@@ -5,45 +5,53 @@ import (
 	"minecraft_orchestrator/internal/engine/model"
 )
 
-type MovementView struct {
+type MirroredBotView struct {
 	Entities []Entity
+
+	Bots []model.Bot
+
+	Sessions []model.Session
 
 	Positions []model.Position
 
+	Rotations []model.Rotation
+
 	Velocitys []model.Velocity
+
+	Healths []model.Health
+
+	GameModes []model.GameMode
+
+	Inventorys []model.Inventory
+
+	Effectss []model.Effects
 }
 
-func (w *World) MovementViews() []MovementView {
-	tables := w.matching(model.ConnectedBotMask)
-	result := make([]MovementView, 0, len(tables))
+func (w *World) MirroredBotViews() []MirroredBotView {
+	tables := w.matching(model.MirroredBotMask)
+	result := make([]MirroredBotView, 0, len(tables))
 
 	for _, table := range tables {
-		result = append(result, MovementView{
+		result = append(result, MirroredBotView{
 			Entities: table.entities,
+
+			Bots: table.columns[uint8(model.CBot)].(*Column[model.Bot]).Data,
+
+			Sessions: table.columns[uint8(model.CSession)].(*Column[model.Session]).Data,
 
 			Positions: table.columns[uint8(model.CPosition)].(*Column[model.Position]).Data,
 
+			Rotations: table.columns[uint8(model.CRotation)].(*Column[model.Rotation]).Data,
+
 			Velocitys: table.columns[uint8(model.CVelocity)].(*Column[model.Velocity]).Data,
-		})
-	}
-	return result
-}
-
-type HealthView struct {
-	Entities []Entity
-
-	Healths []model.Health
-}
-
-func (w *World) HealthViews() []HealthView {
-	tables := w.matching(model.ConnectedBotMask)
-	result := make([]HealthView, 0, len(tables))
-
-	for _, table := range tables {
-		result = append(result, HealthView{
-			Entities: table.entities,
 
 			Healths: table.columns[uint8(model.CHealth)].(*Column[model.Health]).Data,
+
+			GameModes: table.columns[uint8(model.CGameMode)].(*Column[model.GameMode]).Data,
+
+			Inventorys: table.columns[uint8(model.CInventory)].(*Column[model.Inventory]).Data,
+
+			Effectss: table.columns[uint8(model.CEffects)].(*Column[model.Effects]).Data,
 		})
 	}
 	return result

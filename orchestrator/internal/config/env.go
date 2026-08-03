@@ -1,4 +1,4 @@
-// Package config reads the direct Minecraft client configuration from the environment.
+// Package config reads Mineflayer host configuration from the environment.
 package config
 
 import (
@@ -9,11 +9,15 @@ import (
 	"strings"
 )
 
-// Minecraft contains the connection settings required by one direct client.
+// Minecraft contains the shared server connection settings used by generated
+// headless bots.
 type Minecraft struct {
-	Host     string
-	Port     int
-	Username string
+	Host       string
+	Port       int
+	Auth       string
+	Version    string
+	NodeBinary string
+	HostScript string
 }
 
 // LogFormat controls the handler used for structured application logs.
@@ -30,7 +34,7 @@ type Logging struct {
 	Format LogFormat
 }
 
-// LoadMinecraftConfig reads the required direct-client settings from the environment.
+// LoadMinecraftConfig reads the shared server connection settings from the environment.
 func LoadMinecraftConfig() (Minecraft, error) {
 	host := strings.TrimSpace(os.Getenv("MINECRAFT_HOST"))
 	if host == "" {
@@ -49,29 +53,61 @@ func LoadMinecraftConfig() (Minecraft, error) {
 		return Minecraft{}, fmt.Errorf("MINECRAFT_PORT must be between 1 and 65535: %d", port)
 	}
 
-	username := strings.TrimSpace(os.Getenv("MINECRAFT_USERNAME"))
-	if username == "" {
-		return Minecraft{}, fmt.Errorf("MINECRAFT_USERNAME is required")
+	auth := strings.TrimSpace(os.Getenv("MINEFLAYER_AUTH"))
+	if auth == "" {
+		auth = "offline"
 	}
-
-	return Minecraft{Host: host, Port: port, Username: username}, nil
+	if auth != "offline" && auth != "microsoft" {
+		return Minecraft{}, fmt.Errorf("MINEFLAYER_AUTH must be offline or microsoft: %q", auth)
+	}
+	version := strings.TrimSpace(os.Getenv("MINEFLAYER_VERSION"))
+	if version == "" {
+		version = "1.21.11"
+	}
+	nodeBinary := strings.TrimSpace(os.Getenv("MINEFLAYER_NODE_BINARY"))
+	if nodeBinary == "" {
+		nodeBinary = "node"
+	}
+	hostScript := strings.TrimSpace(os.Getenv("MINEFLAYER_HOST_SCRIPT"))
+	if hostScript == "" {
+		hostScript = "bots/src/host.ts"
+	}
+	return Minecraft{Host: host, Port: port, Auth: auth, Version: version, NodeBinary: nodeBinary, HostScript: hostScript}, nil
 }
 
 // LoadLogging reads optional structured logging settings from the environment.
 func LoadLogging() (Logging, error) {
 	level := slog.LevelInfo
+
 	if value := strings.TrimSpace(os.Getenv("MINECRAFT_LOG_LEVEL")); value != "" {
-		if err := level.UnmarshalText([]byte(strings.ToUpper(value))); err != nil {
-			return Logging{}, fmt.Errorf("MINECRAFT_LOG_LEVEL must be debug, info, warn, or error: %w", err)
+		switch strings.ToLower(value) {
+		case "debug":
+			level = slog.LevelDebug
+		case "info":
+			level = slog.LevelInfo
+		case "warn":
+			level = slog.LevelWarn
+		case "error":
+			level = slog.LevelError
+		default:
+			return Logging{}, fmt.Errorf("MINECRAFT_LOG_LEVEL must be debug, info, warn, or error, got %q", value)
 		}
 	}
 
 	format := LogFormatText
 	if value := strings.TrimSpace(os.Getenv("MINECRAFT_LOG_FORMAT")); value != "" {
-		format = LogFormat(strings.ToLower(value))
+		switch strings.ToLower(value) {
+		case "text":
+			format = LogFormatText
+		case "json":
+			format = LogFormatJSON
+		default:
+			return Logging{}, fmt.Errorf("MINECRAFT_LOG_FORMAT must be text or json: %q", format)
+		}
 	}
-	if format != LogFormatText && format != LogFormatJSON {
-		return Logging{}, fmt.Errorf("MINECRAFT_LOG_FORMAT must be text or json: %q", format)
-	}
-	return Logging{Level: level, Format: format}, nil
+
+	return Logging{
+		Level:  level,
+		Format: format,
+	}, nil
 }

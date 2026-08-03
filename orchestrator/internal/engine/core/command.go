@@ -14,16 +14,16 @@ type shadowEntity struct {
 
 type shadowState struct {
 	entities map[Entity]*shadowEntity
-	bots     map[uint64]Entity
+	bots     map[model.ProfileID]Entity
 }
 
 func NewShadowState(w *World) *shadowState {
-	bots := make(map[uint64]Entity, len(w.botIndex))
+	bots := make(map[model.ProfileID]Entity, len(w.botIndex))
 	maps.Copy(bots, w.botIndex)
 
 	return &shadowState{
 		entities: make(map[Entity]*shadowEntity),
-		bots: bots,
+		bots:     bots,
 	}
 }
 
@@ -161,13 +161,13 @@ func (c CreateCommand) validate(w *World, shadow *shadowState) (validatedCommand
 		if !ok {
 			return nil, fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		if existing, found := w.botIndex[botData.ID]; found {
-			return nil, fmt.Errorf("validate create: bot %d already mapped to entity %s", botData.ID, existing)
+		if existing, found := w.botIndex[botData.ProfileID]; found {
+			return nil, fmt.Errorf("validate create: bot with profile ID %x already mapped to entity %s", botData.ProfileID, existing)
 		}
-		if _, exists := shadow.bots[botData.ID]; exists {
-			return nil, fmt.Errorf("validate create: bot %d already exists in batch", botData.ID)
+		if _, exists := shadow.bots[botData.ProfileID]; exists {
+			return nil, fmt.Errorf("validate create: bot with profile ID %x already exists in batch", botData.ProfileID)
 		}
-		shadow.bots[botData.ID] = Entity{} // reserved until commit
+		shadow.bots[botData.ProfileID] = Entity{} // reserved until commit
 	}
 
 	return validatedCreate{
@@ -199,103 +199,10 @@ func (c DestroyCommand) validate(w *World, shadow *shadowState) (validatedComman
 		if !ok {
 			return nil, fmt.Errorf("corrupted bundle: CBot mask set but data is not model.CBot")
 		}
-		delete(shadow.bots, botData.ID)
+		delete(shadow.bots, botData.ProfileID)
 	}
 	state.alive = false
 	return validatedDestroy{
 		entity: c.Entity,
-	}, nil
-}
-
-type DisconnectedCommand struct {
-	Entity    Entity
-	ClientID  string
-	SinceTick uint64
-}
-
-func (c DisconnectedCommand) String() string {
-	return fmt.Sprintf("disconnect %s", c.Entity)
-}
-
-func (c DisconnectedCommand) DeclaredAffected() []model.Mask {
-	return []model.Mask{
-		model.ConnectedBotMask, model.DisconnectedBotMask,
-	}
-}
-
-func (c DisconnectedCommand) validate(w *World, shadow *shadowState) (validatedCommand, error) {
-	state, err := shadow.entity(w, c.Entity)
-	if err != nil {
-		return nil, fmt.Errorf("validate disconnect: %w", err)
-	}
-
-	if !state.bundle.Mask.Equals(model.ConnectedBotMask) {
-		return nil, fmt.Errorf("validate disconnect: entity %s is in %s, expected %s", c.Entity, state.bundle.Mask, model.ConnectedBotMask)
-	}
-
-	connectionData, ok := state.bundle.Get(model.CConnection).(model.Connection)
-	if !ok {
-		return nil, fmt.Errorf("corrupted bundle: CConnection mask set but data is not model.Connection")
-	}
-
-	if c.ClientID != "" && connectionData.ClientId != c.ClientID {
-		return nil, fmt.Errorf("validate disconnect: client mismatch for %s", c.Entity)
-	}
-
-	source := state.bundle.Mask
-	state.bundle.Mask &^= model.Bit(model.CConnection)
-	state.bundle.Mask |= model.Bit(model.CDisconnected)
-
-	state.bundle.Set(model.CDisconnected, model.Disconnected{
-		SinceTick: c.SinceTick,
-	})
-
-	return validatedMigrate{
-		entity:      c.Entity,
-		source:      source,
-		destination: state.bundle,
-	}, nil
-}
-
-type ReconnectedCommand struct {
-	Entity   Entity
-	ClientID string
-}
-
-func (c ReconnectedCommand) String() string {
-	return fmt.Sprintf("reconnect %s", c.Entity)
-}
-
-func (c ReconnectedCommand) DeclaredAffected() []model.Mask {
-	return []model.Mask{
-		model.DisconnectedBotMask, model.ConnectedBotMask,
-	}
-}
-
-func (c ReconnectedCommand) validate(w *World, shadow *shadowState) (validatedCommand, error) {
-	if c.ClientID == "" {
-		return nil, fmt.Errorf("validate reconnect: client id is empty")
-	}
-
-	state, err := shadow.entity(w, c.Entity)
-	if err != nil {
-		return nil, fmt.Errorf("validate reconnect: %w", err)
-	}
-
-	if !state.bundle.Mask.Equals(model.DisconnectedBotMask) {
-		return nil, fmt.Errorf("validate reconnect: entity %s is in %s, expected %s", c.Entity, state.bundle.Mask, model.DisconnectedBotMask)
-	}
-
-	source := state.bundle.Mask
-	state.bundle.Mask &^= model.Bit(model.CDisconnected)
-	state.bundle.Mask |= model.Bit(model.CConnection)
-	state.bundle.Set(model.CConnection, model.Connection{
-		ClientId: c.ClientID,
-	})
-
-	return validatedMigrate{
-		entity:      c.Entity,
-		source:      source,
-		destination: state.bundle,
 	}, nil
 }

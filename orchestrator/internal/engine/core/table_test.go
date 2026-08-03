@@ -40,18 +40,18 @@ func TestBundle_Validate_NegativeMaxHealth(t *testing.T) {
 	}
 }
 
-func TestBundle_Validate_ZeroBotID(t *testing.T) {
+func TestBundle_Validate_ZeroBotProfileID(t *testing.T) {
 	var b Bundle
-	b.Set(model.CBot, model.Bot{ID: 0})
+	b.Set(model.CBot, model.Bot{})
 	err := b.Validate()
 	if err == nil {
-		t.Fatal("expected error for zero bot ID")
+		t.Fatal("expected error for zero bot profile ID")
 	}
 }
 
 func TestBundle_Validate_Success(t *testing.T) {
 	var b Bundle
-	b.Set(model.CBot, model.Bot{ID: 1})
+	b.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(1)})
 	b.Set(model.CHealth, model.Health{Max: 20})
 	if err := b.Validate(); err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -285,15 +285,6 @@ func TestNewTable_EmptyMask(t *testing.T) {
 	}
 }
 
-func TestNewTable_PanicsOnMissingConstructor(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic for missing column constructor")
-		}
-	}()
-	NewTable(model.Components(model.CHunger))
-}
-
 func TestTable_AddEntity_MaskMismatch(t *testing.T) {
 	tbl := NewTable(model.Components(model.CPosition, model.CVelocity))
 
@@ -351,12 +342,12 @@ func TestTable_BundleAt(t *testing.T) {
 	e1 := Entity{Index: 1, Generation: 1}
 	b1 := Bundle{Mask: tbl.mask}
 	b1.Set(model.CPosition, model.Position{X: 1, Y: 2, Z: 3})
-	b1.Set(model.CBot, model.Bot{ID: 100})
+	b1.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(100)})
 
 	e2 := Entity{Index: 2, Generation: 1}
 	b2 := Bundle{Mask: tbl.mask}
 	b2.Set(model.CPosition, model.Position{X: 4, Y: 5, Z: 6})
-	b2.Set(model.CBot, model.Bot{ID: 200})
+	b2.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(200)})
 
 	tbl.AddEntity(e1, b1)
 	tbl.AddEntity(e2, b2)
@@ -367,8 +358,8 @@ func TestTable_BundleAt(t *testing.T) {
 		t.Fatalf("bundleAt(1).Position.X = %f, want 4", pos.X)
 	}
 	bot := got.Components[model.CBot].(model.Bot)
-	if bot.ID != 200 {
-		t.Fatalf("bundleAt(1).Bot.ID = %d, want 200", bot.ID)
+	if bot.ProfileID != profileIDForTest(200) {
+		t.Fatalf("bundleAt(1).Bot.ProfileID = %x, want %x", bot.ProfileID, profileIDForTest(200))
 	}
 }
 
@@ -406,17 +397,17 @@ func TestTable_RemoveSwap_NotLast(t *testing.T) {
 	e0 := Entity{Index: 0, Generation: 1}
 	b0 := Bundle{Mask: mask}
 	b0.Set(model.CPosition, model.Position{X: 0})
-	b0.Set(model.CBot, model.Bot{ID: 1})
+	b0.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(1)})
 
 	e1 := Entity{Index: 1, Generation: 1}
 	b1 := Bundle{Mask: mask}
 	b1.Set(model.CPosition, model.Position{X: 1})
-	b1.Set(model.CBot, model.Bot{ID: 2})
+	b1.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(2)})
 
 	e2 := Entity{Index: 2, Generation: 1}
 	b2 := Bundle{Mask: mask}
 	b2.Set(model.CPosition, model.Position{X: 2})
-	b2.Set(model.CBot, model.Bot{ID: 3})
+	b2.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(3)})
 
 	tbl.AddEntity(e0, b0)
 	tbl.AddEntity(e1, b1)
@@ -522,12 +513,12 @@ func TestTable_RemoveSwap_ClearsColumn(t *testing.T) {
 	e0 := Entity{Index: 0, Generation: 1}
 	b0 := Bundle{Mask: mask}
 	b0.Set(model.CPosition, model.Position{X: 100})
-	b0.Set(model.CBot, model.Bot{ID: 1})
+	b0.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(1)})
 
 	e1 := Entity{Index: 1, Generation: 1}
 	b1 := Bundle{Mask: mask}
 	b1.Set(model.CPosition, model.Position{X: 200})
-	b1.Set(model.CBot, model.Bot{ID: 2})
+	b1.Set(model.CBot, model.Bot{ProfileID: profileIDForTest(2)})
 
 	tbl.AddEntity(e0, b0)
 	tbl.AddEntity(e1, b1)

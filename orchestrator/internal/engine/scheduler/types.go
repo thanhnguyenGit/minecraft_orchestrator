@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -57,6 +58,7 @@ type RunContext struct {
 	Tick     uint64
 	Delta    time.Duration
 	Data     any
+	Logger   *slog.Logger
 }
 
 func (c *RunContext) DeltaSeconds() float64 {

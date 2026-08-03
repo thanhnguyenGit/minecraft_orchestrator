@@ -13,23 +13,11 @@ func BuildScheduler() (*scheduler.ExecutionPlan, error) {
 		return nil, err
 	}
 
-	if err := builder.AddPhase(PhaseSimulation, PhaseInput); err != nil {
+	if err := builder.AddSystem(PhaseInput, BootstrapSystem{}); err != nil {
 		return nil, err
 	}
 
-	if err := builder.AddSystem(PhaseInput, ConnectionSystem{}); err != nil {
-		return nil, err
-	}
-
-	if err := builder.AddSystem(PhaseInput, ApplyInputSystem{}, scheduler.After(SystemConnection)); err != nil {
-		return nil, err
-	}
-
-	if err := builder.AddSystem(PhaseSimulation, MovementSystem{}); err != nil {
-		return nil, err
-	}
-
-	if err := builder.AddSystem(PhaseSimulation, DisconnectedCleanUpSystem{}); err != nil {
+	if err := builder.AddSystem(PhaseInput, NetworkApplySystem{}, scheduler.After(SystemBootstrap)); err != nil {
 		return nil, err
 	}
 

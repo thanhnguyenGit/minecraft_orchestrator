@@ -10,3 +10,5 @@ dist/
 
 # IDE/text editor 
 .zed 
+
+logs/

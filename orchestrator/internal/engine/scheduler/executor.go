@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"log/slog"
 	"runtime/debug"
 	"slices"
 	"sync"
@@ -38,7 +39,12 @@ func (e *Executor) RunFrame(
 	tick uint64,
 	delta time.Duration,
 	data any,
+	logger *slog.Logger,
 ) error {
+	if logger == nil {
+		return fmt.Errorf("frame logger is required")
+	}
+
 	for nodeIndex, node := range e.plan.Nodes {
 		switch node.Kind {
 		case NodeSync:
@@ -54,7 +60,7 @@ func (e *Executor) RunFrame(
 				}
 			}
 
-			if err := e.runWave(ctx, world, node, tick, delta, data); err != nil {
+			if err := e.runWave(ctx, world, node, tick, delta, data, logger); err != nil {
 				return fmt.Errorf("plan node %d phase %q wave %d: %w", nodeIndex, node.Phase, node.Wave, err)
 			}
 
@@ -76,7 +82,15 @@ type systemResult struct {
 	err      error
 }
 
-func (e *Executor) runWave(ctx context.Context, world *core.World, node PlanNode, tick uint64, delta time.Duration, data any) error {
+func (e *Executor) runWave(
+	ctx context.Context,
+	world *core.World,
+	node PlanNode,
+	tick uint64,
+	delta time.Duration,
+	data any,
+	logger *slog.Logger,
+) error {
 	results := make([]systemResult, len(node.Systems))
 	var wait sync.WaitGroup
 	wait.Add(len(node.Systems))
@@ -105,6 +119,7 @@ func (e *Executor) runWave(ctx context.Context, world *core.World, node PlanNode
 				Tick:     tick,
 				Delta:    delta,
 				Data:     data,
+				Logger:   logger,
 			})
 		}()
 	}

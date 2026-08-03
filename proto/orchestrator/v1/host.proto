@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+package orchestrator.v1;
+
+option go_package = "minecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1";
+
+// HostEnvelope is the sole payload carried over the local framed socket.
+message HostEnvelope {
+  oneof payload {
+    HostHello hello = 1;
+    HostConfigure configure = 2;
+    HostShutdown shutdown = 3;
+    BotObservation observation = 4;
+  }
+}
+
+message HostHello {
+  string token = 1;
+  uint32 protocol_version = 2;
+}
+
+message HostConfigure {
+  uint64 generation = 1;
+  repeated BotConfiguration bots = 2;
+}
+
+message HostShutdown {}
+
+message BotConfiguration {
+  bytes profile_id = 1;
+  string username = 2;
+  string host = 3;
+  uint32 port = 4;
+  string auth = 5;
+  string version = 6;
+}
+
+message BotObservation {
+  bytes profile_id = 1;
+  string session_id = 2;
+  uint64 sequence = 3;
+  int64 observed_at_unix_ms = 4;
+
+  oneof payload {
+    BotStatusChanged status_changed = 10;
+    BotSpawned spawned = 11;
+    HostStateSnapshot state_snapshot = 12;
+    HostVitalsChanged vitals_changed = 13;
+    HostEffectsChanged effects_changed = 14;
+    HostPositionChanged position_changed = 15;
+    HostInventoryChanged inventory_changed = 16;
+  }
+}
+
+message BotStatusChanged {
+  BotConnectionState state = 1;
+  string detail = 2;
+}
+
+enum BotConnectionState {
+  BOT_CONNECTION_STATE_UNSPECIFIED = 0;
+  BOT_CONNECTION_STATE_CONNECTING = 1;
+  BOT_CONNECTION_STATE_CONNECTED = 2;
+  BOT_CONNECTION_STATE_DISCONNECTED = 3;
+  BOT_CONNECTION_STATE_KICKED = 4;
+  BOT_CONNECTION_STATE_ERROR = 5;
+}
+
+message BotSpawned {
+  HostBotState state = 1;
+}
+
+message HostStateSnapshot {
+  HostBotState state = 1;
+}
+
+message HostVitalsChanged {
+  HostVitals vitals = 1;
+}
+
+message HostEffectsChanged {
+  repeated HostPotionEffect effects = 1;
+}
+
+message HostPositionChanged {
+  HostPosition position = 1;
+}
+
+message HostInventoryChanged {
+  repeated HostInventorySlot slots = 1;
+  int32 selected_hotbar_slot = 2;
+  bool selected_hotbar_slot_changed = 3;
+}
+
+message HostBotState {
+  HostVitals vitals = 1;
+  repeated HostPotionEffect effects = 2;
+  HostPosition position = 3;
+  HostInventory inventory = 4;
+  int32 game_mode = 5;
+}
+
+message HostVitals {
+  double health = 1;
+  int32 food = 2;
+  double saturation = 3;
+  int32 oxygen = 4;
+}
+
+message HostPotionEffect {
+  int32 id = 1;
+  string name = 2;
+  int32 amplifier = 3;
+  int32 duration_ticks = 4;
+}
+
+message HostPosition {
+  string dimension = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+  double pitch = 6;
+  double velocity_x = 7;
+  double velocity_y = 8;
+  double velocity_z = 9;
+}
+
+message HostInventory {
+  int32 selected_hotbar_slot = 1;
+  repeated HostInventorySlot slots = 2;
+}
+
+message HostInventorySlot {
+  int32 slot = 1;
+  HostItemStack item = 2;
+}
+
+message HostItemStack {
+  int32 id = 1;
+  string name = 2;
+  int32 metadata = 3;
+  int32 count = 4;
+}

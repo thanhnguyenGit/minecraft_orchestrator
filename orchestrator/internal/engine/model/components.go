@@ -15,10 +15,11 @@ const (
 	CVelocity
 	CHealth
 	CBot
-	CHunger
-	CInputState
-	CConnection
-	CDisconnected
+	CRotation
+	CGameMode
+	CSession
+	CInventory
+	CEffects
 	ComponentCount
 )
 
@@ -31,19 +32,22 @@ func ParseComponent(v uint8) (Component, error) {
 }
 
 var componentNames = [...]string{
-	"Meta",
 	"Position",
 	"Velocity",
-	"Bot",
 	"Health",
-	"Hunger",
-	"InputState",
-	"Connection",
-	"Disconnected",
+	"Bot",
+	"Rotation",
+	"GameMode",
+	"Session",
+	"Inventory",
+	"Effects",
 }
 
+type ProfileID [16]byte
+
 type Bot struct {
-	ID uint64
+	ProfileID ProfileID
+	Username  string
 }
 
 type Position struct {
@@ -54,36 +58,77 @@ type Velocity struct {
 	X, Y, Z float64
 }
 
-type Connection struct {
-	ClientId string
-	SessionId string
+type Rotation struct {
+	Yaw, Pitch float32
 }
 
-type Disconnected struct {
-	SinceTick uint64
+type GameMode uint8
+
+const (
+	GameModeSurvival GameMode = iota
+	GameModeCreative
+	GameModeAdventure
+	GameModeSpectator
+)
+
+type SessionPhase uint8
+
+const (
+	SessionStopped SessionPhase = iota
+	SessionConnecting
+	SessionPlayReady
+	SessionRetryWaiting
+	SessionFailed
+)
+
+func (p SessionPhase) String() string {
+	switch p {
+	case SessionStopped:
+		return "stopped"
+	case SessionConnecting:
+		return "connecting"
+	case SessionPlayReady:
+		return "play_ready"
+	case SessionRetryWaiting:
+		return "retry_waiting"
+	case SessionFailed:
+		return "failed"
+	default:
+		return fmt.Sprintf("SessionPhase(%d)", p)
+	}
 }
+
+type Session struct {
+	Phase          SessionPhase
+	AttemptID      uint64
+	PlayerEntityID int32
+	Failure        string
+	RemoteSessionID string
+	LastSequence    uint64
+}
+
+type ItemStack struct { ID int32; Name string; Metadata int32; Count int32 }
+type InventorySlot struct { Slot int32; Item *ItemStack }
+type Inventory struct { SelectedHotbarSlot int32; Slots []InventorySlot }
+type Effect struct { ID int32; Name string; Amplifier int32; DurationTicks int32 }
+type Effects struct { Values []Effect }
 
 type Health struct {
 	Current float64
-	Max float64
+	Max     float64
 }
 
 var (
-	ConnectedBotMask = Components(
+	MirroredBotMask = Components(
 		CPosition,
 		CVelocity,
 		CHealth,
 		CBot,
-		// CInputState,
-		CConnection,
-	)
-	DisconnectedBotMask = Components( 
-		CPosition,
-		CVelocity,
-		CHealth,
-		CBot,
-		// CInputState,
-		CDisconnected,
+		CRotation,
+		CGameMode,
+		CSession,
+		CInventory,
+		CEffects,
 	)
 )
 
@@ -144,4 +189,3 @@ func (m Mask) String() string {
 
 	return "{" + strings.Join(parts, ",") + "}"
 }
-

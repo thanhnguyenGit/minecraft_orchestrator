@@ -15,6 +15,15 @@ func mustCreateEntity(t testing.TB, w *World, b Bundle) Entity {
 	return e
 }
 
+func profileIDForTest(id uint64) model.ProfileID {
+	var profileID model.ProfileID
+	for offset := 0; id > 0; offset++ {
+		profileID[len(profileID)-1-offset] = byte(id)
+		id >>= 8
+	}
+	return profileID
+}
+
 func makeBundle(mask model.Mask, botID uint64) Bundle {
 	var b Bundle
 	for c := range model.ComponentCount {
@@ -29,11 +38,7 @@ func makeBundle(mask model.Mask, botID uint64) Bundle {
 		case model.CHealth:
 			b.Set(c, model.Health{Current: 20, Max: 20})
 		case model.CBot:
-			b.Set(c, model.Bot{ID: botID})
-		case model.CConnection:
-			b.Set(c, model.Connection{ClientId: "client"})
-		case model.CDisconnected:
-			b.Set(c, model.Disconnected{SinceTick: 1})
+			b.Set(c, model.Bot{ProfileID: profileIDForTest(botID), Username: "test-bot"})
 		}
 	}
 	return b
@@ -284,8 +289,8 @@ func TestWorld_Create_Success(t *testing.T) {
 	if !loc.alive {
 		t.Fatal("entity should be alive after create")
 	}
-	if _, found := w.botIndex[100]; !found {
-		t.Fatal("bot ID should be in botIndex")
+	if _, found := w.botIndex[profileIDForTest(100)]; !found {
+		t.Fatal("bot profile ID should be in botIndex")
 	}
 }
 
@@ -358,8 +363,8 @@ func TestWorld_Destroy_Success(t *testing.T) {
 		t.Fatal("entity should be dead after destroy")
 	}
 
-	if _, found := w.botIndex[100]; found {
-		t.Fatal("bot ID should be removed from botIndex")
+	if _, found := w.botIndex[profileIDForTest(100)]; found {
+		t.Fatal("bot profile ID should be removed from botIndex")
 	}
 }
 
@@ -487,8 +492,8 @@ func TestWorld_Migrate_Success(t *testing.T) {
 		t.Fatalf("loc.mask = %v, want %v", loc.mask, destMask)
 	}
 
-	if _, found := w.botIndex[100]; !found {
-		t.Fatal("bot ID should still be in botIndex")
+	if _, found := w.botIndex[profileIDForTest(100)]; !found {
+		t.Fatal("bot profile ID should still be in botIndex")
 	}
 }
 
@@ -504,8 +509,8 @@ func TestWorld_Migrate_BotRemoved(t *testing.T) {
 		t.Fatalf("migrateNow error = %v", err)
 	}
 
-	if _, found := w.botIndex[100]; found {
-		t.Fatal("bot ID should be removed from botIndex")
+	if _, found := w.botIndex[profileIDForTest(100)]; found {
+		t.Fatal("bot profile ID should be removed from botIndex")
 	}
 }
 
@@ -558,7 +563,7 @@ func TestWorld_CreateDestroyCycle(t *testing.T) {
 	if err == nil {
 		t.Fatal("entity should be dead")
 	}
-	if _, found := w.botIndex[100]; found {
+	if _, found := w.botIndex[profileIDForTest(100)]; found {
 		t.Fatal("bot should be removed from botIndex")
 	}
 
