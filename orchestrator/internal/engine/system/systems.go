@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"log/slog"
 
 	enginecore "minecraft_orchestrator/internal/engine/core"
 	"minecraft_orchestrator/internal/engine/model"
@@ -106,38 +107,199 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 				if bot.ProfileID != event.ProfileID {
 					continue
 				}
-				applyNetworkEvent(&view, index, event)
+
+				applyNetworkEvent(&view, index, event, ctx.Logger)
 			}
+		}
+	}
+
+	for _, view := range views {
+		for i, bot := range view.Bots {
+			ctx.Logger.Info("ecs.state",
+				"username", bot.Username,
+				"profile_id", fmt.Sprintf("%x", bot.ProfileID),
+				"phase", view.Sessions[i].Phase,
+				"remote_session", view.Sessions[i].RemoteSessionID,
+				"last_seq", view.Sessions[i].LastSequence,
+				"health", fmt.Sprintf("%.1f/%.1f", view.Healths[i].Current, view.Healths[i].Max),
+				"pos", fmt.Sprintf("(%.1f, %.1f, %.1f)", view.Positions[i].X, view.Positions[i].Y, view.Positions[i].Z),
+				"yaw", fmt.Sprintf("%.1f", view.Rotations[i].Yaw),
+				"pitch", fmt.Sprintf("%.1f", view.Rotations[i].Pitch),
+				"vel", fmt.Sprintf("(%.3f, %.3f, %.3f)", view.Velocitys[i].X, view.Velocitys[i].Y, view.Velocitys[i].Z),
+				"game_mode", view.GameModes[i],
+				"effects", len(view.Effectss[i].Values),
+				"inv_slots", len(view.Inventorys[i].Slots),
+				"inv_hotbar", view.Inventorys[i].SelectedHotbarSlot,
+			)
 		}
 	}
 
 	return nil
 }
 
-func applyNetworkEvent(view *enginecore.MirroredBotView, index int, event network.Event) {
+func applyNetworkEvent(
+	view *enginecore.MirroredBotView,
+	index int,
+	event network.Event,
+	logger *slog.Logger,
+) {
 	switch event.Kind {
 	case network.EventHostStatus:
-		applyHostStatus(view, index, event)
+		oldPhase := view.Sessions[index].Phase
+		if !applyHostStatus(view, index, event) {
+			logger.Debug("ecs.status_drop")
+			break
+		}
+		newPhase := view.Sessions[index].Phase
+		if newPhase != oldPhase {
+			logger.Debug("ecs.status",
+				"phase_from", oldPhase,
+				"phase_to", newPhase,
+			)
+		}
 	case network.EventHostSnapshot:
-		if acceptHostObservation(view, index, event) && event.Snapshot != nil {
+		if event.RemoteSessionID == "" {
+			logger.Debug(
+				"ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "empty_session",
+			)
+			break
+		}
+		lastSeq := view.Sessions[index].LastSequence
+		if !acceptHostObservation(view, index, event) {
+			logger.Debug(
+				"ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "stale_sequence",
+				"last_seq", lastSeq,
+			)
+			break
+		}
+		if event.Snapshot != nil {
+			logger.Debug(
+				"ecs.apply",
+				"kind", event.Kind,
+				"event", event,
+			)
 			applyHostSnapshot(view, index, *event.Snapshot)
 		}
 	case network.EventHostPosition:
-		if acceptHostObservation(view, index, event) && event.Position != nil {
-			applyHostSnapshot(view, index, *event.Position)
+		if event.RemoteSessionID == "" {
+			logger.Debug(
+				"ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "empty_session",
+			)
+			break
+		}
+		lastSeq := view.Sessions[index].LastSequence
+		if !acceptHostObservation(view, index, event) {
+			logger.Debug("ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "stale_sequence",
+				"last_seq", lastSeq,
+			)
+			break
+		}
+		if event.Position != nil {
+			logger.Debug(
+				"ecs.apply",
+				"kind", event.Kind,
+				"event", event,
+			)
+			view.Positions[index] = event.Position.Position
+			view.Rotations[index] = event.Position.Rotation
+			view.Velocitys[index] = event.Position.Velocity
 		}
 	case network.EventHostVitals:
-		if acceptHostObservation(view, index, event) && event.Vitals != nil {
+		if event.RemoteSessionID == "" {
+			logger.Debug(
+				"ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "empty_session",
+			)
+			break
+		}
+		lastSeq := view.Sessions[index].LastSequence
+		if !acceptHostObservation(view, index, event) {
+			logger.Debug("ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "stale_sequence",
+				"last_seq", lastSeq,
+			)
+			break
+		}
+		if event.Vitals != nil {
+			logger.Debug(
+				"ecs.apply",
+				"kind", event.Kind,
+				"event", event,
+			)
 			health := view.Healths[index]
 			health.Current = event.Vitals.Health
 			view.Healths[index] = health
 		}
 	case network.EventHostEffects:
-		if acceptHostObservation(view, index, event) && event.Effects != nil {
+		if event.RemoteSessionID == "" {
+			logger.Debug(
+				"ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "empty_session",
+			)
+			break
+		}
+		lastSeq := view.Sessions[index].LastSequence
+		if !acceptHostObservation(view, index, event) {
+			logger.Debug("ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "stale_sequence",
+				"last_seq", lastSeq,
+			)
+			break
+		}
+		if event.Effects != nil {
+			logger.Debug(
+				"ecs.apply",
+				"kind", event.Kind,
+				"event", event,
+			)
 			view.Effectss[index] = *event.Effects
 		}
 	case network.EventHostInventory:
-		if acceptHostObservation(view, index, event) && event.Inventory != nil {
+		if event.RemoteSessionID == "" {
+			logger.Debug(
+				"ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "empty_session",
+			)
+			break
+		}
+		lastSeq := view.Sessions[index].LastSequence
+		if !acceptHostObservation(view, index, event) {
+			logger.Debug("ecs.apply_drop",
+				"kind", event.Kind,
+				"event", event,
+				"reason", "stale_sequence",
+				"last_seq", lastSeq,
+			)
+			break
+		}
+		if event.Inventory != nil {
+			logger.Debug(
+				"ecs.apply",
+				"kind", event.Kind,
+				"event", event,
+			)
 			view.Inventorys[index] = *event.Inventory
 		}
 	}
@@ -147,31 +309,37 @@ func acceptHostObservation(view *enginecore.MirroredBotView, index int, event ne
 	if event.RemoteSessionID == "" {
 		return false
 	}
+
 	session := view.Sessions[index]
 	if session.RemoteSessionID != event.RemoteSessionID {
 		session.RemoteSessionID = event.RemoteSessionID
 		session.LastSequence = 0
 	}
+
 	if event.Sequence <= session.LastSequence {
 		return false
 	}
+
 	session.LastSequence = event.Sequence
 	if session.Phase != model.SessionPlayReady {
 		session.Phase = model.SessionPlayReady
 	}
+
 	view.Sessions[index] = session
 	return true
 }
 
-func applyHostStatus(view *enginecore.MirroredBotView, index int, event network.Event) {
+func applyHostStatus(view *enginecore.MirroredBotView, index int, event network.Event) bool {
 	session := view.Sessions[index]
 	if event.RemoteSessionID != "" && session.RemoteSessionID != event.RemoteSessionID {
 		session.RemoteSessionID = event.RemoteSessionID
 		session.LastSequence = 0
 	}
+
 	if event.Sequence <= session.LastSequence {
-		return
+		return false
 	}
+
 	session.LastSequence = event.Sequence
 	switch event.HostStatus {
 	case network.HostConnecting:
@@ -184,13 +352,16 @@ func applyHostStatus(view *enginecore.MirroredBotView, index int, event network.
 		session.Phase = model.SessionRetryWaiting
 		session.Failure = event.Failure
 	}
+
 	view.Sessions[index] = session
+	return true
 }
 
 func applyHostSnapshot(view *enginecore.MirroredBotView, index int, snapshot network.HostSnapshot) {
 	view.Positions[index], view.Rotations[index], view.Velocitys[index] = snapshot.Position, snapshot.Rotation, snapshot.Velocity
-	health := view.Healths[index]
+
+	health := &view.Healths[index]
 	health.Current = snapshot.Vitals.Health
-	view.Healths[index] = health
+
 	view.GameModes[index], view.Inventorys[index], view.Effectss[index] = snapshot.GameMode, snapshot.Inventory, snapshot.Effects
 }

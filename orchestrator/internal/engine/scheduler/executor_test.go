@@ -2,6 +2,8 @@ package scheduler
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -9,6 +11,10 @@ import (
 	"minecraft_orchestrator/internal/engine/core"
 	"minecraft_orchestrator/internal/engine/model"
 )
+
+func discardLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
+}
 
 type errorSystem struct {
 	id  SystemID
@@ -103,9 +109,25 @@ func TestRunFrame_EmptyPlan(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunFrame_NilLogger(t *testing.T) {
+	plan := &ExecutionPlan{}
+	pool := mustCreatePool(t, 1, 1)
+	defer pool.Close()
+	executor := mustCreateExecutor(t, plan, pool)
+	world := core.NewWorld()
+
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, nil)
+	if err == nil {
+		t.Fatal("expected error for nil logger")
+	}
+	if !strings.Contains(err.Error(), "logger") {
+		t.Fatalf("error = %v, want mention of logger", err)
 	}
 }
 
@@ -120,7 +142,7 @@ func TestRunFrame_PendingCommandsAfterPlan(t *testing.T) {
 		{SystemOrder: 1, Sequence: 0, Command: core.CreateCommand{Bundle: core.Bundle{Mask: model.Components(model.CPosition)}}},
 	}, nil)
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected error for pending commands")
 	}
@@ -143,7 +165,7 @@ func TestRunFrame_SyncNode(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -171,7 +193,7 @@ func TestRunFrame_SyncNode_Error(t *testing.T) {
 		{SystemOrder: 0, Sequence: 0, Command: core.CreateCommand{Bundle: core.Bundle{}}},
 	}, nil)
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected sync validation error")
 	}
@@ -197,7 +219,7 @@ func TestRunFrame_WaveNode_RunsSystem(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -220,7 +242,7 @@ func TestRunFrame_WaveNode_SystemError(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected error from system")
 	}
@@ -246,7 +268,7 @@ func TestRunFrame_WaveNode_SystemPanic(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected panic error")
 	}
@@ -286,7 +308,7 @@ func TestRunFrame_WaveNode_DirtyQuery(t *testing.T) {
 
 	world.Stage(nil, []model.Mask{dirtyMask})
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected dirty query conflict error")
 	}
@@ -308,7 +330,7 @@ func TestRunFrame_UnknownKind(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected error for unknown kind")
 	}
@@ -341,7 +363,7 @@ func TestRunFrame_StructuralCommandWithoutDeclaration(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected error for structural commands without declaration")
 	}
@@ -377,7 +399,7 @@ func TestRunFrame_CommandEffectsUndeclaredMask(t *testing.T) {
 	executor := mustCreateExecutor(t, plan, pool)
 	world := core.NewWorld()
 
-	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil)
+	err := executor.RunFrame(context.Background(), world, 0, time.Second, nil, discardLogger())
 	if err == nil {
 		t.Fatal("expected error for undeclared command effects")
 	}

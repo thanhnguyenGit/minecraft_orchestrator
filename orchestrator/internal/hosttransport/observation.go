@@ -10,25 +10,38 @@ import (
 
 // ObservationToEvent validates a host observation at the transport boundary
 // and converts it to an immutable Inbox event. It has no World access.
-func ObservationToEvent(observation *orchestratorv1.BotObservation, allowed map[model.ProfileID]struct{}) (network.Event, error) {
+func ObservationToEvent(
+	observation *orchestratorv1.BotObservation,
+	allowed map[model.ProfileID]struct{},
+) (network.Event, error) {
 	if observation == nil {
 		return network.Event{}, fmt.Errorf("host observation is nil")
 	}
+
 	if len(observation.GetProfileId()) != len(model.ProfileID{}) {
 		return network.Event{}, fmt.Errorf("host profile id has length %d, want 16", len(observation.GetProfileId()))
 	}
+
 	var profileID model.ProfileID
 	copy(profileID[:], observation.GetProfileId())
 	if _, ok := allowed[profileID]; !ok {
 		return network.Event{}, fmt.Errorf("host observation has unknown profile id")
 	}
+
 	if observation.GetSessionId() == "" {
 		return network.Event{}, fmt.Errorf("host observation has empty session id")
 	}
+
 	if observation.GetSequence() == 0 {
 		return network.Event{}, fmt.Errorf("host observation has zero sequence")
 	}
-	event := network.Event{ProfileID: profileID, RemoteSessionID: observation.GetSessionId(), Sequence: observation.GetSequence()}
+
+	event := network.Event{
+		ProfileID: profileID,
+		RemoteSessionID: observation.GetSessionId(),
+		Sequence: observation.GetSequence(),
+	}
+
 	switch payload := observation.GetPayload().(type) {
 	case *orchestratorv1.BotObservation_StatusChanged:
 		event.Kind = network.EventHostStatus
@@ -49,11 +62,18 @@ func ObservationToEvent(observation *orchestratorv1.BotObservation, allowed map[
 		event.Effects = &effects
 	case *orchestratorv1.BotObservation_PositionChanged:
 		event.Kind = network.EventHostPosition
-		snapshot := network.HostSnapshot{Position: position(payload.PositionChanged.GetPosition()), Rotation: rotation(payload.PositionChanged.GetPosition()), Velocity: velocity(payload.PositionChanged.GetPosition())}
+		snapshot := network.HostSnapshot{
+			Position: position(payload.PositionChanged.GetPosition()),
+			Rotation: rotation(payload.PositionChanged.GetPosition()),
+			Velocity: velocity(payload.PositionChanged.GetPosition()),
+		}
 		event.Position = &snapshot
 	case *orchestratorv1.BotObservation_InventoryChanged:
 		event.Kind = network.EventHostInventory
-		inventory := inventory(&orchestratorv1.HostInventory{SelectedHotbarSlot: payload.InventoryChanged.GetSelectedHotbarSlot(), Slots: payload.InventoryChanged.GetSlots()})
+		inventory := inventory(&orchestratorv1.HostInventory{
+			SelectedHotbarSlot: payload.InventoryChanged.GetSelectedHotbarSlot(),
+			Slots: payload.InventoryChanged.GetSlots(),
+		})
 		event.Inventory = &inventory
 	default:
 		return network.Event{}, fmt.Errorf("host observation has no payload")
@@ -84,54 +104,97 @@ func botState(state *orchestratorv1.HostBotState) *network.HostSnapshot {
 		return &network.HostSnapshot{}
 	}
 	p := state.GetPosition()
-	return &network.HostSnapshot{Vitals: vitals(state.GetVitals()), Position: position(p), Rotation: rotation(p), Velocity: velocity(p), Inventory: inventory(state.GetInventory()), Effects: effects(state.GetEffects()), GameMode: model.GameMode(state.GetGameMode())}
+	return &network.HostSnapshot{
+		Vitals: vitals(state.GetVitals()),
+		Position: position(p),
+		Rotation: rotation(p),
+		Velocity: velocity(p),
+		Inventory: inventory(state.GetInventory()),
+		Effects: effects(state.GetEffects()),
+		GameMode: model.GameMode(state.GetGameMode()),
+	}
 }
+
 func vitals(value *orchestratorv1.HostVitals) network.HostVitals {
 	if value == nil {
 		return network.HostVitals{}
 	}
-	return network.HostVitals{Health: value.GetHealth(), Food: value.GetFood(), Saturation: value.GetSaturation(), Oxygen: value.GetOxygen()}
+
+	return network.HostVitals{
+		Health: value.GetHealth(),
+		Food: value.GetFood(),
+		Saturation: value.GetSaturation(),
+		Oxygen: value.GetOxygen(),
+	}
 }
+
 func position(value *orchestratorv1.HostPosition) model.Position {
 	if value == nil {
 		return model.Position{}
 	}
 	return model.Position{X: value.GetX(), Y: value.GetY(), Z: value.GetZ()}
 }
+
 func rotation(value *orchestratorv1.HostPosition) model.Rotation {
 	if value == nil {
 		return model.Rotation{}
 	}
 	return model.Rotation{Yaw: float32(value.GetYaw()), Pitch: float32(value.GetPitch())}
 }
+
 func velocity(value *orchestratorv1.HostPosition) model.Velocity {
 	if value == nil {
 		return model.Velocity{}
 	}
 	return model.Velocity{X: value.GetVelocityX(), Y: value.GetVelocityY(), Z: value.GetVelocityZ()}
 }
+
 func effects(values []*orchestratorv1.HostPotionEffect) model.Effects {
-	result := model.Effects{Values: make([]model.Effect, 0, len(values))}
+	result := model.Effects{
+		Values: make([]model.Effect, 0, len(values)),
+	}
+
 	for _, value := range values {
 		if value != nil {
-			result.Values = append(result.Values, model.Effect{ID: value.GetId(), Name: value.GetName(), Amplifier: value.GetAmplifier(), DurationTicks: value.GetDurationTicks()})
+			result.Values = append(
+				result.Values,
+				model.Effect{
+					ID: value.GetId(),
+					Name: value.GetName(),
+					Amplifier: value.GetAmplifier(),
+					DurationTicks: value.GetDurationTicks(),
+				},
+			)
 		}
 	}
 	return result
 }
+
 func inventory(value *orchestratorv1.HostInventory) model.Inventory {
 	if value == nil {
 		return model.Inventory{}
 	}
-	result := model.Inventory{SelectedHotbarSlot: value.GetSelectedHotbarSlot(), Slots: make([]model.InventorySlot, 0, len(value.GetSlots()))}
+
+	result := model.Inventory{
+		SelectedHotbarSlot: value.GetSelectedHotbarSlot(),
+		Slots: make([]model.InventorySlot, 0, len(value.GetSlots())),
+	}
+
 	for _, slot := range value.GetSlots() {
 		if slot == nil {
 			continue
 		}
+
 		resultSlot := model.InventorySlot{Slot: slot.GetSlot()}
 		if item := slot.GetItem(); item != nil {
-			resultSlot.Item = &model.ItemStack{ID: item.GetId(), Name: item.GetName(), Metadata: item.GetMetadata(), Count: item.GetCount()}
+			resultSlot.Item = &model.ItemStack{
+				ID: item.GetId(),
+				Name: item.GetName(),
+				Metadata: item.GetMetadata(),
+				Count: item.GetCount(),
+			}
 		}
+
 		result.Slots = append(result.Slots, resultSlot)
 	}
 	return result

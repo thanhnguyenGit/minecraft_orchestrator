@@ -21,7 +21,12 @@ import (
 type runtimeExecutor func(context.Context, config.Minecraft, *slog.Logger) error
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(
+		context.Background(), 
+		os.Interrupt, 
+		syscall.SIGTERM,
+	)
+	
 	defer stop()
 
 	if err := run(ctx, os.Stdout); err != nil {
@@ -44,7 +49,10 @@ func run(ctx context.Context, output io.Writer) error {
 	}
 	logger, closeLogger := newLogger(output, logging)
 	logger.Info("orchestrator.start")
-	return errors.Join(runWithConfig(ctx, minecraft, logger, runRuntime), closeLogger())
+	return errors.Join(
+		runWithConfig(ctx, minecraft, logger, runRuntime), 
+		closeLogger(),
+	)
 }
 
 func loadDotenv() error {
@@ -119,7 +127,7 @@ func runRuntime(ctx context.Context, minecraft config.Minecraft, logger *slog.Lo
 	runtime, err := engineruntime.NewRuntime(engineruntime.HostConfig{
 		Host: minecraft.Host, Port: minecraft.Port, Auth: minecraft.Auth, Version: minecraft.Version,
 		NodeBinary: minecraft.NodeBinary, HostScript: minecraft.HostScript, Logger: logger.With("component", "mineflayer_host"),
-	}, bots, nil)
+	}, bots, nil, logger.With("component", "ecs"))
 	if err != nil {
 		return fmt.Errorf("create engine runtime: %w", err)
 	}

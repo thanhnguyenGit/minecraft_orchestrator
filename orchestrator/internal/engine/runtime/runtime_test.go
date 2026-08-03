@@ -2,6 +2,8 @@ package runtime
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"path/filepath"
 	"testing"
 	"time"
@@ -20,7 +22,7 @@ func TestRuntimeBootstrapsEntityBeforeStartingMineflayerHost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	runtime, err := NewRuntime(HostConfig{Host: "127.0.0.1", Port: 25565, Auth: "offline", Version: "1.21.11", NodeBinary: "node", HostScript: hostScript}, []BotSpec{{ProfileID: profileID, Username: "king_crimson_bot"}}, clock)
+	runtime, err := NewRuntime(HostConfig{Host: "127.0.0.1", Port: 25565, Auth: "offline", Version: "1.21.11", NodeBinary: "node", HostScript: hostScript}, []BotSpec{{ProfileID: profileID, Username: "king_crimson_bot"}}, clock, discardLogger())
 	if err != nil {
 		t.Fatalf("NewRuntime() error = %v", err)
 	}
@@ -39,6 +41,10 @@ func TestRuntimeBootstrapsEntityBeforeStartingMineflayerHost(t *testing.T) {
 type runtimeClock struct {
 	now    time.Time
 	onWait func()
+}
+
+func discardLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
 func (c *runtimeClock) Now() time.Time { return c.now }

@@ -78,18 +78,36 @@ func LoadMinecraftConfig() (Minecraft, error) {
 // LoadLogging reads optional structured logging settings from the environment.
 func LoadLogging() (Logging, error) {
 	level := slog.LevelInfo
+
 	if value := strings.TrimSpace(os.Getenv("MINECRAFT_LOG_LEVEL")); value != "" {
-		if err := level.UnmarshalText([]byte(strings.ToUpper(value))); err != nil {
-			return Logging{}, fmt.Errorf("MINECRAFT_LOG_LEVEL must be debug, info, warn, or error: %w", err)
+		switch strings.ToLower(value) {
+		case "debug":
+			level = slog.LevelDebug
+		case "info":
+			level = slog.LevelInfo
+		case "warn":
+			level = slog.LevelWarn
+		case "error":
+			level = slog.LevelError
+		default:
+			return Logging{}, fmt.Errorf("MINECRAFT_LOG_LEVEL must be debug, info, warn, or error, got %q", value)
 		}
 	}
 
 	format := LogFormatText
 	if value := strings.TrimSpace(os.Getenv("MINECRAFT_LOG_FORMAT")); value != "" {
-		format = LogFormat(strings.ToLower(value))
+		switch strings.ToLower(value) {
+		case "text":
+			format = LogFormatText
+		case "json":
+			format = LogFormatJSON
+		default:
+			return Logging{}, fmt.Errorf("MINECRAFT_LOG_FORMAT must be text or json: %q", format)
+		}
 	}
-	if format != LogFormatText && format != LogFormatJSON {
-		return Logging{}, fmt.Errorf("MINECRAFT_LOG_FORMAT must be text or json: %q", format)
-	}
-	return Logging{Level: level, Format: format}, nil
+
+	return Logging{
+		Level:  level,
+		Format: format,
+	}, nil
 }

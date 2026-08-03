@@ -81,6 +81,23 @@ const (
 	SessionFailed
 )
 
+func (p SessionPhase) String() string {
+	switch p {
+	case SessionStopped:
+		return "stopped"
+	case SessionConnecting:
+		return "connecting"
+	case SessionPlayReady:
+		return "play_ready"
+	case SessionRetryWaiting:
+		return "retry_waiting"
+	case SessionFailed:
+		return "failed"
+	default:
+		return fmt.Sprintf("SessionPhase(%d)", p)
+	}
+}
+
 type Session struct {
 	Phase          SessionPhase
 	AttemptID      uint64

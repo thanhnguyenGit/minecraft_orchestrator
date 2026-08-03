@@ -51,8 +51,13 @@ func NewAsyncHandler(next slog.Handler, capacity int) *AsyncHandler {
 		records: make(chan asyncRecord, capacity),
 		done:    make(chan struct{}),
 	}
+	
 	go state.run()
-	return &AsyncHandler{state: state, next: next}
+	
+	return &AsyncHandler{
+		state: state, 
+		next: next,
+	}
 }
 
 func (h *AsyncHandler) Enabled(ctx context.Context, level slog.Level) bool {

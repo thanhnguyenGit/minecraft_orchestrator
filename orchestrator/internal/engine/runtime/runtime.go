@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -27,6 +28,7 @@ type Runtime struct {
 	config HostConfig
 	bots   []BotSpec
 	clock  Clock
+	logger *slog.Logger
 
 	mu   sync.Mutex
 	host *HostSupervisor
@@ -36,11 +38,15 @@ func NewRuntime(
 	config HostConfig,
 	bots []BotSpec,
 	clock Clock,
+	logger *slog.Logger,
 ) (*Runtime, error) {
 	if len(bots) == 0 {
 		return nil, errors.New("runtime requires at least one bot")
 	}
-	
+	if logger == nil {
+		return nil, errors.New("engine logger is required")
+	}
+
 	plan, err := enginesystem.BuildScheduler()
 	if err != nil {
 		return nil, fmt.Errorf("build engine scheduler: %w", err)
@@ -66,6 +72,7 @@ func NewRuntime(
 		config:   config,
 		bots:     append([]BotSpec(nil), bots...),
 		clock:    clock,
+		logger:   logger,
 	}, nil
 }
 
@@ -102,7 +109,7 @@ func (r *Runtime) Run(ctx context.Context) error {
 			Outbox:    r.outbox,
 		}
 		bootstrap = nil
-		if err := r.executor.RunFrame(ctx, r.World, tick, delta, data); err != nil {
+		if err := r.executor.RunFrame(ctx, r.World, tick, delta, data, r.logger); err != nil {
 			return err
 		}
 		return host.Apply(ctx, r.outbox.Drain())
