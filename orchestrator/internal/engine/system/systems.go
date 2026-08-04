@@ -8,6 +8,7 @@ import (
 	"minecraft_orchestrator/internal/engine/model"
 	"minecraft_orchestrator/internal/engine/network"
 	"minecraft_orchestrator/internal/engine/scheduler"
+	"minecraft_orchestrator/internal/mc_protocol/chunk"
 )
 
 const (
@@ -102,6 +103,8 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 
 	views := ctx.World.MirroredBotViews()
 	for _, event := range data.Network.Events {
+		applyChunkEvent(ctx.World.Resources(), event, ctx.Logger)
+
 		for _, view := range views {
 			for index, bot := range view.Bots {
 				if bot.ProfileID != event.ProfileID {
@@ -113,9 +116,11 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 		}
 	}
 
+	worldViews := ctx.World.Resources().WorldViews()
+
 	for _, view := range views {
 		for i, bot := range view.Bots {
-			ctx.Logger.Info("ecs.state",
+			ctx.Logger.Debug("ecs.state",
 				"username", bot.Username,
 				"profile_id", fmt.Sprintf("%x", bot.ProfileID),
 				"phase", view.Sessions[i].Phase,
@@ -131,6 +136,19 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 				"inv_slots", len(view.Inventorys[i].Slots),
 				"inv_hotbar", view.Inventorys[i].SelectedHotbarSlot,
 			)
+
+			if worldView, ok := worldViews.Get(bot.ProfileID); ok {
+				chunks := len(worldView.GetChunks())
+				for cpos, ccol := range worldView.GetChunks() {
+					ctx.Logger.Debug("ecs.world",
+						"username", bot.Username,
+						"profile_id", fmt.Sprintf("%x", bot.ProfileID),
+						"chunk_position", cpos,
+						"chunk", ccol,
+						"chunk_counts", chunks,
+					)
+				}
+			}
 		}
 	}
 
@@ -364,4 +382,150 @@ func applyHostSnapshot(view *enginecore.MirroredBotView, index int, snapshot net
 	health.Current = snapshot.Vitals.Health
 
 	view.GameModes[index], view.Inventorys[index], view.Effectss[index] = snapshot.GameMode, snapshot.Inventory, snapshot.Effects
+}
+
+func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger *slog.Logger) {
+	views := resource.WorldViews()
+
+	perception, hasPerception := views.Get(event.ProfileID)
+
+	switch event.Kind {
+	case network.EventChunkLoad:
+		if event.ChunkLoad == nil {
+			return
+		}
+
+		logger.Info(
+			"ecs.chunk_load",
+			"kind", event.Kind.String(),
+			"position", event.ChunkLoad.Position,
+			"data_length", len(event.ChunkLoad.Data),
+			"min_y", event.ChunkLoad.MinY,
+			"height", event.ChunkLoad.Height,
+		)
+
+		if !hasPerception || perception.ActiveDimensionType.MinY != event.ChunkLoad.MinY || perception.ActiveDimensionType.Height != event.ChunkLoad.Height {
+			logger.Info(
+				"ecs.chunk_perception_init",
+				"has_perception", hasPerception,
+				"current_min_y", perception.ActiveDimensionType.MinY,
+				"event_min_y", event.ChunkLoad.MinY,
+				"current_height", perception.ActiveDimensionType.Height,
+				"event_height", event.ChunkLoad.Height,
+			)
+			attemptID := perception.AttemptID + 1
+			views.BeginAttempt(event.ProfileID, attemptID)
+			dimType := model.DimensionType{
+				RegistryID: 0,
+				Key:        "minecraft:overworld",
+				MinY:       event.ChunkLoad.MinY,
+				Height:     event.ChunkLoad.Height,
+			}
+			views.SetDimensionTypes(event.ProfileID, attemptID, []model.DimensionType{dimType})
+			views.BindDimension(event.ProfileID, attemptID, 0)
+
+			perception, hasPerception = views.Get(event.ProfileID)
+		}
+
+		if !hasPerception || !perception.HasActiveDimensionType {
+			logger.Info("ecs.chunk_drop", "reason", "no_active_dimension")
+			return
+		}
+
+		column, err := chunk.DecodeColumn(event.ChunkLoad.Data, perception.ActiveDimensionType)
+		if err != nil {
+			logger.Info("ecs.chunk_decode_error", "error", err)
+			return
+		}
+
+		views.ReplaceChunk(
+			event.ProfileID,
+			perception.AttemptID,
+			event.ChunkLoad.Position,
+			column,
+		)
+
+		chunks, ok := views.Get(event.ProfileID)
+		if !ok {
+			return
+		}
+
+		logger.Info("ecs.chunk_load", "stored_chunks", len(chunks.GetChunks()))
+	case network.EventChunkUnload:
+		if event.ChunkUnload == nil {
+			return
+		}
+
+		chunks, ok := resource.WorldViews().Get(event.ProfileID)
+		if !ok {
+			return
+		}
+
+		preChunkCount := len(chunks.GetChunks())
+
+		attemptID := uint64(0)
+		if hasPerception {
+			attemptID = perception.AttemptID
+		}
+
+		views.UnloadChunk(event.ProfileID, attemptID, *event.ChunkUnload)
+
+		currentChunkCount := len(chunks.GetChunks())
+
+		if currentChunkCount != preChunkCount {
+			logger.Info(
+				"ecs.chunk_unload",
+				"kind", event.Kind.String(),
+				"chunk", event.ChunkUnload,
+				"previous_chunk_count", preChunkCount,
+				"current_chunk_count", currentChunkCount,
+			)
+		}
+	case network.EventBlockStateChange:
+		if event.BlockStateChange == nil {
+			return
+		}
+		logger.Debug(
+			"ecs.chunk_block_change",
+			"kind", event.Kind.String(),
+			"position", event.BlockStateChange.Position,
+			"state_id", event.BlockStateChange.StateID,
+		)
+
+		attemptID := uint64(0)
+		if hasPerception {
+			attemptID = perception.AttemptID
+		}
+
+		views.SetBlockState(
+			event.ProfileID,
+			attemptID, event.BlockStateChange.Position,
+			event.BlockStateChange.StateID,
+		)
+	case network.EventMultiBlocksUpdated:
+		if event.MultiBlocksUpdated == nil {
+			return
+		}
+
+		logger.Debug(
+			"ecs.chunk_multi_block_change",
+			"kind", event.Kind.String(),
+			"records", len(event.MultiBlocksUpdated.Records),
+		)
+
+		attemptID := uint64(0)
+		if hasPerception {
+			attemptID = perception.AttemptID
+		}
+
+		updates := make([]model.BlockUpdate, len(event.MultiBlocksUpdated.Records))
+		for i, r := range event.MultiBlocksUpdated.Records {
+			updates[i] = model.BlockUpdate{
+				Position: r.Position,
+				StateID:  r.StateID,
+			}
+		}
+
+		views.SetBlockStates(event.ProfileID, attemptID, updates)
+	}
 }

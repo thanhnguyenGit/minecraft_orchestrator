@@ -19,6 +19,8 @@ type location struct {
 }
 
 type World struct {
+	resources Resources
+
 	// exact-match table lookup and deterministic mask-order iteration
 	tables     map[model.Mask]*Table
 	tableOrder []model.Mask
@@ -38,13 +40,19 @@ type World struct {
 
 func NewWorld() *World {
 	return &World{
-		tables:   make(map[model.Mask]*Table),
-		botIndex: make(map[model.ProfileID]Entity),
-		dirty:    make(map[model.Mask]struct{}),
+		resources: newResources(),
+		tables:    make(map[model.Mask]*Table),
+		botIndex:  make(map[model.ProfileID]Entity),
+		dirty:     make(map[model.Mask]struct{}),
 		// Reserve index 0 so a zero Entity is always invalid.
 		locations:   make([]location, 1),
 		generations: make([]uint32, 1),
 	}
+}
+
+// Resources returns World-owned singleton state.
+func (w *World) Resources() *Resources {
+	return &w.resources
 }
 
 func (w *World) ensureTable(mask model.Mask) *Table {

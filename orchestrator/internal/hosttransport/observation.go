@@ -37,9 +37,9 @@ func ObservationToEvent(
 	}
 
 	event := network.Event{
-		ProfileID: profileID,
+		ProfileID:       profileID,
 		RemoteSessionID: observation.GetSessionId(),
-		Sequence: observation.GetSequence(),
+		Sequence:        observation.GetSequence(),
 	}
 
 	switch payload := observation.GetPayload().(type) {
@@ -72,9 +72,45 @@ func ObservationToEvent(
 		event.Kind = network.EventHostInventory
 		inventory := inventory(&orchestratorv1.HostInventory{
 			SelectedHotbarSlot: payload.InventoryChanged.GetSelectedHotbarSlot(),
-			Slots: payload.InventoryChanged.GetSlots(),
+			Slots:               payload.InventoryChanged.GetSlots(),
 		})
 		event.Inventory = &inventory
+	case *orchestratorv1.BotObservation_ChunkLoaded:
+		event.Kind = network.EventChunkLoad
+		event.ChunkLoad = &network.ChunkLoad{
+			Position: model.ChunkPosition{
+				X: payload.ChunkLoaded.GetChunkX(),
+				Z: payload.ChunkLoaded.GetChunkZ(),
+			},
+			Data:   payload.ChunkLoaded.GetData(),
+			MinY:   payload.ChunkLoaded.GetMinY(),
+			Height: payload.ChunkLoaded.GetHeight(),
+		}
+	case *orchestratorv1.BotObservation_ChunkUnloaded:
+		event.Kind = network.EventChunkUnload
+		pos := model.ChunkPosition{
+			X: payload.ChunkUnloaded.GetChunkX(),
+			Z: payload.ChunkUnloaded.GetChunkZ(),
+		}
+
+		event.ChunkUnload = &pos
+	case *orchestratorv1.BotObservation_BlockUpdated:
+		event.Kind = network.EventBlockStateChange
+		event.BlockStateChange = &network.BlockStateChange{
+			Position: model.BlockPosition{X: payload.BlockUpdated.GetX(), Y: payload.BlockUpdated.GetY(), Z: payload.BlockUpdated.GetZ()},
+			StateID:  uint32(payload.BlockUpdated.GetStateId()),
+		}
+	case *orchestratorv1.BotObservation_MultiBlocksUpdated:
+		event.Kind = network.EventMultiBlocksUpdated
+		protoRecords := payload.MultiBlocksUpdated.GetRecords()
+		records := make([]network.BlockStateChange, len(protoRecords))
+		for i, r := range protoRecords {
+			records[i] = network.BlockStateChange{
+				Position: model.BlockPosition{X: r.GetX(), Y: r.GetY(), Z: r.GetZ()},
+				StateID:  uint32(r.GetStateId()),
+			}
+		}
+		event.MultiBlocksUpdated = &network.MultiBlocksUpdated{Records: records}
 	default:
 		return network.Event{}, fmt.Errorf("host observation has no payload")
 	}
@@ -105,13 +141,13 @@ func botState(state *orchestratorv1.HostBotState) *network.HostSnapshot {
 	}
 	p := state.GetPosition()
 	return &network.HostSnapshot{
-		Vitals: vitals(state.GetVitals()),
-		Position: position(p),
-		Rotation: rotation(p),
-		Velocity: velocity(p),
+		Vitals:    vitals(state.GetVitals()),
+		Position:  position(p),
+		Rotation:  rotation(p),
+		Velocity:  velocity(p),
 		Inventory: inventory(state.GetInventory()),
-		Effects: effects(state.GetEffects()),
-		GameMode: model.GameMode(state.GetGameMode()),
+		Effects:   effects(state.GetEffects()),
+		GameMode:  model.GameMode(state.GetGameMode()),
 	}
 }
 
@@ -121,10 +157,10 @@ func vitals(value *orchestratorv1.HostVitals) network.HostVitals {
 	}
 
 	return network.HostVitals{
-		Health: value.GetHealth(),
-		Food: value.GetFood(),
+		Health:     value.GetHealth(),
+		Food:       value.GetFood(),
 		Saturation: value.GetSaturation(),
-		Oxygen: value.GetOxygen(),
+		Oxygen:     value.GetOxygen(),
 	}
 }
 
@@ -159,9 +195,9 @@ func effects(values []*orchestratorv1.HostPotionEffect) model.Effects {
 			result.Values = append(
 				result.Values,
 				model.Effect{
-					ID: value.GetId(),
-					Name: value.GetName(),
-					Amplifier: value.GetAmplifier(),
+					ID:            value.GetId(),
+					Name:          value.GetName(),
+					Amplifier:     value.GetAmplifier(),
 					DurationTicks: value.GetDurationTicks(),
 				},
 			)
@@ -177,7 +213,7 @@ func inventory(value *orchestratorv1.HostInventory) model.Inventory {
 
 	result := model.Inventory{
 		SelectedHotbarSlot: value.GetSelectedHotbarSlot(),
-		Slots: make([]model.InventorySlot, 0, len(value.GetSlots())),
+		Slots:              make([]model.InventorySlot, 0, len(value.GetSlots())),
 	}
 
 	for _, slot := range value.GetSlots() {
@@ -188,10 +224,10 @@ func inventory(value *orchestratorv1.HostInventory) model.Inventory {
 		resultSlot := model.InventorySlot{Slot: slot.GetSlot()}
 		if item := slot.GetItem(); item != nil {
 			resultSlot.Item = &model.ItemStack{
-				ID: item.GetId(),
-				Name: item.GetName(),
+				ID:       item.GetId(),
+				Name:     item.GetName(),
 				Metadata: item.GetMetadata(),
-				Count: item.GetCount(),
+				Count:    item.GetCount(),
 			}
 		}
 

@@ -49,6 +49,10 @@ message BotObservation {
     HostEffectsChanged effects_changed = 14;
     HostPositionChanged position_changed = 15;
     HostInventoryChanged inventory_changed = 16;
+    HostChunkLoaded chunk_loaded = 17;
+    HostChunkUnloaded chunk_unloaded = 18;
+    HostBlockUpdated block_updated = 19;
+    HostMultiBlocksUpdated multi_blocks_updated = 20;
   }
 }
 
@@ -141,4 +145,34 @@ message HostItemStack {
   string name = 2;
   int32 metadata = 3;
   int32 count = 4;
+}
+
+message HostChunkLoaded {
+  int32 chunk_x = 1;
+  int32 chunk_z = 2;
+  bytes data = 3;
+  int32 min_y = 4;
+  int32 height = 5;
+}
+
+message HostChunkUnloaded {
+  int32 chunk_x = 1;
+  int32 chunk_z = 2;
+}
+
+message HostBlockUpdated {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+  int32 state_id = 4;
+}
+
+message HostMultiBlocksUpdated {
+  message BlockRecord {
+    int32 x = 1;
+    int32 y = 2;
+    int32 z = 3;
+    int32 state_id = 4;
+  }
+  repeated BlockRecord records = 1;
 }

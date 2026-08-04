@@ -433,6 +433,10 @@ type BotObservation struct {
 	//	*BotObservation_EffectsChanged
 	//	*BotObservation_PositionChanged
 	//	*BotObservation_InventoryChanged
+	//	*BotObservation_ChunkLoaded
+	//	*BotObservation_ChunkUnloaded
+	//	*BotObservation_BlockUpdated
+	//	*BotObservation_MultiBlocksUpdated
 	Payload       isBotObservation_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -566,6 +570,42 @@ func (x *BotObservation) GetInventoryChanged() *HostInventoryChanged {
 	return nil
 }
 
+func (x *BotObservation) GetChunkLoaded() *HostChunkLoaded {
+	if x != nil {
+		if x, ok := x.Payload.(*BotObservation_ChunkLoaded); ok {
+			return x.ChunkLoaded
+		}
+	}
+	return nil
+}
+
+func (x *BotObservation) GetChunkUnloaded() *HostChunkUnloaded {
+	if x != nil {
+		if x, ok := x.Payload.(*BotObservation_ChunkUnloaded); ok {
+			return x.ChunkUnloaded
+		}
+	}
+	return nil
+}
+
+func (x *BotObservation) GetBlockUpdated() *HostBlockUpdated {
+	if x != nil {
+		if x, ok := x.Payload.(*BotObservation_BlockUpdated); ok {
+			return x.BlockUpdated
+		}
+	}
+	return nil
+}
+
+func (x *BotObservation) GetMultiBlocksUpdated() *HostMultiBlocksUpdated {
+	if x != nil {
+		if x, ok := x.Payload.(*BotObservation_MultiBlocksUpdated); ok {
+			return x.MultiBlocksUpdated
+		}
+	}
+	return nil
+}
+
 type isBotObservation_Payload interface {
 	isBotObservation_Payload()
 }
@@ -598,6 +638,22 @@ type BotObservation_InventoryChanged struct {
 	InventoryChanged *HostInventoryChanged `protobuf:"bytes,16,opt,name=inventory_changed,json=inventoryChanged,proto3,oneof"`
 }
 
+type BotObservation_ChunkLoaded struct {
+	ChunkLoaded *HostChunkLoaded `protobuf:"bytes,17,opt,name=chunk_loaded,json=chunkLoaded,proto3,oneof"`
+}
+
+type BotObservation_ChunkUnloaded struct {
+	ChunkUnloaded *HostChunkUnloaded `protobuf:"bytes,18,opt,name=chunk_unloaded,json=chunkUnloaded,proto3,oneof"`
+}
+
+type BotObservation_BlockUpdated struct {
+	BlockUpdated *HostBlockUpdated `protobuf:"bytes,19,opt,name=block_updated,json=blockUpdated,proto3,oneof"`
+}
+
+type BotObservation_MultiBlocksUpdated struct {
+	MultiBlocksUpdated *HostMultiBlocksUpdated `protobuf:"bytes,20,opt,name=multi_blocks_updated,json=multiBlocksUpdated,proto3,oneof"`
+}
+
 func (*BotObservation_StatusChanged) isBotObservation_Payload() {}
 
 func (*BotObservation_Spawned) isBotObservation_Payload() {}
@@ -611,6 +667,14 @@ func (*BotObservation_EffectsChanged) isBotObservation_Payload() {}
 func (*BotObservation_PositionChanged) isBotObservation_Payload() {}
 
 func (*BotObservation_InventoryChanged) isBotObservation_Payload() {}
+
+func (*BotObservation_ChunkLoaded) isBotObservation_Payload() {}
+
+func (*BotObservation_ChunkUnloaded) isBotObservation_Payload() {}
+
+func (*BotObservation_BlockUpdated) isBotObservation_Payload() {}
+
+func (*BotObservation_MultiBlocksUpdated) isBotObservation_Payload() {}
 
 type BotStatusChanged struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1436,6 +1500,314 @@ func (x *HostItemStack) GetCount() int32 {
 	return 0
 }
 
+type HostChunkLoaded struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChunkX        int32                  `protobuf:"varint,1,opt,name=chunk_x,json=chunkX,proto3" json:"chunk_x,omitempty"`
+	ChunkZ        int32                  `protobuf:"varint,2,opt,name=chunk_z,json=chunkZ,proto3" json:"chunk_z,omitempty"`
+	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	MinY          int32                  `protobuf:"varint,4,opt,name=min_y,json=minY,proto3" json:"min_y,omitempty"`
+	Height        int32                  `protobuf:"varint,5,opt,name=height,proto3" json:"height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostChunkLoaded) Reset() {
+	*x = HostChunkLoaded{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostChunkLoaded) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostChunkLoaded) ProtoMessage() {}
+
+func (x *HostChunkLoaded) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostChunkLoaded.ProtoReflect.Descriptor instead.
+func (*HostChunkLoaded) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *HostChunkLoaded) GetChunkX() int32 {
+	if x != nil {
+		return x.ChunkX
+	}
+	return 0
+}
+
+func (x *HostChunkLoaded) GetChunkZ() int32 {
+	if x != nil {
+		return x.ChunkZ
+	}
+	return 0
+}
+
+func (x *HostChunkLoaded) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *HostChunkLoaded) GetMinY() int32 {
+	if x != nil {
+		return x.MinY
+	}
+	return 0
+}
+
+func (x *HostChunkLoaded) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+type HostChunkUnloaded struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChunkX        int32                  `protobuf:"varint,1,opt,name=chunk_x,json=chunkX,proto3" json:"chunk_x,omitempty"`
+	ChunkZ        int32                  `protobuf:"varint,2,opt,name=chunk_z,json=chunkZ,proto3" json:"chunk_z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostChunkUnloaded) Reset() {
+	*x = HostChunkUnloaded{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostChunkUnloaded) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostChunkUnloaded) ProtoMessage() {}
+
+func (x *HostChunkUnloaded) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostChunkUnloaded.ProtoReflect.Descriptor instead.
+func (*HostChunkUnloaded) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *HostChunkUnloaded) GetChunkX() int32 {
+	if x != nil {
+		return x.ChunkX
+	}
+	return 0
+}
+
+func (x *HostChunkUnloaded) GetChunkZ() int32 {
+	if x != nil {
+		return x.ChunkZ
+	}
+	return 0
+}
+
+type HostBlockUpdated struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,3,opt,name=z,proto3" json:"z,omitempty"`
+	StateId       int32                  `protobuf:"varint,4,opt,name=state_id,json=stateId,proto3" json:"state_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostBlockUpdated) Reset() {
+	*x = HostBlockUpdated{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostBlockUpdated) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostBlockUpdated) ProtoMessage() {}
+
+func (x *HostBlockUpdated) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostBlockUpdated.ProtoReflect.Descriptor instead.
+func (*HostBlockUpdated) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *HostBlockUpdated) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *HostBlockUpdated) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *HostBlockUpdated) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+func (x *HostBlockUpdated) GetStateId() int32 {
+	if x != nil {
+		return x.StateId
+	}
+	return 0
+}
+
+type HostMultiBlocksUpdated struct {
+	state         protoimpl.MessageState                `protogen:"open.v1"`
+	Records       []*HostMultiBlocksUpdated_BlockRecord `protobuf:"bytes,1,rep,name=records,proto3" json:"records,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostMultiBlocksUpdated) Reset() {
+	*x = HostMultiBlocksUpdated{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostMultiBlocksUpdated) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostMultiBlocksUpdated) ProtoMessage() {}
+
+func (x *HostMultiBlocksUpdated) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostMultiBlocksUpdated.ProtoReflect.Descriptor instead.
+func (*HostMultiBlocksUpdated) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *HostMultiBlocksUpdated) GetRecords() []*HostMultiBlocksUpdated_BlockRecord {
+	if x != nil {
+		return x.Records
+	}
+	return nil
+}
+
+type HostMultiBlocksUpdated_BlockRecord struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,3,opt,name=z,proto3" json:"z,omitempty"`
+	StateId       int32                  `protobuf:"varint,4,opt,name=state_id,json=stateId,proto3" json:"state_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) Reset() {
+	*x = HostMultiBlocksUpdated_BlockRecord{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostMultiBlocksUpdated_BlockRecord) ProtoMessage() {}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostMultiBlocksUpdated_BlockRecord.ProtoReflect.Descriptor instead.
+func (*HostMultiBlocksUpdated_BlockRecord) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{23, 0}
+}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+func (x *HostMultiBlocksUpdated_BlockRecord) GetStateId() int32 {
+	if x != nil {
+		return x.StateId
+	}
+	return 0
+}
+
 var File_orchestrator_v1_host_proto protoreflect.FileDescriptor
 
 const file_orchestrator_v1_host_proto_rawDesc = "" +
@@ -1463,7 +1835,7 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\x04host\x18\x03 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x04 \x01(\rR\x04port\x12\x12\n" +
 	"\x04auth\x18\x05 \x01(\tR\x04auth\x12\x18\n" +
-	"\aversion\x18\x06 \x01(\tR\aversion\"\xbc\x05\n" +
+	"\aversion\x18\x06 \x01(\tR\aversion\"\xf7\a\n" +
 	"\x0eBotObservation\x12\x1d\n" +
 	"\n" +
 	"profile_id\x18\x01 \x01(\fR\tprofileId\x12\x1d\n" +
@@ -1478,7 +1850,11 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\x0evitals_changed\x18\r \x01(\v2\".orchestrator.v1.HostVitalsChangedH\x00R\rvitalsChanged\x12N\n" +
 	"\x0feffects_changed\x18\x0e \x01(\v2#.orchestrator.v1.HostEffectsChangedH\x00R\x0eeffectsChanged\x12Q\n" +
 	"\x10position_changed\x18\x0f \x01(\v2$.orchestrator.v1.HostPositionChangedH\x00R\x0fpositionChanged\x12T\n" +
-	"\x11inventory_changed\x18\x10 \x01(\v2%.orchestrator.v1.HostInventoryChangedH\x00R\x10inventoryChangedB\t\n" +
+	"\x11inventory_changed\x18\x10 \x01(\v2%.orchestrator.v1.HostInventoryChangedH\x00R\x10inventoryChanged\x12E\n" +
+	"\fchunk_loaded\x18\x11 \x01(\v2 .orchestrator.v1.HostChunkLoadedH\x00R\vchunkLoaded\x12K\n" +
+	"\x0echunk_unloaded\x18\x12 \x01(\v2\".orchestrator.v1.HostChunkUnloadedH\x00R\rchunkUnloaded\x12H\n" +
+	"\rblock_updated\x18\x13 \x01(\v2!.orchestrator.v1.HostBlockUpdatedH\x00R\fblockUpdated\x12[\n" +
+	"\x14multi_blocks_updated\x18\x14 \x01(\v2'.orchestrator.v1.HostMultiBlocksUpdatedH\x00R\x12multiBlocksUpdatedB\t\n" +
 	"\apayload\"e\n" +
 	"\x10BotStatusChanged\x129\n" +
 	"\x05state\x18\x01 \x01(\x0e2#.orchestrator.v1.BotConnectionStateR\x05state\x12\x16\n" +
@@ -1540,7 +1916,28 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
 	"\bmetadata\x18\x03 \x01(\x05R\bmetadata\x12\x14\n" +
-	"\x05count\x18\x04 \x01(\x05R\x05count*\xeb\x01\n" +
+	"\x05count\x18\x04 \x01(\x05R\x05count\"\x84\x01\n" +
+	"\x0fHostChunkLoaded\x12\x17\n" +
+	"\achunk_x\x18\x01 \x01(\x05R\x06chunkX\x12\x17\n" +
+	"\achunk_z\x18\x02 \x01(\x05R\x06chunkZ\x12\x12\n" +
+	"\x04data\x18\x03 \x01(\fR\x04data\x12\x13\n" +
+	"\x05min_y\x18\x04 \x01(\x05R\x04minY\x12\x16\n" +
+	"\x06height\x18\x05 \x01(\x05R\x06height\"E\n" +
+	"\x11HostChunkUnloaded\x12\x17\n" +
+	"\achunk_x\x18\x01 \x01(\x05R\x06chunkX\x12\x17\n" +
+	"\achunk_z\x18\x02 \x01(\x05R\x06chunkZ\"W\n" +
+	"\x10HostBlockUpdated\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x03 \x01(\x05R\x01z\x12\x19\n" +
+	"\bstate_id\x18\x04 \x01(\x05R\astateId\"\xbb\x01\n" +
+	"\x16HostMultiBlocksUpdated\x12M\n" +
+	"\arecords\x18\x01 \x03(\v23.orchestrator.v1.HostMultiBlocksUpdated.BlockRecordR\arecords\x1aR\n" +
+	"\vBlockRecord\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x03 \x01(\x05R\x01z\x12\x19\n" +
+	"\bstate_id\x18\x04 \x01(\x05R\astateId*\xeb\x01\n" +
 	"\x12BotConnectionState\x12$\n" +
 	" BOT_CONNECTION_STATE_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fBOT_CONNECTION_STATE_CONNECTING\x10\x01\x12\"\n" +
@@ -1562,29 +1959,34 @@ func file_orchestrator_v1_host_proto_rawDescGZIP() []byte {
 }
 
 var file_orchestrator_v1_host_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_orchestrator_v1_host_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_orchestrator_v1_host_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_orchestrator_v1_host_proto_goTypes = []any{
-	(BotConnectionState)(0),      // 0: orchestrator.v1.BotConnectionState
-	(*HostEnvelope)(nil),         // 1: orchestrator.v1.HostEnvelope
-	(*HostHello)(nil),            // 2: orchestrator.v1.HostHello
-	(*HostConfigure)(nil),        // 3: orchestrator.v1.HostConfigure
-	(*HostShutdown)(nil),         // 4: orchestrator.v1.HostShutdown
-	(*BotConfiguration)(nil),     // 5: orchestrator.v1.BotConfiguration
-	(*BotObservation)(nil),       // 6: orchestrator.v1.BotObservation
-	(*BotStatusChanged)(nil),     // 7: orchestrator.v1.BotStatusChanged
-	(*BotSpawned)(nil),           // 8: orchestrator.v1.BotSpawned
-	(*HostStateSnapshot)(nil),    // 9: orchestrator.v1.HostStateSnapshot
-	(*HostVitalsChanged)(nil),    // 10: orchestrator.v1.HostVitalsChanged
-	(*HostEffectsChanged)(nil),   // 11: orchestrator.v1.HostEffectsChanged
-	(*HostPositionChanged)(nil),  // 12: orchestrator.v1.HostPositionChanged
-	(*HostInventoryChanged)(nil), // 13: orchestrator.v1.HostInventoryChanged
-	(*HostBotState)(nil),         // 14: orchestrator.v1.HostBotState
-	(*HostVitals)(nil),           // 15: orchestrator.v1.HostVitals
-	(*HostPotionEffect)(nil),     // 16: orchestrator.v1.HostPotionEffect
-	(*HostPosition)(nil),         // 17: orchestrator.v1.HostPosition
-	(*HostInventory)(nil),        // 18: orchestrator.v1.HostInventory
-	(*HostInventorySlot)(nil),    // 19: orchestrator.v1.HostInventorySlot
-	(*HostItemStack)(nil),        // 20: orchestrator.v1.HostItemStack
+	(BotConnectionState)(0),                    // 0: orchestrator.v1.BotConnectionState
+	(*HostEnvelope)(nil),                       // 1: orchestrator.v1.HostEnvelope
+	(*HostHello)(nil),                          // 2: orchestrator.v1.HostHello
+	(*HostConfigure)(nil),                      // 3: orchestrator.v1.HostConfigure
+	(*HostShutdown)(nil),                       // 4: orchestrator.v1.HostShutdown
+	(*BotConfiguration)(nil),                   // 5: orchestrator.v1.BotConfiguration
+	(*BotObservation)(nil),                     // 6: orchestrator.v1.BotObservation
+	(*BotStatusChanged)(nil),                   // 7: orchestrator.v1.BotStatusChanged
+	(*BotSpawned)(nil),                         // 8: orchestrator.v1.BotSpawned
+	(*HostStateSnapshot)(nil),                  // 9: orchestrator.v1.HostStateSnapshot
+	(*HostVitalsChanged)(nil),                  // 10: orchestrator.v1.HostVitalsChanged
+	(*HostEffectsChanged)(nil),                 // 11: orchestrator.v1.HostEffectsChanged
+	(*HostPositionChanged)(nil),                // 12: orchestrator.v1.HostPositionChanged
+	(*HostInventoryChanged)(nil),               // 13: orchestrator.v1.HostInventoryChanged
+	(*HostBotState)(nil),                       // 14: orchestrator.v1.HostBotState
+	(*HostVitals)(nil),                         // 15: orchestrator.v1.HostVitals
+	(*HostPotionEffect)(nil),                   // 16: orchestrator.v1.HostPotionEffect
+	(*HostPosition)(nil),                       // 17: orchestrator.v1.HostPosition
+	(*HostInventory)(nil),                      // 18: orchestrator.v1.HostInventory
+	(*HostInventorySlot)(nil),                  // 19: orchestrator.v1.HostInventorySlot
+	(*HostItemStack)(nil),                      // 20: orchestrator.v1.HostItemStack
+	(*HostChunkLoaded)(nil),                    // 21: orchestrator.v1.HostChunkLoaded
+	(*HostChunkUnloaded)(nil),                  // 22: orchestrator.v1.HostChunkUnloaded
+	(*HostBlockUpdated)(nil),                   // 23: orchestrator.v1.HostBlockUpdated
+	(*HostMultiBlocksUpdated)(nil),             // 24: orchestrator.v1.HostMultiBlocksUpdated
+	(*HostMultiBlocksUpdated_BlockRecord)(nil), // 25: orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
 }
 var file_orchestrator_v1_host_proto_depIdxs = []int32{
 	2,  // 0: orchestrator.v1.HostEnvelope.hello:type_name -> orchestrator.v1.HostHello
@@ -1599,24 +2001,29 @@ var file_orchestrator_v1_host_proto_depIdxs = []int32{
 	11, // 9: orchestrator.v1.BotObservation.effects_changed:type_name -> orchestrator.v1.HostEffectsChanged
 	12, // 10: orchestrator.v1.BotObservation.position_changed:type_name -> orchestrator.v1.HostPositionChanged
 	13, // 11: orchestrator.v1.BotObservation.inventory_changed:type_name -> orchestrator.v1.HostInventoryChanged
-	0,  // 12: orchestrator.v1.BotStatusChanged.state:type_name -> orchestrator.v1.BotConnectionState
-	14, // 13: orchestrator.v1.BotSpawned.state:type_name -> orchestrator.v1.HostBotState
-	14, // 14: orchestrator.v1.HostStateSnapshot.state:type_name -> orchestrator.v1.HostBotState
-	15, // 15: orchestrator.v1.HostVitalsChanged.vitals:type_name -> orchestrator.v1.HostVitals
-	16, // 16: orchestrator.v1.HostEffectsChanged.effects:type_name -> orchestrator.v1.HostPotionEffect
-	17, // 17: orchestrator.v1.HostPositionChanged.position:type_name -> orchestrator.v1.HostPosition
-	19, // 18: orchestrator.v1.HostInventoryChanged.slots:type_name -> orchestrator.v1.HostInventorySlot
-	15, // 19: orchestrator.v1.HostBotState.vitals:type_name -> orchestrator.v1.HostVitals
-	16, // 20: orchestrator.v1.HostBotState.effects:type_name -> orchestrator.v1.HostPotionEffect
-	17, // 21: orchestrator.v1.HostBotState.position:type_name -> orchestrator.v1.HostPosition
-	18, // 22: orchestrator.v1.HostBotState.inventory:type_name -> orchestrator.v1.HostInventory
-	19, // 23: orchestrator.v1.HostInventory.slots:type_name -> orchestrator.v1.HostInventorySlot
-	20, // 24: orchestrator.v1.HostInventorySlot.item:type_name -> orchestrator.v1.HostItemStack
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	21, // 12: orchestrator.v1.BotObservation.chunk_loaded:type_name -> orchestrator.v1.HostChunkLoaded
+	22, // 13: orchestrator.v1.BotObservation.chunk_unloaded:type_name -> orchestrator.v1.HostChunkUnloaded
+	23, // 14: orchestrator.v1.BotObservation.block_updated:type_name -> orchestrator.v1.HostBlockUpdated
+	24, // 15: orchestrator.v1.BotObservation.multi_blocks_updated:type_name -> orchestrator.v1.HostMultiBlocksUpdated
+	0,  // 16: orchestrator.v1.BotStatusChanged.state:type_name -> orchestrator.v1.BotConnectionState
+	14, // 17: orchestrator.v1.BotSpawned.state:type_name -> orchestrator.v1.HostBotState
+	14, // 18: orchestrator.v1.HostStateSnapshot.state:type_name -> orchestrator.v1.HostBotState
+	15, // 19: orchestrator.v1.HostVitalsChanged.vitals:type_name -> orchestrator.v1.HostVitals
+	16, // 20: orchestrator.v1.HostEffectsChanged.effects:type_name -> orchestrator.v1.HostPotionEffect
+	17, // 21: orchestrator.v1.HostPositionChanged.position:type_name -> orchestrator.v1.HostPosition
+	19, // 22: orchestrator.v1.HostInventoryChanged.slots:type_name -> orchestrator.v1.HostInventorySlot
+	15, // 23: orchestrator.v1.HostBotState.vitals:type_name -> orchestrator.v1.HostVitals
+	16, // 24: orchestrator.v1.HostBotState.effects:type_name -> orchestrator.v1.HostPotionEffect
+	17, // 25: orchestrator.v1.HostBotState.position:type_name -> orchestrator.v1.HostPosition
+	18, // 26: orchestrator.v1.HostBotState.inventory:type_name -> orchestrator.v1.HostInventory
+	19, // 27: orchestrator.v1.HostInventory.slots:type_name -> orchestrator.v1.HostInventorySlot
+	20, // 28: orchestrator.v1.HostInventorySlot.item:type_name -> orchestrator.v1.HostItemStack
+	25, // 29: orchestrator.v1.HostMultiBlocksUpdated.records:type_name -> orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
+	30, // [30:30] is the sub-list for method output_type
+	30, // [30:30] is the sub-list for method input_type
+	30, // [30:30] is the sub-list for extension type_name
+	30, // [30:30] is the sub-list for extension extendee
+	0,  // [0:30] is the sub-list for field type_name
 }
 
 func init() { file_orchestrator_v1_host_proto_init() }
@@ -1638,6 +2045,10 @@ func file_orchestrator_v1_host_proto_init() {
 		(*BotObservation_EffectsChanged)(nil),
 		(*BotObservation_PositionChanged)(nil),
 		(*BotObservation_InventoryChanged)(nil),
+		(*BotObservation_ChunkLoaded)(nil),
+		(*BotObservation_ChunkUnloaded)(nil),
+		(*BotObservation_BlockUpdated)(nil),
+		(*BotObservation_MultiBlocksUpdated)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1645,7 +2056,7 @@ func file_orchestrator_v1_host_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_orchestrator_v1_host_proto_rawDesc), len(file_orchestrator_v1_host_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   20,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
