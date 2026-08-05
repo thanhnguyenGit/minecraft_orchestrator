@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -9,7 +10,7 @@ import (
 	"minecraft_orchestrator/internal/engine/model"
 )
 
-const BootstrapBotCount = 7
+const BootstrapBotCount = 1
 
 type BotSpec struct {
 	ProfileID model.ProfileID
@@ -17,12 +18,12 @@ type BotSpec struct {
 }
 
 func BootstrapBots() ([]BotSpec, error) {
-	return bootstrapBots(randomUsername, randomProfileID)
+	return bootstrapBots(randomUsername)
 }
 
-func bootstrapBots(generateUsername func() string, generateProfileID func() model.ProfileID) ([]BotSpec, error) {
-	if generateUsername == nil || generateProfileID == nil {
-		return nil, errors.New("bootstrap identity generators are required")
+func bootstrapBots(generateUsername func() string) ([]BotSpec, error) {
+	if generateUsername == nil {
+		return nil, errors.New("bootstrap username generator is required")
 	}
 
 	bots := make([]BotSpec, 0, BootstrapBotCount)
@@ -40,7 +41,7 @@ func bootstrapBots(generateUsername func() string, generateProfileID func() mode
 		}
 		seen[username] = struct{}{}
 		bots = append(bots, BotSpec{
-			ProfileID: generateProfileID(),
+			ProfileID: offlineProfileID(username),
 			Username:  username,
 		})
 	}
@@ -61,10 +62,11 @@ func randomUsername() string {
 	return "bot_" + hex.EncodeToString(raw)
 }
 
-func randomProfileID() model.ProfileID {
+func offlineProfileID(username string) model.ProfileID {
+	hash := md5.Sum([]byte("OfflinePlayer:" + username))
 	var profileID model.ProfileID
-	if _, err := rand.Read(profileID[:]); err != nil {
-		return model.ProfileID{}
-	}
+	copy(profileID[:], hash[:])
+	profileID[6] = (profileID[6] & 0x0f) | 0x30
+	profileID[8] = (profileID[8] & 0x3f) | 0x80
 	return profileID
 }

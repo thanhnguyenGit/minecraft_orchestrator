@@ -19,6 +19,13 @@ export type ConnectOptions = {
   version: string;
 };
 
+const ignorePackets = new Set([
+  "keep_alive",
+  "update_time",
+  "entity_velocity",
+  "entity_look",
+]);
+
 export type BotStatus =
   "idle" | "connecting" | "connected" | "disconnected" | "error";
 type MineflayerBot = ReturnType<typeof mineflayer.createBot>;
@@ -67,6 +74,18 @@ export type MineflayerAdapterEvents = {
     selectedHotbarSlotChanged: boolean,
   ];
   physicsDiagnostic: [event: PhysicsDiagnostic];
+  chunkLoaded: [
+    chunkX: number,
+    chunkZ: number,
+    data: Uint8Array,
+    minY: number,
+    height: number,
+  ];
+  chunkUnloaded: [chunkX: number, chunkZ: number];
+  blockUpdated: [x: number, y: number, z: number, stateId: number];
+  multiBlocksUpdated: [
+    records: { x: number; y: number; z: number; stateId: number }[],
+  ];
 };
 
 export class MineflayerAdapter extends EventEmitter implements BotAdapter {
@@ -108,6 +127,7 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
 
     this.#wireTelemetry(this.#bot);
     this.#wirePhysicsDiagnostics(this.#bot);
+    this.#debugAllPackets(this.#bot);
 
     this.#bot.once("spawn", () => {
       this.#status = "connected";
@@ -174,6 +194,104 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
     bot.on("forcedMove", () => this.#emitMotionIfChanged(bot, true));
     bot.on("physicsTick", () => this.#emitMotionIfChanged(bot));
     bot.once("inject_allowed", () => this.#wireInventoryTelemetry(bot));
+    this.#wireChunkEvents(bot);
+  }
+
+  #wireChunkEvents(bot: MineflayerBot): void {
+    if (!bot._client) return;
+
+    bot._client.on(
+      "map_chunk",
+      (packet: { x: number; z: number; data?: Buffer; chunkData?: Buffer }) => {
+        if (bot !== this.#bot) return;
+
+        // Get the length of the Buffer in bytes
+        const buffer = packet.chunkData || packet.data;
+
+        if (!buffer) {
+          console.warn(
+            `Missing chunk buffer for chunk at ${packet.x}, ${packet.z}`,
+          );
+          return;
+        }
+
+        // const sizeInBytes = buffer.length;
+        // console.log(
+        //   `Chunk at ${packet.x}, ${packet.z} is ${sizeInBytes} bytes`,
+        // );
+
+        this.emit(
+          "chunkLoaded",
+          packet.x,
+          packet.z,
+          buffer,
+          (bot.game as unknown as Record<string, number>).minY,
+          (bot.game as unknown as Record<string, number>).height,
+        );
+      },
+    );
+
+    bot._client.on(
+      "unload_chunk",
+      (packet: {
+        x?: number;
+        z?: number;
+        chunkX?: number;
+        chunkZ?: number;
+      }) => {
+        if (bot !== this.#bot) return;
+
+        const cx = packet.x ?? packet.chunkX;
+        const cz = packet.z ?? packet.chunkZ;
+
+        if (cx === undefined || cz === undefined) return;
+
+        this.emit("chunkUnloaded", cx, cz);
+      },
+    );
+
+    bot._client.on(
+      "block_change",
+      (packet: {
+        location: { x: number; y: number; z: number };
+        type: number;
+      }) => {
+        if (bot !== this.#bot) return;
+
+        // console.log("BLOCK_CHANGE received!");
+
+        this.emit(
+          "blockUpdated",
+          packet.location.x,
+          packet.location.y,
+          packet.location.z,
+          packet.type,
+        );
+      },
+    );
+
+    bot._client.on(
+      "multi_block_change",
+      (packet: {
+        chunkCoordinates: { x: number; y: number; z: number };
+        notTrustEdges?: boolean;
+        records: number[]; 
+      }) => {
+        if (bot !== this.#bot) return;
+
+        const sectionWorldX = packet.chunkCoordinates.x * 16;
+        const sectionWorldY = packet.chunkCoordinates.y * 16;
+        const sectionWorldZ = packet.chunkCoordinates.z * 16;
+
+        const records = packet.records.map((record) => ({
+          x: sectionWorldX + ((record >> 8) & 0x0f),
+          y: sectionWorldY + (record & 0x0f),
+          z: sectionWorldZ + ((record >> 4) & 0x0f),
+          stateId: record >>> 12,
+        }));
+        this.emit("multiBlocksUpdated", records);
+      },
+    );
   }
 
   #wirePhysicsDiagnostics(bot: MineflayerBot): void {
@@ -351,6 +469,25 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       velocityZ: entity.velocity.z,
     };
   }
+
+  #debugAllPackets(bot: MineflayerBot): void {
+    if (!bot._client) return;
+
+    bot._client.on(
+      "packet",
+      (
+        data: any,
+        meta: {
+          name: string;
+          state: string;
+        },
+      ) => {
+        // console.log(`\n[PACKET RECEIVED] Name: ${meta.name}`);
+        // console.dir(data, { depth: 4, colors: true });
+      },
+    );
+  }
+
   #itemStack(item: {
     type: number;
     name: string;

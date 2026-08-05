@@ -15,6 +15,10 @@ const (
 	EventHostVitals
 	EventHostEffects
 	EventHostInventory
+	EventChunkLoad
+	EventChunkUnload
+	EventBlockStateChange
+	EventMultiBlocksUpdated
 )
 
 func (k EventKind) String() string {
@@ -31,6 +35,14 @@ func (k EventKind) String() string {
 		return "host_effects"
 	case EventHostInventory:
 		return "host_inventory"
+	case EventChunkLoad:
+		return "chunk_load"
+	case EventChunkUnload:
+		return "chunk_unload"
+	case EventBlockStateChange:
+		return "block_state_change"
+	case EventMultiBlocksUpdated:
+		return "multi_blocks_updated"
 	default:
 		return fmt.Sprintf("EventKind(%d)", k)
 	}
@@ -79,6 +91,22 @@ type HostSnapshot struct {
 	GameMode  model.GameMode
 }
 
+type ChunkLoad struct {
+	Position model.ChunkPosition
+	Data     []byte
+	MinY     int32
+	Height   int32
+}
+
+type BlockStateChange struct {
+	Position model.BlockPosition
+	StateID  uint32
+}
+
+type MultiBlocksUpdated struct {
+	Records []BlockStateChange
+}
+
 // Event is an immutable observation from one Minecraft session attempt. It
 // deliberately carries no ECS Entity or World reference: ECS resolves and
 // validates the profile/attempt identity inside its Input phase.
@@ -95,6 +123,11 @@ type Event struct {
 	Position        *HostSnapshot
 	Effects         *model.Effects
 	Inventory       *model.Inventory
+
+	ChunkLoad        *ChunkLoad
+	ChunkUnload      *model.ChunkPosition
+	BlockStateChange *BlockStateChange
+	MultiBlocksUpdated *MultiBlocksUpdated
 }
 
 type Batch struct {

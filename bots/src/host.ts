@@ -12,6 +12,10 @@ import {
   BotSpawnedSchema,
   BotStatusChangedSchema,
   HostConfigureSchema,
+  HostChunkLoadedSchema,
+  HostChunkUnloadedSchema,
+  HostBlockUpdatedSchema,
+  HostMultiBlocksUpdatedSchema,
   HostEffectsChangedSchema,
   HostEnvelopeSchema,
   HostHelloSchema,
@@ -129,6 +133,55 @@ class Controller {
             slots: slots.map(hostSlot),
             selectedHotbarSlot,
             selectedHotbarSlotChanged,
+          }),
+        }),
+    );
+    this.#adapter.on(
+      "chunkLoaded",
+      (
+        chunkX: number,
+        chunkZ: number,
+        data: Uint8Array,
+        minY: number,
+        height: number,
+      ) =>
+        this.observe({
+          case: "chunkLoaded",
+          value: create(HostChunkLoadedSchema, {
+            chunkX,
+            chunkZ,
+            data,
+            minY,
+            height,
+          }),
+        }),
+    );
+    this.#adapter.on("chunkUnloaded", (chunkX: number, chunkZ: number) =>
+      this.observe({
+        case: "chunkUnloaded",
+        value: create(HostChunkUnloadedSchema, { chunkX, chunkZ }),
+      }),
+    );
+    this.#adapter.on(
+      "blockUpdated",
+      (x: number, y: number, z: number, stateId: number) =>
+        this.observe({
+          case: "blockUpdated",
+          value: create(HostBlockUpdatedSchema, { x, y, z, stateId }),
+        }),
+    );
+    this.#adapter.on(
+      "multiBlocksUpdated",
+      (records: { x: number; y: number; z: number; stateId: number }[]) =>
+        this.observe({
+          case: "multiBlocksUpdated",
+          value: create(HostMultiBlocksUpdatedSchema, {
+            records: records.map((r) => ({
+              x: r.x,
+              y: r.y,
+              z: r.z,
+              stateId: r.stateId,
+            })),
           }),
         }),
     );
