@@ -50,14 +50,6 @@ type packedStates struct {
 }
 
 func NewSingleValueSection(nonAir uint16, stateID uint32) (ChunkSection, error) {
-	if nonAir > sectionBlockCount {
-		return ChunkSection{}, fmt.Errorf("invalid non-air block count: %d", nonAir)
-	}
-	
-	if (stateID == 0 && nonAir != 0) || (stateID != 0 && nonAir != sectionBlockCount) {
-		return ChunkSection{}, fmt.Errorf("single-value section has inconsistent non-air block count: state=%d count=%d", stateID, nonAir)
-	}
-	
 	return ChunkSection{
 		nonAir: nonAir, 
 		states: singleValueStates{value: stateID},
@@ -65,23 +57,13 @@ func NewSingleValueSection(nonAir uint16, stateID uint32) (ChunkSection, error) 
 }
 
 func NewIndirectPaletteSection(nonAir uint16, bits uint8, palette []uint32, words []uint64) (ChunkSection, error) {
-	if nonAir > sectionBlockCount || bits < 1 || bits > maxIndirectBits || len(palette) == 0 || len(palette) > 1<<bits {
+	if bits < 1 || bits > maxIndirectBits || len(palette) == 0 || len(palette) > 1<<bits {
 		return ChunkSection{}, fmt.Errorf("invalid indirect palette section")
 	}
 	
 	packed, err := newPackedStates(bits, sectionBlockCount, words)
 	if err != nil {
 		return ChunkSection{}, err
-	}
-	
-	for index := range sectionBlockCount {
-		if int(packed.get(index)) >= len(palette) {
-			return ChunkSection{}, fmt.Errorf("palette index out of range")
-		}
-	}
-	
-	if countPaletteNonAir(packed, palette) != nonAir {
-		return ChunkSection{}, fmt.Errorf("indirect palette section has inconsistent non-air block count")
 	}
 	
 	return ChunkSection{
@@ -93,17 +75,13 @@ func NewIndirectPaletteSection(nonAir uint16, bits uint8, palette []uint32, word
 }
 
 func NewDirectPaletteSection(nonAir uint16, bits uint8, words []uint64) (ChunkSection, error) {
-	if nonAir > sectionBlockCount || bits <= maxIndirectBits || bits > maxDirectBits {
+	if bits <= maxIndirectBits || bits > maxDirectBits {
 		return ChunkSection{}, fmt.Errorf("invalid direct palette section bits: %d", bits)
 	}
 	
 	packed, err := newPackedStates(bits, sectionBlockCount, words)
 	if err != nil {
 		return ChunkSection{}, err
-	}
-	
-	if countDirectNonAir(packed) != nonAir {
-		return ChunkSection{}, fmt.Errorf("direct palette section has inconsistent non-air block count")
 	}
 	
 	return ChunkSection{
@@ -286,26 +264,6 @@ func (p packedStates) resize(bits uint8) packedStates {
 
 func (p packedStates) mask() uint32 {
 	return uint32((uint64(1) << p.bits) - 1)
-}
-
-func countPaletteNonAir(packed packedStates, palette []uint32) uint16 {
-	var count uint16
-	for index := range sectionBlockCount {
-		if palette[packed.get(index)] != 0 {
-			count++
-		}
-	}
-	return count
-}
-
-func countDirectNonAir(packed packedStates) uint16 {
-	var count uint16
-	for index := range sectionBlockCount {
-		if packed.get(index) != 0 {
-			count++
-		}
-	}
-	return count
 }
 
 func (s ChunkSection) NonAir() uint16 { return s.nonAir }

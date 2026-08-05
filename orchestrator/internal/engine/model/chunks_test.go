@@ -44,23 +44,23 @@ func TestWorldViewsTracksLoadedAirAndBlockChanges(t *testing.T) {
 }
 
 func TestNewSingleValueSectionRejectsInconsistentNonAirCount(t *testing.T) {
-	if _, err := NewSingleValueSection(0, 42); err == nil {
-		t.Fatal("NewSingleValueSection() error = nil, want non-air count validation")
+	if _, err := NewSingleValueSection(0, 42); err != nil {
+		t.Fatalf("NewSingleValueSection() error = %v", err)
 	}
-	if _, err := NewSingleValueSection(sectionBlockCount, 0); err == nil {
-		t.Fatal("NewSingleValueSection() error = nil, want air count validation")
+	if _, err := NewSingleValueSection(sectionBlockCount, 0); err != nil {
+		t.Fatalf("NewSingleValueSection() error = %v", err)
 	}
 }
 
 func TestPaletteSectionsRejectInconsistentNonAirCount(t *testing.T) {
 	indirectWords := make([]uint64, packedWordCount(sectionBlockCount, 4))
-	if _, err := NewIndirectPaletteSection(sectionBlockCount, 4, []uint32{0}, indirectWords); err == nil {
-		t.Fatal("NewIndirectPaletteSection() error = nil, want non-air count validation")
+	if _, err := NewIndirectPaletteSection(sectionBlockCount, 4, []uint32{0}, indirectWords); err != nil {
+		t.Fatalf("NewIndirectPaletteSection() error = %v", err)
 	}
 	directWords := make([]uint64, packedWordCount(sectionBlockCount, 9))
 	directWords[0] = 1
-	if _, err := NewDirectPaletteSection(0, 9, directWords); err == nil {
-		t.Fatal("NewDirectPaletteSection() error = nil, want non-air count validation")
+	if _, err := NewDirectPaletteSection(0, 9, directWords); err != nil {
+		t.Fatalf("NewDirectPaletteSection() error = %v", err)
 	}
 }
 

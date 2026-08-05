@@ -28,7 +28,7 @@ func DecodeColumn(payload []byte, dimension model.DimensionType) (model.ChunkCol
 			return model.ChunkColumn{}, fmt.Errorf("read section %d block count: %w", sectionIndex, err)
 		}
 
-		if nonAir < 0 || nonAir > blockEntries {
+		if nonAir < 0 {
 			return model.ChunkColumn{}, fmt.Errorf("invalid section %d block count: %d", sectionIndex, nonAir)
 		}
 

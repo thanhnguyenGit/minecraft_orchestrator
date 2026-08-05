@@ -395,7 +395,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 			return
 		}
 
-		logger.Info(
+		logger.Debug(
 			"ecs.chunk_load",
 			"kind", event.Kind.String(),
 			"position", event.ChunkLoad.Position,
@@ -405,7 +405,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 		)
 
 		if !hasPerception || perception.ActiveDimensionType.MinY != event.ChunkLoad.MinY || perception.ActiveDimensionType.Height != event.ChunkLoad.Height {
-			logger.Info(
+			logger.Debug(
 				"ecs.chunk_perception_init",
 				"has_perception", hasPerception,
 				"current_min_y", perception.ActiveDimensionType.MinY,
@@ -428,13 +428,13 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 		}
 
 		if !hasPerception || !perception.HasActiveDimensionType {
-			logger.Info("ecs.chunk_drop", "reason", "no_active_dimension")
+			logger.Debug("ecs.chunk_drop", "reason", "no_active_dimension")
 			return
 		}
 
 		column, err := chunk.DecodeColumn(event.ChunkLoad.Data, perception.ActiveDimensionType)
 		if err != nil {
-			logger.Info("ecs.chunk_decode_error", "error", err)
+			logger.Debug("ecs.chunk_decode_error", "error", err)
 			return
 		}
 
@@ -450,7 +450,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 			return
 		}
 
-		logger.Info("ecs.chunk_load", "stored_chunks", len(chunks.GetChunks()))
+		logger.Debug("ecs.chunk_load", "stored_chunks", len(chunks.GetChunks()))
 	case network.EventChunkUnload:
 		if event.ChunkUnload == nil {
 			return
@@ -473,7 +473,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 		currentChunkCount := len(chunks.GetChunks())
 
 		if currentChunkCount != preChunkCount {
-			logger.Info(
+			logger.Debug(
 				"ecs.chunk_unload",
 				"kind", event.Kind.String(),
 				"chunk", event.ChunkUnload,
