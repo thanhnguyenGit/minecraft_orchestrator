@@ -3,9 +3,11 @@ package core
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"math/rand/v2"
 	"time"
 
+	"minecraft_orchestrator/internal/engine/ai"
 	enginecore "minecraft_orchestrator/internal/engine/core"
 	"minecraft_orchestrator/internal/engine/model"
 	"minecraft_orchestrator/internal/engine/network"
@@ -16,7 +18,9 @@ import (
 const (
 	SystemBootstrap    scheduler.SystemID = "Bootstrap"
 	SystemNetworkApply scheduler.SystemID = "NetworkApply"
+	SystemPerception   scheduler.SystemID = "Perception"
 	SystemRandomWander scheduler.SystemID = "RandomWander"
+	SystemNeeds        scheduler.SystemID = "Needs"
 )
 
 type TickData struct {
@@ -101,6 +105,8 @@ func (NetworkApplySystem) Access() scheduler.AccessSpec {
 }
 
 func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
+	debugEnabled := ctx.Logger.Enabled(ctx.Context, slog.LevelDebug)
+
 	data, err := tickData(ctx)
 	if err != nil {
 		return err
@@ -108,8 +114,8 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 
 	views := ctx.World.MirroredBotViews()
 	for _, event := range data.Network.Events {
-		
-		applyChunkEvent(ctx.World.Resources(), event, ctx.Logger)
+
+		applyChunkEvent(ctx.World.Resources(), event, ctx.Logger, debugEnabled)
 		applyEntityEvent(ctx.World.Resources(), event, ctx.Logger)
 
 		for _, view := range views {
@@ -125,35 +131,37 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 
 	worldViews := ctx.World.Resources().WorldViews()
 
-	for _, view := range views {
-		for i, bot := range view.Bots {
-			ctx.Logger.Debug("ecs.state",
-				"username", bot.Username,
-				"profile_id", fmt.Sprintf("%x", bot.ProfileID),
-				"phase", view.Sessions[i].Phase,
-				"remote_session", view.Sessions[i].RemoteSessionID,
-				"last_seq", view.Sessions[i].LastSequence,
-				"health", fmt.Sprintf("%.1f/%.1f", view.Healths[i].Current, view.Healths[i].Max),
-				"pos", fmt.Sprintf("(%.1f, %.1f, %.1f)", view.Positions[i].X, view.Positions[i].Y, view.Positions[i].Z),
-				"yaw", fmt.Sprintf("%.1f", view.Rotations[i].Yaw),
-				"pitch", fmt.Sprintf("%.1f", view.Rotations[i].Pitch),
-				"vel", fmt.Sprintf("(%.3f, %.3f, %.3f)", view.Velocitys[i].X, view.Velocitys[i].Y, view.Velocitys[i].Z),
-				"game_mode", view.GameModes[i],
-				"effects", len(view.Effectss[i].Values),
-				"inv_slots", len(view.Inventorys[i].Slots),
-				"inv_hotbar", view.Inventorys[i].SelectedHotbarSlot,
-			)
+	if debugEnabled {
+		for _, view := range views {
+			for i, bot := range view.Bots {
+				ctx.Logger.Debug("ecs.state",
+					"username", bot.Username,
+					"profile_id", fmt.Sprintf("%x", bot.ProfileID),
+					"phase", view.Sessions[i].Phase,
+					"remote_session", view.Sessions[i].RemoteSessionID,
+					"last_seq", view.Sessions[i].LastSequence,
+					"health", fmt.Sprintf("%.1f/%.1f", view.Healths[i].Current, view.Healths[i].Max),
+					"pos", fmt.Sprintf("(%.1f, %.1f, %.1f)", view.Positions[i].X, view.Positions[i].Y, view.Positions[i].Z),
+					"yaw", fmt.Sprintf("%.1f", view.Rotations[i].Yaw),
+					"pitch", fmt.Sprintf("%.1f", view.Rotations[i].Pitch),
+					"vel", fmt.Sprintf("(%.3f, %.3f, %.3f)", view.Velocitys[i].X, view.Velocitys[i].Y, view.Velocitys[i].Z),
+					"game_mode", view.GameModes[i],
+					"effects", len(view.Effectss[i].Values),
+					"inv_slots", len(view.Inventorys[i].Slots),
+					"inv_hotbar", view.Inventorys[i].SelectedHotbarSlot,
+				)
 
-			if worldView, ok := worldViews.Get(bot.ProfileID); ok {
-				chunks := len(worldView.GetChunks())
-				for cpos, ccol := range worldView.GetChunks() {
-					ctx.Logger.Debug("ecs.world",
-						"username", bot.Username,
-						"profile_id", fmt.Sprintf("%x", bot.ProfileID),
-						"chunk_position", cpos,
-						"chunk", ccol,
-						"chunk_counts", chunks,
-					)
+				if worldView, ok := worldViews.Get(bot.ProfileID); ok {
+					chunks := worldView.ChunksCount()
+					for cpos, ccol := range worldView.GetChunks() {
+						ctx.Logger.Debug("ecs.world",
+							"username", bot.Username,
+							"profile_id", fmt.Sprintf("%x", bot.ProfileID),
+							"chunk_position", cpos,
+							"chunk", ccol,
+							"chunk_counts", chunks,
+						)
+					}
 				}
 			}
 		}
@@ -393,7 +401,12 @@ func applyHostSnapshot(view *enginecore.MirroredBotView, index int, snapshot net
 	view.GameModes[index], view.Inventorys[index], view.Effectss[index] = snapshot.GameMode, snapshot.Inventory, snapshot.Effects
 }
 
-func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger *slog.Logger) {
+func applyChunkEvent(
+	resource *enginecore.Resources,
+	event network.Event,
+	logger *slog.Logger,
+	debugEnabled bool,
+) {
 	views := resource.WorldViews()
 
 	perception, hasPerception := views.Get(event.ProfileID)
@@ -404,14 +417,16 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 			return
 		}
 
-		logger.Debug(
-			"ecs.chunk_load",
-			"kind", event.Kind.String(),
-			"position", event.ChunkLoad.Position,
-			"data_length", len(event.ChunkLoad.Data),
-			"min_y", event.ChunkLoad.MinY,
-			"height", event.ChunkLoad.Height,
-		)
+		if debugEnabled {
+			logger.Debug(
+				"ecs.chunk_load",
+				"kind", event.Kind.String(),
+				"position", event.ChunkLoad.Position,
+				"data_length", len(event.ChunkLoad.Data),
+				"min_y", event.ChunkLoad.MinY,
+				"height", event.ChunkLoad.Height,
+			)
+		}
 
 		if !hasPerception || perception.ActiveDimensionType.MinY != event.ChunkLoad.MinY || perception.ActiveDimensionType.Height != event.ChunkLoad.Height {
 			logger.Debug(
@@ -437,13 +452,17 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 		}
 
 		if !hasPerception || !perception.HasActiveDimensionType {
-			logger.Debug("ecs.chunk_drop", "reason", "no_active_dimension")
+			if debugEnabled {
+				logger.Debug("ecs.chunk_drop", "reason", "no_active_dimension")
+			}
 			return
 		}
 
 		column, err := chunk.DecodeColumn(event.ChunkLoad.Data, perception.ActiveDimensionType)
 		if err != nil {
-			logger.Debug("ecs.chunk_decode_error", "error", err)
+			if debugEnabled {
+				logger.Debug("ecs.chunk_decode_error", "error", err)
+			}
 			return
 		}
 
@@ -459,7 +478,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 			return
 		}
 
-		logger.Debug("ecs.chunk_load", "stored_chunks", len(chunks.GetChunks()))
+		logger.Debug("ecs.chunk_load", "stored_chunks", chunks.ChunksCount())
 	case network.EventChunkUnload:
 		if event.ChunkUnload == nil {
 			return
@@ -470,7 +489,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 			return
 		}
 
-		preChunkCount := len(chunks.GetChunks())
+		preChunkCount := chunks.ChunksCount()
 
 		attemptID := uint64(0)
 		if hasPerception {
@@ -479,7 +498,7 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 
 		views.UnloadChunk(event.ProfileID, attemptID, *event.ChunkUnload)
 
-		currentChunkCount := len(chunks.GetChunks())
+		currentChunkCount := chunks.ChunksCount()
 
 		if currentChunkCount != preChunkCount {
 			logger.Debug(
@@ -619,9 +638,9 @@ func (s *RandomWanderSystem) Run(ctx *scheduler.RunContext) error {
 					Z:        dest.Z,
 				},
 			})
-			
+
 			// jitter := time.Duration(5000+rand.IntN(10000)) * time.Millisecond
-			ws.nextActionAt = now.Add(2*time.Second)
+			ws.nextActionAt = now.Add(2 * time.Second)
 		}
 	}
 
@@ -684,10 +703,9 @@ func applyEntityEvent(resource *enginecore.Resources, event network.Event, logge
 		return
 	}
 
-	
 	entities := resource.EntityViews()
 	changes := event.EntityChanges
-	
+
 	logger.Debug(
 		"ecs.entity",
 		"entities", entities,
@@ -697,11 +715,11 @@ func applyEntityEvent(resource *enginecore.Resources, event network.Event, logge
 	if len(changes.Added) > 0 {
 		entities.AddEntities(event.ProfileID, toModelEntities(changes.Added))
 	}
-	
+
 	if len(changes.Removed) > 0 {
 		entities.RemoveEntities(event.ProfileID, changes.Removed)
 	}
-	
+
 	if len(changes.Moved) > 0 {
 		entities.MoveEntities(event.ProfileID, toModelEntities(changes.Moved))
 	}
@@ -725,4 +743,93 @@ func toModelEntities(ents []network.Entity) []model.Entity {
 		}
 	}
 	return out
+}
+
+type PerceptionSystem struct {
+	fov ai.FOVStrategy
+}
+
+func NewPerceptionSystem(fov ai.FOVStrategy) *PerceptionSystem {
+	if fov == nil {
+		fov = ai.ConeFOV{}
+	}
+	return &PerceptionSystem{fov: fov}
+}
+
+func (s PerceptionSystem) ID() scheduler.SystemID {
+	return SystemPerception
+}
+
+func (PerceptionSystem) Access() scheduler.AccessSpec {
+	return scheduler.AccessSpec{
+		Queries: []model.Mask{model.MirroredBotMask},
+	}
+}
+
+func (s *PerceptionSystem) Run(ctx *scheduler.RunContext) error {
+	entityViews := ctx.World.Resources().EntityViews()
+	perceptionView := ctx.World.Resources().PerceptionView()
+	views := ctx.World.MirroredBotViews()
+
+	for _, view := range views {
+		for index, session := range view.Sessions {
+			if session.Phase != model.SessionPlayReady {
+				continue
+			}
+
+			bot := view.Bots[index]
+			pos := view.Positions[index]
+			rot := view.Rotations[index]
+
+			nearby := entityViews.GetNearby(bot.ProfileID, pos, defaultPerceptionRadius)
+			visible := make([]model.PerceivedEntity, 0, len(nearby))
+
+			for _, entity := range nearby {
+				if !s.fov.IsInFOV(pos, rot, defaultFOV, entity.Position) {
+					continue
+				}
+
+				dx := entity.Position.X - pos.X
+				dy := entity.Position.Y - pos.Y
+				dz := entity.Position.Z - pos.Z
+				distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+
+				yawRad := float64(rot.Yaw) * (math.Pi / 180)
+				entityAngle := math.Atan2(-dx, dz)
+				angle := math.Mod(entityAngle-yawRad+3*math.Pi, 2*math.Pi) - math.Pi
+
+				visible = append(visible, model.PerceivedEntity{
+					ID:       entity.ID,
+					Name:     entity.Name,
+					Position: entity.Position,
+					Distance: distance,
+					Angle:    angle,
+				})
+			}
+
+			perceptionView.Set(bot.ProfileID, visible)
+		}
+	}
+
+	return nil
+}
+
+const (
+	defaultPerceptionRadius = 32.0
+	defaultFOV              = 120.0
+)
+
+type NeedState struct {
+	hungerUrgency  float32
+	healthUrgency  float32
+	safetyUrgency  float32
+	foodSupplyNeed float32
+}
+
+type NeedSystem struct {
+	states map[model.ProfileID]*NeedState
+}
+
+func (NeedSystem) ID() scheduler.SystemID {
+	return SystemNeeds
 }

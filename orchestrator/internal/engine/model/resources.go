@@ -187,35 +187,35 @@ func (v *WorldViews) SetBlockStates(profileID ProfileID, attemptID uint64, updat
 	if !ok || view.AttemptID != attemptID || !view.HasActiveDimensionType {
 		return false
 	}
-	
+
 	if view.chunks == nil {
 		return false
 	}
-	
+
 	for _, b := range updates {
 		if b.Position.Y < view.ActiveDimensionType.MinY || b.Position.Y >= view.ActiveDimensionType.MinY+view.ActiveDimensionType.Height {
 			continue
 		}
-		
+
 		chunkKey := ChunkPosition{
-			X: floorChunk(b.Position.X), 
+			X: floorChunk(b.Position.X),
 			Z: floorChunk(b.Position.Z),
 		}
-		
+
 		column, found := view.chunks[chunkKey]
 		if !found {
 			continue
 		}
-		
+
 		if column.setBlockState(b.Position.X-chunkKey.X*chunkWidth, b.Position.Y, b.Position.Z-chunkKey.Z*chunkWidth, b.StateID) {
 			column.version++
 			view.chunks[chunkKey] = column
 		}
-		
+
 	}
-	
+
 	v.views[profileID] = view
-	
+
 	return true
 }
 
@@ -242,7 +242,19 @@ func (v *WorldViews) ChunkVersion(profileID ProfileID, position ChunkPosition) (
 }
 
 func (v *WorldView) GetChunks() map[ChunkPosition]ChunkColumn {
-	return v.chunks
+	_c := v.chunks
+	if _c == nil {
+		return nil
+	}
+
+	out := make(map[ChunkPosition]ChunkColumn, len(_c))
+	maps.Copy(out, _c)
+
+	return out
+}
+
+func (v *WorldView) ChunksCount() int {
+	return len(v.chunks)
 }
 
 func (v *WorldView) clearChunks() {
@@ -283,13 +295,13 @@ func (v *EntityViews) AddEntities(profileID ProfileID, additions []Entity) {
 	if v.entities == nil {
 		v.entities = make(map[ProfileID]map[int32]Entity)
 	}
-	
+
 	m, ok := v.entities[profileID]
 	if !ok {
 		m = make(map[int32]Entity)
 		v.entities[profileID] = m
 	}
-	
+
 	for _, e := range additions {
 		m[e.ID] = e
 	}
@@ -300,11 +312,10 @@ func (v *EntityViews) RemoveEntities(profileID ProfileID, ids []int32) {
 	if !ok {
 		return
 	}
-	
+
 	for _, id := range ids {
 		delete(m, id)
 	}
-	
 }
 
 func (v *EntityViews) MoveEntities(profileID ProfileID, moves []Entity) {
@@ -312,7 +323,7 @@ func (v *EntityViews) MoveEntities(profileID ProfileID, moves []Entity) {
 	if !ok {
 		return
 	}
-	
+
 	for _, e := range moves {
 		if existing, exists := m[e.ID]; exists {
 			existing.Position = e.Position
@@ -328,7 +339,7 @@ func (v *EntityViews) GetNearby(profileID ProfileID, pos Position, radius float6
 	if !ok {
 		return nil
 	}
-	
+
 	result := make([]Entity, 0)
 	for _, e := range m {
 		dx := e.Position.X - pos.X
@@ -338,7 +349,7 @@ func (v *EntityViews) GetNearby(profileID ProfileID, pos Position, radius float6
 			result = append(result, e)
 		}
 	}
-	
+
 	return result
 }
 
@@ -347,9 +358,43 @@ func (v *EntityViews) GetAll(profileID ProfileID) map[int32]Entity {
 	if !ok {
 		return nil
 	}
-	
+
 	out := make(map[int32]Entity, len(m))
-	maps.Copy(out,m)
+	maps.Copy(out, m)
+
+	return out
+}
+
+type PerceivedEntity struct {
+	ID       int32
+	Name     string
+	Position Position
+	Distance float64
+	Angle    float64
+}
+
+type PerceptionView struct {
+	entities map[ProfileID][]PerceivedEntity
+}
+
+func (v *PerceptionView) Set(profileID ProfileID, ents []PerceivedEntity) {
+	if v.entities == nil {
+		v.entities = make(map[ProfileID][]PerceivedEntity)
+	}
+
+	stored := make([]PerceivedEntity, len(ents))
+	copy(stored, ents)
+	v.entities[profileID] = stored
+}
+
+func (v *PerceptionView) Get(profileID ProfileID) []PerceivedEntity {
+	_s := v.entities[profileID]
+	if _s == nil {
+		return nil
+	}
+
+	out := make([]PerceivedEntity, len(_s))
+	copy(out, _s)
 
 	return out
 }

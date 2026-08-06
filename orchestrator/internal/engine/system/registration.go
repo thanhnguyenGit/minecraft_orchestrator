@@ -4,6 +4,7 @@ import "minecraft_orchestrator/internal/engine/scheduler"
 
 const (
 	PhaseInput      scheduler.PhaseID = "input"
+	PhaseDetection  scheduler.PhaseID = "detection"
 	PhaseSimulation scheduler.PhaseID = "simulation"
 )
 
@@ -18,6 +19,14 @@ func BuildScheduler() (*scheduler.ExecutionPlan, error) {
 	}
 
 	if err := builder.AddSystem(PhaseInput, NetworkApplySystem{}, scheduler.After(SystemBootstrap)); err != nil {
+		return nil, err
+	}
+
+	if err := builder.AddPhase(PhaseDetection); err != nil {
+		return nil, err
+	}
+
+	if err := builder.AddSystem(PhaseDetection, NewPerceptionSystem(nil)); err != nil {
 		return nil, err
 	}
 
