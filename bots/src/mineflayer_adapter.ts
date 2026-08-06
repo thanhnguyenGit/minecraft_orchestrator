@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import mineflayer from "mineflayer";
+import pf from "mineflayer-pathfinder";
 import {
   buildStateSnapshot,
   coalesceInventoryUpdates,
@@ -56,6 +57,7 @@ export interface BotAdapter {
   disconnect(): Promise<void>;
   status(): BotStatus;
   sendChat(message: string): Promise<void>;
+  gotoDestination(x: number, y: number, z: number): void;
 }
 
 export type MineflayerAdapterEvents = {
@@ -86,6 +88,27 @@ export type MineflayerAdapterEvents = {
   multiBlocksUpdated: [
     records: { x: number; y: number; z: number; stateId: number }[],
   ];
+  entitiesChanged: [
+    added: {
+      entityId: number;
+      name: string;
+      x: number;
+      y: number;
+      z: number;
+      yaw: number;
+      pitch: number;
+    }[],
+    removed: number[],
+    moved: {
+      entityId: number;
+      name: string;
+      x: number;
+      y: number;
+      z: number;
+      yaw: number;
+      pitch: number;
+    }[],
+  ];
 };
 
 export class MineflayerAdapter extends EventEmitter implements BotAdapter {
@@ -98,6 +121,12 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
   #pendingInventoryUpdates: InventorySlot[] = [];
   #inventoryFlushQueued = false;
   #selectedHotbarSlotChanged = false;
+  #pendingEntities: {
+    added: Map<number, { entityId: number; name: string; x: number; y: number; z: number; yaw: number; pitch: number }>;
+    removed: Set<number>;
+    moved: Map<number, { entityId: number; name: string; x: number; y: number; z: number; yaw: number; pitch: number }>;
+  } = { added: new Map(), removed: new Set(), moved: new Map() };
+  #entityFlushTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     botFactory: MineflayerBotFactory = mineflayer.createBot,
@@ -126,6 +155,7 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
     });
 
     this.#wireTelemetry(this.#bot);
+    this.#wireEntityTelemetry(this.#bot);
     this.#wirePhysicsDiagnostics(this.#bot);
     this.#debugAllPackets(this.#bot);
 
@@ -139,6 +169,12 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
         "telemetrySnapshot",
         buildStateSnapshot(this.#readState(this.#bot!)),
       );
+
+      this.#bot!.loadPlugin(pf.pathfinder);
+      const moves = new pf.Movements(this.#bot!);
+      moves.canDig = false;
+      moves.allowFreeMotion = false;
+      (this.#bot! as any).pathfinder.setMovements(moves);
     });
     this.#bot.on("chat", (username: string, message: string) => {
       this.emit("chat", username, message);
@@ -175,6 +211,13 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       throw new Error("bot is not connected");
     }
     this.#bot.chat(message);
+  }
+
+  gotoDestination(x: number, y: number, z: number): void {
+    if (!this.#bot) return;
+    const bot = this.#bot as any;
+    const GoalNear = (pf.goals as any).GoalNear;
+    bot.pathfinder.setGoal(new GoalNear(x, y, z, 1));
   }
 
   #wireTelemetry(bot: MineflayerBot): void {
@@ -383,6 +426,59 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       this.#selectedHotbarSlotChanged = false;
       this.emit("inventoryChanged", slots, bot.quickBarSlot, changed);
     });
+  }
+
+  #wireEntityTelemetry(bot: MineflayerBot): void {
+    const entityData = (e: any) => ({
+      entityId: e.id as number,
+      name: e.name as string,
+      x: (e.position as any).x as number,
+      y: (e.position as any).y as number,
+      z: (e.position as any).z as number,
+      yaw: e.yaw as number,
+      pitch: e.pitch as number,
+    });
+
+    bot.on("entitySpawn", (e: any) => {
+      if (bot !== this.#bot) return;
+      const d = entityData(e);
+      this.#pendingEntities.added.set(d.entityId, d);
+      this.#pendingEntities.removed.delete(d.entityId);
+      this.#scheduleEntityFlush();
+    });
+
+    bot.on("entityGone", (e: any) => {
+      if (bot !== this.#bot) return;
+      const id = e.id ?? e;
+      this.#pendingEntities.added.delete(id);
+      this.#pendingEntities.moved.delete(id);
+      this.#pendingEntities.removed.add(id);
+      this.#scheduleEntityFlush();
+    });
+
+    bot.on("entityMoved", (e: any) => {
+      if (bot !== this.#bot) return;
+      const d = entityData(e);
+      if (!this.#pendingEntities.added.has(d.entityId)) {
+        this.#pendingEntities.moved.set(d.entityId, d);
+      }
+      this.#scheduleEntityFlush();
+    });
+  }
+
+  #scheduleEntityFlush(): void {
+    if (this.#entityFlushTimer) return;
+    this.#entityFlushTimer = setTimeout(() => {
+      this.#entityFlushTimer = undefined;
+      const added = Array.from(this.#pendingEntities.added.values());
+      const removed = Array.from(this.#pendingEntities.removed);
+      const moved = Array.from(this.#pendingEntities.moved.values());
+      this.#pendingEntities.added.clear();
+      this.#pendingEntities.removed.clear();
+      this.#pendingEntities.moved.clear();
+      if (added.length === 0 && removed.length === 0 && moved.length === 0) return;
+      this.emit("entitiesChanged", added, removed, moved);
+    }, 200);
   }
 
   #emitMotionIfChanged(bot: MineflayerBot, force = false): void {

@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
+	"time"
 
 	enginecore "minecraft_orchestrator/internal/engine/core"
 	"minecraft_orchestrator/internal/engine/model"
@@ -14,6 +16,7 @@ import (
 const (
 	SystemBootstrap    scheduler.SystemID = "Bootstrap"
 	SystemNetworkApply scheduler.SystemID = "NetworkApply"
+	SystemRandomWander scheduler.SystemID = "RandomWander"
 )
 
 type TickData struct {
@@ -61,6 +64,7 @@ func (BootstrapSystem) Run(ctx *scheduler.RunContext) error {
 		bundle.Set(model.CRotation, model.Rotation{})
 		bundle.Set(model.CVelocity, model.Velocity{})
 		bundle.Set(model.CHealth, model.Health{Current: 20, Max: 20})
+		bundle.Set(model.CHunger, model.Hunger{Current: 20, Max: 20})
 		bundle.Set(model.CGameMode, model.GameModeSurvival)
 		bundle.Set(model.CInventory, model.Inventory{})
 		bundle.Set(model.CEffects, model.Effects{})
@@ -88,6 +92,7 @@ func (NetworkApplySystem) Access() scheduler.AccessSpec {
 			model.CRotation,
 			model.CVelocity,
 			model.CHealth,
+			model.CHunger,
 			model.CGameMode,
 			model.CInventory,
 			model.CEffects,
@@ -103,7 +108,9 @@ func (NetworkApplySystem) Run(ctx *scheduler.RunContext) error {
 
 	views := ctx.World.MirroredBotViews()
 	for _, event := range data.Network.Events {
+		
 		applyChunkEvent(ctx.World.Resources(), event, ctx.Logger)
+		applyEntityEvent(ctx.World.Resources(), event, ctx.Logger)
 
 		for _, view := range views {
 			for index, bot := range view.Bots {
@@ -263,6 +270,7 @@ func applyNetworkEvent(
 			health := view.Healths[index]
 			health.Current = event.Vitals.Health
 			view.Healths[index] = health
+			view.Hungers[index] = model.Hunger{Current: float64(event.Vitals.Food), Max: 20}
 		}
 	case network.EventHostEffects:
 		if event.RemoteSessionID == "" {
@@ -380,6 +388,7 @@ func applyHostSnapshot(view *enginecore.MirroredBotView, index int, snapshot net
 
 	health := &view.Healths[index]
 	health.Current = snapshot.Vitals.Health
+	view.Hungers[index] = model.Hunger{Current: float64(snapshot.Vitals.Food), Max: 20}
 
 	view.GameModes[index], view.Inventorys[index], view.Effectss[index] = snapshot.GameMode, snapshot.Inventory, snapshot.Effects
 }
@@ -528,4 +537,192 @@ func applyChunkEvent(resource *enginecore.Resources, event network.Event, logger
 
 		views.SetBlockStates(event.ProfileID, attemptID, updates)
 	}
+}
+
+// TODO: delete RandomWanderSystem after movement tests.
+// RandomWanderSystem generates random control sequences for bots, using chunk
+// data to avoid walking into walls, lava, fire, water, or off cliffs. It is
+// temporary test scaffolding and will be replaced by a real decision system.
+type RandomWanderSystem struct {
+	states map[model.ProfileID]*wanderState
+}
+
+type wanderState struct {
+	nextActionAt time.Time
+	sequence     uint64
+}
+
+func (RandomWanderSystem) ID() scheduler.SystemID {
+	return SystemRandomWander
+}
+
+func (RandomWanderSystem) Access() scheduler.AccessSpec {
+	return scheduler.AccessSpec{
+		Queries: []model.Mask{model.MirroredBotMask},
+	}
+}
+
+func (s *RandomWanderSystem) Run(ctx *scheduler.RunContext) error {
+	data, err := tickData(ctx)
+	if err != nil {
+		return err
+	}
+	if data.Outbox == nil {
+		return nil
+	}
+
+	if s.states == nil {
+		s.states = make(map[model.ProfileID]*wanderState)
+	}
+
+	now := time.Now()
+	worldViews := ctx.World.Resources().WorldViews()
+	views := ctx.World.MirroredBotViews()
+
+	for _, view := range views {
+		for index, bot := range view.Bots {
+			if view.Sessions[index].Phase != model.SessionPlayReady {
+				continue
+			}
+
+			ws := s.states[bot.ProfileID]
+			if ws == nil {
+				ws = &wanderState{}
+				s.states[bot.ProfileID] = ws
+			}
+
+			if now.Before(ws.nextActionAt) {
+				continue
+			}
+
+			pos := view.Positions[index]
+
+			wv, ok := worldViews.Get(bot.ProfileID)
+			if !ok || !wv.HasActiveDimensionType {
+				continue
+			}
+
+			dest, ok := s.pickDestination(bot.ProfileID, pos, worldViews)
+			if !ok {
+				continue
+			}
+
+			ws.sequence++
+
+			data.Outbox.Publish(network.Intent{
+				ProfileID: bot.ProfileID,
+				Kind:      network.IntentCommand,
+				Command: &network.GotoCommand{
+					Sequence: ws.sequence,
+					X:        dest.X,
+					Y:        dest.Y,
+					Z:        dest.Z,
+				},
+			})
+			
+			// jitter := time.Duration(5000+rand.IntN(10000)) * time.Millisecond
+			ws.nextActionAt = now.Add(2*time.Second)
+		}
+	}
+
+	return nil
+}
+
+func (s *RandomWanderSystem) pickDestination(profileID model.ProfileID, pos model.Position, wv *model.WorldViews) (model.BlockPosition, bool) {
+	radius := int32(5 + rand.IntN(16))
+	originX := int32(pos.X)
+	originY := int32(pos.Y)
+	originZ := int32(pos.Z)
+
+	for range 30 {
+		dx := int32(rand.IntN(int(radius*2+1))) - radius
+		dz := int32(rand.IntN(int(radius*2+1))) - radius
+
+		for dy := int32(-3); dy <= 3; dy++ {
+			bx := originX + dx
+			by := originY + dy
+			bz := originZ + dz
+
+			if canStandAt(profileID, bx, by, bz, wv) {
+				return model.BlockPosition{X: bx, Y: by, Z: bz}, true
+			}
+		}
+	}
+
+	return model.BlockPosition{}, false
+}
+
+func canStandAt(profileID model.ProfileID, bx, by, bz int32, wv *model.WorldViews) bool {
+	feetID, ok := wv.BlockState(profileID, model.BlockPosition{X: bx, Y: by, Z: bz})
+	if !ok || feetID != 0 {
+		return false
+	}
+
+	headID, ok := wv.BlockState(profileID, model.BlockPosition{X: bx, Y: by + 1, Z: bz})
+	if !ok || headID != 0 {
+		return false
+	}
+
+	groundID, ok := wv.BlockState(profileID, model.BlockPosition{X: bx, Y: by - 1, Z: bz})
+	if !ok || groundID == 0 || isHazard(groundID) {
+		return false
+	}
+	return true
+}
+
+func isHazard(stateID uint32) bool {
+	return (stateID >= 86 && stateID <= 117) || // water + lava
+		(stateID >= 3174 && stateID <= 3685) || // fire
+		(stateID >= 6728 && stateID <= 6743) || // cactus
+		stateID == 14643 || // magma_block
+		(stateID >= 20675 && stateID <= 20742) || // campfires + sweet_berry_bush
+		stateID == 24487 // powder_snow
+}
+
+func applyEntityEvent(resource *enginecore.Resources, event network.Event, logger *slog.Logger) {
+	if event.Kind != network.EventEntityChanges || event.EntityChanges == nil {
+		return
+	}
+
+	
+	entities := resource.EntityViews()
+	changes := event.EntityChanges
+	
+	logger.Debug(
+		"ecs.entity",
+		"entities", entities,
+		"raw", changes,
+	)
+
+	if len(changes.Added) > 0 {
+		entities.AddEntities(event.ProfileID, toModelEntities(changes.Added))
+	}
+	
+	if len(changes.Removed) > 0 {
+		entities.RemoveEntities(event.ProfileID, changes.Removed)
+	}
+	
+	if len(changes.Moved) > 0 {
+		entities.MoveEntities(event.ProfileID, toModelEntities(changes.Moved))
+	}
+
+	logger.Debug("ecs.entity_changes",
+		"added", len(changes.Added),
+		"removed", len(changes.Removed),
+		"moved", len(changes.Moved),
+	)
+}
+
+func toModelEntities(ents []network.Entity) []model.Entity {
+	out := make([]model.Entity, len(ents))
+	for i, e := range ents {
+		out[i] = model.Entity{
+			ID:       e.ID,
+			Name:     e.Name,
+			Position: e.Position,
+			Yaw:      e.Yaw,
+			Pitch:    e.Pitch,
+		}
+	}
+	return out
 }

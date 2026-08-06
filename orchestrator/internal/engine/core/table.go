@@ -103,6 +103,7 @@ var columnConstructors = map[model.Component]func() ComponentColumn{
 	model.CPosition:     func() ComponentColumn { return NewColumn[model.Position]() },
 	model.CVelocity:     func() ComponentColumn { return NewColumn[model.Velocity]() },
 	model.CHealth:       func() ComponentColumn { return NewColumn[model.Health]() },
+	model.CHunger:       func() ComponentColumn { return NewColumn[model.Hunger]() },
 	model.CBot:          func() ComponentColumn { return NewColumn[model.Bot]() },
 	model.CRotation:     func() ComponentColumn { return NewColumn[model.Rotation]() },
 	model.CGameMode:     func() ComponentColumn { return NewColumn[model.GameMode]() },

@@ -19,6 +19,7 @@ const (
 	EventChunkUnload
 	EventBlockStateChange
 	EventMultiBlocksUpdated
+	EventEntityChanges
 )
 
 func (k EventKind) String() string {
@@ -43,6 +44,8 @@ func (k EventKind) String() string {
 		return "block_state_change"
 	case EventMultiBlocksUpdated:
 		return "multi_blocks_updated"
+	case EventEntityChanges:
+		return "entity_changes"
 	default:
 		return fmt.Sprintf("EventKind(%d)", k)
 	}
@@ -128,9 +131,31 @@ type Event struct {
 	ChunkUnload      *model.ChunkPosition
 	BlockStateChange *BlockStateChange
 	MultiBlocksUpdated *MultiBlocksUpdated
+	EntityChanges   *EntityChanges
+}
+
+type Entity struct {
+	ID       int32
+	Name     string
+	Position model.Position
+	Yaw      float32
+	Pitch    float32
+}
+
+type EntityChanges struct {
+	Added   []Entity
+	Removed []int32
+	Moved   []Entity
 }
 
 type Batch struct {
 	Events []Event
+}
+
+type GotoCommand struct {
+	Sequence uint64
+	X        int32
+	Y        int32
+	Z        int32
 }
 

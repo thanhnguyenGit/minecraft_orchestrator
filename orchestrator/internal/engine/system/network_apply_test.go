@@ -159,6 +159,7 @@ func stageMirroredBot(t testing.TB, world *enginecore.World, profileID model.Pro
 	bundle.Set(model.CRotation, model.Rotation{})
 	bundle.Set(model.CVelocity, model.Velocity{})
 	bundle.Set(model.CHealth, model.Health{Current: 20, Max: 20})
+	bundle.Set(model.CHunger, model.Hunger{Current: 20, Max: 20})
 	bundle.Set(model.CGameMode, model.GameModeSurvival)
 	bundle.Set(model.CInventory, model.Inventory{})
 	bundle.Set(model.CEffects, model.Effects{})

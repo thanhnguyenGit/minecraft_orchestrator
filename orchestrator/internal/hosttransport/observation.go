@@ -111,6 +111,9 @@ func ObservationToEvent(
 			}
 		}
 		event.MultiBlocksUpdated = &network.MultiBlocksUpdated{Records: records}
+	case *orchestratorv1.BotObservation_EntitiesChanged:
+		event.Kind = network.EventEntityChanges
+		event.EntityChanges = entityChanges(payload.EntitiesChanged)
 	default:
 		return network.Event{}, fmt.Errorf("host observation has no payload")
 	}
@@ -234,4 +237,33 @@ func inventory(value *orchestratorv1.HostInventory) model.Inventory {
 		result.Slots = append(result.Slots, resultSlot)
 	}
 	return result
+}
+
+func entityToGo(e *orchestratorv1.HostEntity) network.Entity {
+	return network.Entity{
+		ID:       e.GetEntityId(),
+		Name:     e.GetName(),
+		Position: model.Position{X: e.GetX(), Y: e.GetY(), Z: e.GetZ()},
+		Yaw:      e.GetYaw(),
+		Pitch:    e.GetPitch(),
+	}
+}
+
+func entityChanges(payload *orchestratorv1.HostEntitiesChanged) *network.EntityChanges {
+	if payload == nil {
+		return nil
+	}
+	added := make([]network.Entity, len(payload.GetAdded()))
+	for i, e := range payload.GetAdded() {
+		added[i] = entityToGo(e)
+	}
+	moved := make([]network.Entity, len(payload.GetMoved()))
+	for i, e := range payload.GetMoved() {
+		moved[i] = entityToGo(e)
+	}
+	return &network.EntityChanges{
+		Added:   added,
+		Removed: payload.GetRemoved(),
+		Moved:   moved,
+	}
 }

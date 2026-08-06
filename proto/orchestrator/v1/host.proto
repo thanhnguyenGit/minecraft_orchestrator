@@ -11,6 +11,7 @@ message HostEnvelope {
     HostConfigure configure = 2;
     HostShutdown shutdown = 3;
     BotObservation observation = 4;
+    GotoCommand command = 5;
   }
 }
 
@@ -53,6 +54,8 @@ message BotObservation {
     HostChunkUnloaded chunk_unloaded = 18;
     HostBlockUpdated block_updated = 19;
     HostMultiBlocksUpdated multi_blocks_updated = 20;
+    CommandResult command_result = 21;
+    HostEntitiesChanged entities_changed = 22;
   }
 }
 
@@ -175,4 +178,40 @@ message HostMultiBlocksUpdated {
     int32 state_id = 4;
   }
   repeated BlockRecord records = 1;
+}
+
+message GotoCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  int32 x = 3;
+  int32 y = 4;
+  int32 z = 5;
+}
+
+enum CommandStatus {
+  COMMAND_STATUS_UNSPECIFIED = 0;
+  COMMAND_STATUS_COMPLETED = 1;
+  COMMAND_STATUS_FAILED = 2;
+}
+
+message CommandResult {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  CommandStatus status = 3;
+}
+
+message HostEntity {
+  int32 entity_id = 1;
+  string name = 2;
+  double x = 3;
+  double y = 4;
+  double z = 5;
+  float yaw = 6;
+  float pitch = 7;
+}
+
+message HostEntitiesChanged {
+  repeated HostEntity added = 1;
+  repeated int32 removed = 2;
+  repeated HostEntity moved = 3;
 }

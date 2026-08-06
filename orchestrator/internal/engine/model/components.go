@@ -14,6 +14,7 @@ const (
 	CPosition Component = iota
 	CVelocity
 	CHealth
+	CHunger
 	CBot
 	CRotation
 	CGameMode
@@ -35,6 +36,7 @@ var componentNames = [...]string{
 	"Position",
 	"Velocity",
 	"Health",
+	"Hunger",
 	"Bot",
 	"Rotation",
 	"GameMode",
@@ -107,10 +109,30 @@ type Session struct {
 	LastSequence    uint64
 }
 
-type ItemStack struct { ID int32; Name string; Metadata int32; Count int32 }
-type InventorySlot struct { Slot int32; Item *ItemStack }
-type Inventory struct { SelectedHotbarSlot int32; Slots []InventorySlot }
-type Effect struct { ID int32; Name string; Amplifier int32; DurationTicks int32 }
+type ItemStack struct { 
+	ID int32 
+	Name string 
+	Metadata int32
+	Count int32 
+}
+
+type InventorySlot struct { 
+	Slot int32 
+	Item *ItemStack 
+}
+
+type Inventory struct { 
+	SelectedHotbarSlot int32 
+	Slots []InventorySlot
+}
+
+type Effect struct { 
+	ID int32 
+	Name string 
+	Amplifier int32 
+	DurationTicks int32 
+}
+
 type Effects struct { Values []Effect }
 
 type Health struct {
@@ -118,11 +140,17 @@ type Health struct {
 	Max     float64
 }
 
+type Hunger struct {
+	Current float64
+	Max float64
+}
+
 var (
 	MirroredBotMask = Components(
 		CPosition,
 		CVelocity,
 		CHealth,
+		CHunger,
 		CBot,
 		CRotation,
 		CGameMode,

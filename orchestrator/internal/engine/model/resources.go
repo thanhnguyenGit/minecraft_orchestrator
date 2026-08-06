@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+)
 
 type DimensionKey string
 
@@ -262,4 +265,91 @@ func (v WorldView) dimensionType(registryID int32) (DimensionType, bool) {
 		return DimensionType{}, false
 	}
 	return candidate, true
+}
+
+type Entity struct {
+	ID       int32
+	Name     string
+	Position Position
+	Yaw      float32
+	Pitch    float32
+}
+
+type EntityViews struct {
+	entities map[ProfileID]map[int32]Entity
+}
+
+func (v *EntityViews) AddEntities(profileID ProfileID, additions []Entity) {
+	if v.entities == nil {
+		v.entities = make(map[ProfileID]map[int32]Entity)
+	}
+	
+	m, ok := v.entities[profileID]
+	if !ok {
+		m = make(map[int32]Entity)
+		v.entities[profileID] = m
+	}
+	
+	for _, e := range additions {
+		m[e.ID] = e
+	}
+}
+
+func (v *EntityViews) RemoveEntities(profileID ProfileID, ids []int32) {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return
+	}
+	
+	for _, id := range ids {
+		delete(m, id)
+	}
+	
+}
+
+func (v *EntityViews) MoveEntities(profileID ProfileID, moves []Entity) {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return
+	}
+	
+	for _, e := range moves {
+		if existing, exists := m[e.ID]; exists {
+			existing.Position = e.Position
+			existing.Yaw = e.Yaw
+			existing.Pitch = e.Pitch
+			m[e.ID] = existing
+		}
+	}
+}
+
+func (v *EntityViews) GetNearby(profileID ProfileID, pos Position, radius float64) []Entity {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return nil
+	}
+	
+	result := make([]Entity, 0)
+	for _, e := range m {
+		dx := e.Position.X - pos.X
+		dy := e.Position.Y - pos.Y
+		dz := e.Position.Z - pos.Z
+		if dx*dx+dy*dy+dz*dz <= radius*radius {
+			result = append(result, e)
+		}
+	}
+	
+	return result
+}
+
+func (v *EntityViews) GetAll(profileID ProfileID) map[int32]Entity {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return nil
+	}
+	
+	out := make(map[int32]Entity, len(m))
+	maps.Copy(out,m)
+
+	return out
 }

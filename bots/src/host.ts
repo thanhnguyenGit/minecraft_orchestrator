@@ -7,16 +7,16 @@ import {
 import { randomUUID } from "node:crypto";
 import net from "node:net";
 import {
-  BotConnectionState,
-  BotObservationSchema,
-  BotSpawnedSchema,
-  BotStatusChangedSchema,
-  HostConfigureSchema,
+  GotoCommandSchema,
+  CommandResultSchema,
+  CommandStatus,
+  HostBlockUpdatedSchema,
   HostChunkLoadedSchema,
   HostChunkUnloadedSchema,
-  HostBlockUpdatedSchema,
   HostMultiBlocksUpdatedSchema,
   HostEffectsChangedSchema,
+  HostEntitiesChangedSchema,
+  HostEntitySchema,
   HostEnvelopeSchema,
   HostHelloSchema,
   HostInventoryChangedSchema,
@@ -30,6 +30,11 @@ import {
   HostVitalsChangedSchema,
   HostVitalsSchema,
   HostBotStateSchema,
+  BotConnectionState,
+  BotObservationSchema,
+  BotSpawnedSchema,
+  BotStatusChangedSchema,
+  HostConfigureSchema,
   type BotConfiguration,
   type BotObservation,
   type HostEnvelope,
@@ -185,6 +190,58 @@ class Controller {
           }),
         }),
     );
+    this.#adapter.on(
+      "entitiesChanged",
+      (
+        added: {
+          entityId: number;
+          name: string;
+          x: number;
+          y: number;
+          z: number;
+          yaw: number;
+          pitch: number;
+        }[],
+        removed: number[],
+        moved: {
+          entityId: number;
+          name: string;
+          x: number;
+          y: number;
+          z: number;
+          yaw: number;
+          pitch: number;
+        }[],
+      ) =>
+        this.observe({
+          case: "entitiesChanged",
+          value: create(HostEntitiesChangedSchema, {
+            added: added.map((e) =>
+              create(HostEntitySchema, {
+                entityId: e.entityId,
+                name: e.name,
+                x: e.x,
+                y: e.y,
+                z: e.z,
+                yaw: e.yaw,
+                pitch: e.pitch,
+              }),
+            ),
+            removed,
+            moved: moved.map((e) =>
+              create(HostEntitySchema, {
+                entityId: e.entityId,
+                name: e.name,
+                x: e.x,
+                y: e.y,
+                z: e.z,
+                yaw: e.yaw,
+                pitch: e.pitch,
+              }),
+            ),
+          }),
+        }),
+    );
     this.#adapter.on("physicsDiagnostic", (event) =>
       console.log(
         JSON.stringify({
@@ -203,6 +260,31 @@ class Controller {
   stop(): void {
     this.#stopped = true;
     void this.#adapter.disconnect();
+  }
+  gotoDestination(
+    profileIdHex: string,
+    x: number,
+    y: number,
+    z: number,
+    sequence: bigint,
+  ): void {
+    this.#adapter.gotoDestination(x, y, z);
+    this.send(
+      create(BotObservationSchema, {
+        profileId: this.config.profileId,
+        sessionId: this.#session,
+        sequence: ++this.#sequence,
+        observedAtUnixMs: BigInt(Date.now()),
+        payload: {
+          case: "commandResult",
+          value: create(CommandResultSchema, {
+            profileId: profileIdHex,
+            sequence,
+              status: CommandStatus.UNSPECIFIED,
+          }),
+        },
+      }),
+    );
   }
   private connect(): void {
     if (this.#stopped) return;
@@ -321,6 +403,13 @@ socket.on("data", (chunk: Buffer) => {
         for (const controller of controllers.values()) controller.stop();
         socket.end();
         break;
+      case "command": {
+        const cmd = create(GotoCommandSchema, envelope.payload.value);
+        const ctl = controllers.get(cmd.profileId);
+        if (ctl)
+          ctl.gotoDestination(cmd.profileId, cmd.x, cmd.y, cmd.z, cmd.sequence);
+        break;
+      }
       default:
         break;
     }

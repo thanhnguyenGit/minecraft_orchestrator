@@ -21,5 +21,13 @@ func BuildScheduler() (*scheduler.ExecutionPlan, error) {
 		return nil, err
 	}
 
+	if err := builder.AddPhase(PhaseSimulation); err != nil {
+		return nil, err
+	}
+
+	if err := builder.AddSystem(PhaseSimulation, &RandomWanderSystem{}); err != nil {
+		return nil, err
+	}
+
 	return builder.Compile()
 }

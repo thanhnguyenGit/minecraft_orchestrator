@@ -79,6 +79,55 @@ func (BotConnectionState) EnumDescriptor() ([]byte, []int) {
 	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{0}
 }
 
+type CommandStatus int32
+
+const (
+	CommandStatus_COMMAND_STATUS_UNSPECIFIED CommandStatus = 0
+	CommandStatus_COMMAND_STATUS_COMPLETED   CommandStatus = 1
+	CommandStatus_COMMAND_STATUS_FAILED      CommandStatus = 2
+)
+
+// Enum value maps for CommandStatus.
+var (
+	CommandStatus_name = map[int32]string{
+		0: "COMMAND_STATUS_UNSPECIFIED",
+		1: "COMMAND_STATUS_COMPLETED",
+		2: "COMMAND_STATUS_FAILED",
+	}
+	CommandStatus_value = map[string]int32{
+		"COMMAND_STATUS_UNSPECIFIED": 0,
+		"COMMAND_STATUS_COMPLETED":   1,
+		"COMMAND_STATUS_FAILED":      2,
+	}
+)
+
+func (x CommandStatus) Enum() *CommandStatus {
+	p := new(CommandStatus)
+	*p = x
+	return p
+}
+
+func (x CommandStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CommandStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_orchestrator_v1_host_proto_enumTypes[1].Descriptor()
+}
+
+func (CommandStatus) Type() protoreflect.EnumType {
+	return &file_orchestrator_v1_host_proto_enumTypes[1]
+}
+
+func (x CommandStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CommandStatus.Descriptor instead.
+func (CommandStatus) EnumDescriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{1}
+}
+
 // HostEnvelope is the sole payload carried over the local framed socket.
 type HostEnvelope struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -88,6 +137,7 @@ type HostEnvelope struct {
 	//	*HostEnvelope_Configure
 	//	*HostEnvelope_Shutdown
 	//	*HostEnvelope_Observation
+	//	*HostEnvelope_Command
 	Payload       isHostEnvelope_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -166,6 +216,15 @@ func (x *HostEnvelope) GetObservation() *BotObservation {
 	return nil
 }
 
+func (x *HostEnvelope) GetCommand() *GotoCommand {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_Command); ok {
+			return x.Command
+		}
+	}
+	return nil
+}
+
 type isHostEnvelope_Payload interface {
 	isHostEnvelope_Payload()
 }
@@ -186,6 +245,10 @@ type HostEnvelope_Observation struct {
 	Observation *BotObservation `protobuf:"bytes,4,opt,name=observation,proto3,oneof"`
 }
 
+type HostEnvelope_Command struct {
+	Command *GotoCommand `protobuf:"bytes,5,opt,name=command,proto3,oneof"`
+}
+
 func (*HostEnvelope_Hello) isHostEnvelope_Payload() {}
 
 func (*HostEnvelope_Configure) isHostEnvelope_Payload() {}
@@ -193,6 +256,8 @@ func (*HostEnvelope_Configure) isHostEnvelope_Payload() {}
 func (*HostEnvelope_Shutdown) isHostEnvelope_Payload() {}
 
 func (*HostEnvelope_Observation) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_Command) isHostEnvelope_Payload() {}
 
 type HostHello struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
@@ -437,6 +502,8 @@ type BotObservation struct {
 	//	*BotObservation_ChunkUnloaded
 	//	*BotObservation_BlockUpdated
 	//	*BotObservation_MultiBlocksUpdated
+	//	*BotObservation_CommandResult
+	//	*BotObservation_EntitiesChanged
 	Payload       isBotObservation_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -606,6 +673,24 @@ func (x *BotObservation) GetMultiBlocksUpdated() *HostMultiBlocksUpdated {
 	return nil
 }
 
+func (x *BotObservation) GetCommandResult() *CommandResult {
+	if x != nil {
+		if x, ok := x.Payload.(*BotObservation_CommandResult); ok {
+			return x.CommandResult
+		}
+	}
+	return nil
+}
+
+func (x *BotObservation) GetEntitiesChanged() *HostEntitiesChanged {
+	if x != nil {
+		if x, ok := x.Payload.(*BotObservation_EntitiesChanged); ok {
+			return x.EntitiesChanged
+		}
+	}
+	return nil
+}
+
 type isBotObservation_Payload interface {
 	isBotObservation_Payload()
 }
@@ -654,6 +739,14 @@ type BotObservation_MultiBlocksUpdated struct {
 	MultiBlocksUpdated *HostMultiBlocksUpdated `protobuf:"bytes,20,opt,name=multi_blocks_updated,json=multiBlocksUpdated,proto3,oneof"`
 }
 
+type BotObservation_CommandResult struct {
+	CommandResult *CommandResult `protobuf:"bytes,21,opt,name=command_result,json=commandResult,proto3,oneof"`
+}
+
+type BotObservation_EntitiesChanged struct {
+	EntitiesChanged *HostEntitiesChanged `protobuf:"bytes,22,opt,name=entities_changed,json=entitiesChanged,proto3,oneof"`
+}
+
 func (*BotObservation_StatusChanged) isBotObservation_Payload() {}
 
 func (*BotObservation_Spawned) isBotObservation_Payload() {}
@@ -675,6 +768,10 @@ func (*BotObservation_ChunkUnloaded) isBotObservation_Payload() {}
 func (*BotObservation_BlockUpdated) isBotObservation_Payload() {}
 
 func (*BotObservation_MultiBlocksUpdated) isBotObservation_Payload() {}
+
+func (*BotObservation_CommandResult) isBotObservation_Payload() {}
+
+func (*BotObservation_EntitiesChanged) isBotObservation_Payload() {}
 
 type BotStatusChanged struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1740,6 +1837,294 @@ func (x *HostMultiBlocksUpdated) GetRecords() []*HostMultiBlocksUpdated_BlockRec
 	return nil
 }
 
+type GotoCommand struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	X             int32                  `protobuf:"varint,3,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,4,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,5,opt,name=z,proto3" json:"z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GotoCommand) Reset() {
+	*x = GotoCommand{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GotoCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GotoCommand) ProtoMessage() {}
+
+func (x *GotoCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GotoCommand.ProtoReflect.Descriptor instead.
+func (*GotoCommand) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GotoCommand) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *GotoCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *GotoCommand) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *GotoCommand) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *GotoCommand) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+type CommandResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Status        CommandStatus          `protobuf:"varint,3,opt,name=status,proto3,enum=orchestrator.v1.CommandStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommandResult) Reset() {
+	*x = CommandResult{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommandResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommandResult) ProtoMessage() {}
+
+func (x *CommandResult) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommandResult.ProtoReflect.Descriptor instead.
+func (*CommandResult) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *CommandResult) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *CommandResult) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *CommandResult) GetStatus() CommandStatus {
+	if x != nil {
+		return x.Status
+	}
+	return CommandStatus_COMMAND_STATUS_UNSPECIFIED
+}
+
+type HostEntity struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EntityId      int32                  `protobuf:"varint,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	X             float64                `protobuf:"fixed64,3,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float64                `protobuf:"fixed64,4,opt,name=y,proto3" json:"y,omitempty"`
+	Z             float64                `protobuf:"fixed64,5,opt,name=z,proto3" json:"z,omitempty"`
+	Yaw           float32                `protobuf:"fixed32,6,opt,name=yaw,proto3" json:"yaw,omitempty"`
+	Pitch         float32                `protobuf:"fixed32,7,opt,name=pitch,proto3" json:"pitch,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostEntity) Reset() {
+	*x = HostEntity{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostEntity) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostEntity) ProtoMessage() {}
+
+func (x *HostEntity) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostEntity.ProtoReflect.Descriptor instead.
+func (*HostEntity) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *HostEntity) GetEntityId() int32 {
+	if x != nil {
+		return x.EntityId
+	}
+	return 0
+}
+
+func (x *HostEntity) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *HostEntity) GetX() float64 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *HostEntity) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *HostEntity) GetZ() float64 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+func (x *HostEntity) GetYaw() float32 {
+	if x != nil {
+		return x.Yaw
+	}
+	return 0
+}
+
+func (x *HostEntity) GetPitch() float32 {
+	if x != nil {
+		return x.Pitch
+	}
+	return 0
+}
+
+type HostEntitiesChanged struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Added         []*HostEntity          `protobuf:"bytes,1,rep,name=added,proto3" json:"added,omitempty"`
+	Removed       []int32                `protobuf:"varint,2,rep,packed,name=removed,proto3" json:"removed,omitempty"`
+	Moved         []*HostEntity          `protobuf:"bytes,3,rep,name=moved,proto3" json:"moved,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostEntitiesChanged) Reset() {
+	*x = HostEntitiesChanged{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostEntitiesChanged) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostEntitiesChanged) ProtoMessage() {}
+
+func (x *HostEntitiesChanged) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostEntitiesChanged.ProtoReflect.Descriptor instead.
+func (*HostEntitiesChanged) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *HostEntitiesChanged) GetAdded() []*HostEntity {
+	if x != nil {
+		return x.Added
+	}
+	return nil
+}
+
+func (x *HostEntitiesChanged) GetRemoved() []int32 {
+	if x != nil {
+		return x.Removed
+	}
+	return nil
+}
+
+func (x *HostEntitiesChanged) GetMoved() []*HostEntity {
+	if x != nil {
+		return x.Moved
+	}
+	return nil
+}
+
 type HostMultiBlocksUpdated_BlockRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
@@ -1752,7 +2137,7 @@ type HostMultiBlocksUpdated_BlockRecord struct {
 
 func (x *HostMultiBlocksUpdated_BlockRecord) Reset() {
 	*x = HostMultiBlocksUpdated_BlockRecord{}
-	mi := &file_orchestrator_v1_host_proto_msgTypes[24]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1764,7 +2149,7 @@ func (x *HostMultiBlocksUpdated_BlockRecord) String() string {
 func (*HostMultiBlocksUpdated_BlockRecord) ProtoMessage() {}
 
 func (x *HostMultiBlocksUpdated_BlockRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_orchestrator_v1_host_proto_msgTypes[24]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1812,12 +2197,13 @@ var File_orchestrator_v1_host_proto protoreflect.FileDescriptor
 
 const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\n" +
-	"\x1aorchestrator/v1/host.proto\x12\x0forchestrator.v1\"\x8f\x02\n" +
+	"\x1aorchestrator/v1/host.proto\x12\x0forchestrator.v1\"\xc9\x02\n" +
 	"\fHostEnvelope\x122\n" +
 	"\x05hello\x18\x01 \x01(\v2\x1a.orchestrator.v1.HostHelloH\x00R\x05hello\x12>\n" +
 	"\tconfigure\x18\x02 \x01(\v2\x1e.orchestrator.v1.HostConfigureH\x00R\tconfigure\x12;\n" +
 	"\bshutdown\x18\x03 \x01(\v2\x1d.orchestrator.v1.HostShutdownH\x00R\bshutdown\x12C\n" +
-	"\vobservation\x18\x04 \x01(\v2\x1f.orchestrator.v1.BotObservationH\x00R\vobservationB\t\n" +
+	"\vobservation\x18\x04 \x01(\v2\x1f.orchestrator.v1.BotObservationH\x00R\vobservation\x128\n" +
+	"\acommand\x18\x05 \x01(\v2\x1c.orchestrator.v1.GotoCommandH\x00R\acommandB\t\n" +
 	"\apayload\"L\n" +
 	"\tHostHello\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12)\n" +
@@ -1835,7 +2221,7 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\x04host\x18\x03 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x04 \x01(\rR\x04port\x12\x12\n" +
 	"\x04auth\x18\x05 \x01(\tR\x04auth\x12\x18\n" +
-	"\aversion\x18\x06 \x01(\tR\aversion\"\xf7\a\n" +
+	"\aversion\x18\x06 \x01(\tR\aversion\"\x93\t\n" +
 	"\x0eBotObservation\x12\x1d\n" +
 	"\n" +
 	"profile_id\x18\x01 \x01(\fR\tprofileId\x12\x1d\n" +
@@ -1854,7 +2240,9 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\fchunk_loaded\x18\x11 \x01(\v2 .orchestrator.v1.HostChunkLoadedH\x00R\vchunkLoaded\x12K\n" +
 	"\x0echunk_unloaded\x18\x12 \x01(\v2\".orchestrator.v1.HostChunkUnloadedH\x00R\rchunkUnloaded\x12H\n" +
 	"\rblock_updated\x18\x13 \x01(\v2!.orchestrator.v1.HostBlockUpdatedH\x00R\fblockUpdated\x12[\n" +
-	"\x14multi_blocks_updated\x18\x14 \x01(\v2'.orchestrator.v1.HostMultiBlocksUpdatedH\x00R\x12multiBlocksUpdatedB\t\n" +
+	"\x14multi_blocks_updated\x18\x14 \x01(\v2'.orchestrator.v1.HostMultiBlocksUpdatedH\x00R\x12multiBlocksUpdated\x12G\n" +
+	"\x0ecommand_result\x18\x15 \x01(\v2\x1e.orchestrator.v1.CommandResultH\x00R\rcommandResult\x12Q\n" +
+	"\x10entities_changed\x18\x16 \x01(\v2$.orchestrator.v1.HostEntitiesChangedH\x00R\x0fentitiesChangedB\t\n" +
 	"\apayload\"e\n" +
 	"\x10BotStatusChanged\x129\n" +
 	"\x05state\x18\x01 \x01(\x0e2#.orchestrator.v1.BotConnectionStateR\x05state\x12\x16\n" +
@@ -1937,14 +2325,43 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x05R\x01y\x12\f\n" +
 	"\x01z\x18\x03 \x01(\x05R\x01z\x12\x19\n" +
-	"\bstate_id\x18\x04 \x01(\x05R\astateId*\xeb\x01\n" +
+	"\bstate_id\x18\x04 \x01(\x05R\astateId\"r\n" +
+	"\vGotoCommand\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12\f\n" +
+	"\x01x\x18\x03 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x04 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x05 \x01(\x05R\x01z\"\x82\x01\n" +
+	"\rCommandResult\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x126\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1e.orchestrator.v1.CommandStatusR\x06status\"\x8f\x01\n" +
+	"\n" +
+	"HostEntity\x12\x1b\n" +
+	"\tentity_id\x18\x01 \x01(\x05R\bentityId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\f\n" +
+	"\x01x\x18\x03 \x01(\x01R\x01x\x12\f\n" +
+	"\x01y\x18\x04 \x01(\x01R\x01y\x12\f\n" +
+	"\x01z\x18\x05 \x01(\x01R\x01z\x12\x10\n" +
+	"\x03yaw\x18\x06 \x01(\x02R\x03yaw\x12\x14\n" +
+	"\x05pitch\x18\a \x01(\x02R\x05pitch\"\x95\x01\n" +
+	"\x13HostEntitiesChanged\x121\n" +
+	"\x05added\x18\x01 \x03(\v2\x1b.orchestrator.v1.HostEntityR\x05added\x12\x18\n" +
+	"\aremoved\x18\x02 \x03(\x05R\aremoved\x121\n" +
+	"\x05moved\x18\x03 \x03(\v2\x1b.orchestrator.v1.HostEntityR\x05moved*\xeb\x01\n" +
 	"\x12BotConnectionState\x12$\n" +
 	" BOT_CONNECTION_STATE_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fBOT_CONNECTION_STATE_CONNECTING\x10\x01\x12\"\n" +
 	"\x1eBOT_CONNECTION_STATE_CONNECTED\x10\x02\x12%\n" +
 	"!BOT_CONNECTION_STATE_DISCONNECTED\x10\x03\x12\x1f\n" +
 	"\x1bBOT_CONNECTION_STATE_KICKED\x10\x04\x12\x1e\n" +
-	"\x1aBOT_CONNECTION_STATE_ERROR\x10\x05BDZBminecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1b\x06proto3"
+	"\x1aBOT_CONNECTION_STATE_ERROR\x10\x05*h\n" +
+	"\rCommandStatus\x12\x1e\n" +
+	"\x1aCOMMAND_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18COMMAND_STATUS_COMPLETED\x10\x01\x12\x19\n" +
+	"\x15COMMAND_STATUS_FAILED\x10\x02BDZBminecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1b\x06proto3"
 
 var (
 	file_orchestrator_v1_host_proto_rawDescOnce sync.Once
@@ -1958,72 +2375,83 @@ func file_orchestrator_v1_host_proto_rawDescGZIP() []byte {
 	return file_orchestrator_v1_host_proto_rawDescData
 }
 
-var file_orchestrator_v1_host_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_orchestrator_v1_host_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_orchestrator_v1_host_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_orchestrator_v1_host_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_orchestrator_v1_host_proto_goTypes = []any{
 	(BotConnectionState)(0),                    // 0: orchestrator.v1.BotConnectionState
-	(*HostEnvelope)(nil),                       // 1: orchestrator.v1.HostEnvelope
-	(*HostHello)(nil),                          // 2: orchestrator.v1.HostHello
-	(*HostConfigure)(nil),                      // 3: orchestrator.v1.HostConfigure
-	(*HostShutdown)(nil),                       // 4: orchestrator.v1.HostShutdown
-	(*BotConfiguration)(nil),                   // 5: orchestrator.v1.BotConfiguration
-	(*BotObservation)(nil),                     // 6: orchestrator.v1.BotObservation
-	(*BotStatusChanged)(nil),                   // 7: orchestrator.v1.BotStatusChanged
-	(*BotSpawned)(nil),                         // 8: orchestrator.v1.BotSpawned
-	(*HostStateSnapshot)(nil),                  // 9: orchestrator.v1.HostStateSnapshot
-	(*HostVitalsChanged)(nil),                  // 10: orchestrator.v1.HostVitalsChanged
-	(*HostEffectsChanged)(nil),                 // 11: orchestrator.v1.HostEffectsChanged
-	(*HostPositionChanged)(nil),                // 12: orchestrator.v1.HostPositionChanged
-	(*HostInventoryChanged)(nil),               // 13: orchestrator.v1.HostInventoryChanged
-	(*HostBotState)(nil),                       // 14: orchestrator.v1.HostBotState
-	(*HostVitals)(nil),                         // 15: orchestrator.v1.HostVitals
-	(*HostPotionEffect)(nil),                   // 16: orchestrator.v1.HostPotionEffect
-	(*HostPosition)(nil),                       // 17: orchestrator.v1.HostPosition
-	(*HostInventory)(nil),                      // 18: orchestrator.v1.HostInventory
-	(*HostInventorySlot)(nil),                  // 19: orchestrator.v1.HostInventorySlot
-	(*HostItemStack)(nil),                      // 20: orchestrator.v1.HostItemStack
-	(*HostChunkLoaded)(nil),                    // 21: orchestrator.v1.HostChunkLoaded
-	(*HostChunkUnloaded)(nil),                  // 22: orchestrator.v1.HostChunkUnloaded
-	(*HostBlockUpdated)(nil),                   // 23: orchestrator.v1.HostBlockUpdated
-	(*HostMultiBlocksUpdated)(nil),             // 24: orchestrator.v1.HostMultiBlocksUpdated
-	(*HostMultiBlocksUpdated_BlockRecord)(nil), // 25: orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
+	(CommandStatus)(0),                         // 1: orchestrator.v1.CommandStatus
+	(*HostEnvelope)(nil),                       // 2: orchestrator.v1.HostEnvelope
+	(*HostHello)(nil),                          // 3: orchestrator.v1.HostHello
+	(*HostConfigure)(nil),                      // 4: orchestrator.v1.HostConfigure
+	(*HostShutdown)(nil),                       // 5: orchestrator.v1.HostShutdown
+	(*BotConfiguration)(nil),                   // 6: orchestrator.v1.BotConfiguration
+	(*BotObservation)(nil),                     // 7: orchestrator.v1.BotObservation
+	(*BotStatusChanged)(nil),                   // 8: orchestrator.v1.BotStatusChanged
+	(*BotSpawned)(nil),                         // 9: orchestrator.v1.BotSpawned
+	(*HostStateSnapshot)(nil),                  // 10: orchestrator.v1.HostStateSnapshot
+	(*HostVitalsChanged)(nil),                  // 11: orchestrator.v1.HostVitalsChanged
+	(*HostEffectsChanged)(nil),                 // 12: orchestrator.v1.HostEffectsChanged
+	(*HostPositionChanged)(nil),                // 13: orchestrator.v1.HostPositionChanged
+	(*HostInventoryChanged)(nil),               // 14: orchestrator.v1.HostInventoryChanged
+	(*HostBotState)(nil),                       // 15: orchestrator.v1.HostBotState
+	(*HostVitals)(nil),                         // 16: orchestrator.v1.HostVitals
+	(*HostPotionEffect)(nil),                   // 17: orchestrator.v1.HostPotionEffect
+	(*HostPosition)(nil),                       // 18: orchestrator.v1.HostPosition
+	(*HostInventory)(nil),                      // 19: orchestrator.v1.HostInventory
+	(*HostInventorySlot)(nil),                  // 20: orchestrator.v1.HostInventorySlot
+	(*HostItemStack)(nil),                      // 21: orchestrator.v1.HostItemStack
+	(*HostChunkLoaded)(nil),                    // 22: orchestrator.v1.HostChunkLoaded
+	(*HostChunkUnloaded)(nil),                  // 23: orchestrator.v1.HostChunkUnloaded
+	(*HostBlockUpdated)(nil),                   // 24: orchestrator.v1.HostBlockUpdated
+	(*HostMultiBlocksUpdated)(nil),             // 25: orchestrator.v1.HostMultiBlocksUpdated
+	(*GotoCommand)(nil),                        // 26: orchestrator.v1.GotoCommand
+	(*CommandResult)(nil),                      // 27: orchestrator.v1.CommandResult
+	(*HostEntity)(nil),                         // 28: orchestrator.v1.HostEntity
+	(*HostEntitiesChanged)(nil),                // 29: orchestrator.v1.HostEntitiesChanged
+	(*HostMultiBlocksUpdated_BlockRecord)(nil), // 30: orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
 }
 var file_orchestrator_v1_host_proto_depIdxs = []int32{
-	2,  // 0: orchestrator.v1.HostEnvelope.hello:type_name -> orchestrator.v1.HostHello
-	3,  // 1: orchestrator.v1.HostEnvelope.configure:type_name -> orchestrator.v1.HostConfigure
-	4,  // 2: orchestrator.v1.HostEnvelope.shutdown:type_name -> orchestrator.v1.HostShutdown
-	6,  // 3: orchestrator.v1.HostEnvelope.observation:type_name -> orchestrator.v1.BotObservation
-	5,  // 4: orchestrator.v1.HostConfigure.bots:type_name -> orchestrator.v1.BotConfiguration
-	7,  // 5: orchestrator.v1.BotObservation.status_changed:type_name -> orchestrator.v1.BotStatusChanged
-	8,  // 6: orchestrator.v1.BotObservation.spawned:type_name -> orchestrator.v1.BotSpawned
-	9,  // 7: orchestrator.v1.BotObservation.state_snapshot:type_name -> orchestrator.v1.HostStateSnapshot
-	10, // 8: orchestrator.v1.BotObservation.vitals_changed:type_name -> orchestrator.v1.HostVitalsChanged
-	11, // 9: orchestrator.v1.BotObservation.effects_changed:type_name -> orchestrator.v1.HostEffectsChanged
-	12, // 10: orchestrator.v1.BotObservation.position_changed:type_name -> orchestrator.v1.HostPositionChanged
-	13, // 11: orchestrator.v1.BotObservation.inventory_changed:type_name -> orchestrator.v1.HostInventoryChanged
-	21, // 12: orchestrator.v1.BotObservation.chunk_loaded:type_name -> orchestrator.v1.HostChunkLoaded
-	22, // 13: orchestrator.v1.BotObservation.chunk_unloaded:type_name -> orchestrator.v1.HostChunkUnloaded
-	23, // 14: orchestrator.v1.BotObservation.block_updated:type_name -> orchestrator.v1.HostBlockUpdated
-	24, // 15: orchestrator.v1.BotObservation.multi_blocks_updated:type_name -> orchestrator.v1.HostMultiBlocksUpdated
-	0,  // 16: orchestrator.v1.BotStatusChanged.state:type_name -> orchestrator.v1.BotConnectionState
-	14, // 17: orchestrator.v1.BotSpawned.state:type_name -> orchestrator.v1.HostBotState
-	14, // 18: orchestrator.v1.HostStateSnapshot.state:type_name -> orchestrator.v1.HostBotState
-	15, // 19: orchestrator.v1.HostVitalsChanged.vitals:type_name -> orchestrator.v1.HostVitals
-	16, // 20: orchestrator.v1.HostEffectsChanged.effects:type_name -> orchestrator.v1.HostPotionEffect
-	17, // 21: orchestrator.v1.HostPositionChanged.position:type_name -> orchestrator.v1.HostPosition
-	19, // 22: orchestrator.v1.HostInventoryChanged.slots:type_name -> orchestrator.v1.HostInventorySlot
-	15, // 23: orchestrator.v1.HostBotState.vitals:type_name -> orchestrator.v1.HostVitals
-	16, // 24: orchestrator.v1.HostBotState.effects:type_name -> orchestrator.v1.HostPotionEffect
-	17, // 25: orchestrator.v1.HostBotState.position:type_name -> orchestrator.v1.HostPosition
-	18, // 26: orchestrator.v1.HostBotState.inventory:type_name -> orchestrator.v1.HostInventory
-	19, // 27: orchestrator.v1.HostInventory.slots:type_name -> orchestrator.v1.HostInventorySlot
-	20, // 28: orchestrator.v1.HostInventorySlot.item:type_name -> orchestrator.v1.HostItemStack
-	25, // 29: orchestrator.v1.HostMultiBlocksUpdated.records:type_name -> orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
-	30, // [30:30] is the sub-list for method output_type
-	30, // [30:30] is the sub-list for method input_type
-	30, // [30:30] is the sub-list for extension type_name
-	30, // [30:30] is the sub-list for extension extendee
-	0,  // [0:30] is the sub-list for field type_name
+	3,  // 0: orchestrator.v1.HostEnvelope.hello:type_name -> orchestrator.v1.HostHello
+	4,  // 1: orchestrator.v1.HostEnvelope.configure:type_name -> orchestrator.v1.HostConfigure
+	5,  // 2: orchestrator.v1.HostEnvelope.shutdown:type_name -> orchestrator.v1.HostShutdown
+	7,  // 3: orchestrator.v1.HostEnvelope.observation:type_name -> orchestrator.v1.BotObservation
+	26, // 4: orchestrator.v1.HostEnvelope.command:type_name -> orchestrator.v1.GotoCommand
+	6,  // 5: orchestrator.v1.HostConfigure.bots:type_name -> orchestrator.v1.BotConfiguration
+	8,  // 6: orchestrator.v1.BotObservation.status_changed:type_name -> orchestrator.v1.BotStatusChanged
+	9,  // 7: orchestrator.v1.BotObservation.spawned:type_name -> orchestrator.v1.BotSpawned
+	10, // 8: orchestrator.v1.BotObservation.state_snapshot:type_name -> orchestrator.v1.HostStateSnapshot
+	11, // 9: orchestrator.v1.BotObservation.vitals_changed:type_name -> orchestrator.v1.HostVitalsChanged
+	12, // 10: orchestrator.v1.BotObservation.effects_changed:type_name -> orchestrator.v1.HostEffectsChanged
+	13, // 11: orchestrator.v1.BotObservation.position_changed:type_name -> orchestrator.v1.HostPositionChanged
+	14, // 12: orchestrator.v1.BotObservation.inventory_changed:type_name -> orchestrator.v1.HostInventoryChanged
+	22, // 13: orchestrator.v1.BotObservation.chunk_loaded:type_name -> orchestrator.v1.HostChunkLoaded
+	23, // 14: orchestrator.v1.BotObservation.chunk_unloaded:type_name -> orchestrator.v1.HostChunkUnloaded
+	24, // 15: orchestrator.v1.BotObservation.block_updated:type_name -> orchestrator.v1.HostBlockUpdated
+	25, // 16: orchestrator.v1.BotObservation.multi_blocks_updated:type_name -> orchestrator.v1.HostMultiBlocksUpdated
+	27, // 17: orchestrator.v1.BotObservation.command_result:type_name -> orchestrator.v1.CommandResult
+	29, // 18: orchestrator.v1.BotObservation.entities_changed:type_name -> orchestrator.v1.HostEntitiesChanged
+	0,  // 19: orchestrator.v1.BotStatusChanged.state:type_name -> orchestrator.v1.BotConnectionState
+	15, // 20: orchestrator.v1.BotSpawned.state:type_name -> orchestrator.v1.HostBotState
+	15, // 21: orchestrator.v1.HostStateSnapshot.state:type_name -> orchestrator.v1.HostBotState
+	16, // 22: orchestrator.v1.HostVitalsChanged.vitals:type_name -> orchestrator.v1.HostVitals
+	17, // 23: orchestrator.v1.HostEffectsChanged.effects:type_name -> orchestrator.v1.HostPotionEffect
+	18, // 24: orchestrator.v1.HostPositionChanged.position:type_name -> orchestrator.v1.HostPosition
+	20, // 25: orchestrator.v1.HostInventoryChanged.slots:type_name -> orchestrator.v1.HostInventorySlot
+	16, // 26: orchestrator.v1.HostBotState.vitals:type_name -> orchestrator.v1.HostVitals
+	17, // 27: orchestrator.v1.HostBotState.effects:type_name -> orchestrator.v1.HostPotionEffect
+	18, // 28: orchestrator.v1.HostBotState.position:type_name -> orchestrator.v1.HostPosition
+	19, // 29: orchestrator.v1.HostBotState.inventory:type_name -> orchestrator.v1.HostInventory
+	20, // 30: orchestrator.v1.HostInventory.slots:type_name -> orchestrator.v1.HostInventorySlot
+	21, // 31: orchestrator.v1.HostInventorySlot.item:type_name -> orchestrator.v1.HostItemStack
+	30, // 32: orchestrator.v1.HostMultiBlocksUpdated.records:type_name -> orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
+	1,  // 33: orchestrator.v1.CommandResult.status:type_name -> orchestrator.v1.CommandStatus
+	28, // 34: orchestrator.v1.HostEntitiesChanged.added:type_name -> orchestrator.v1.HostEntity
+	28, // 35: orchestrator.v1.HostEntitiesChanged.moved:type_name -> orchestrator.v1.HostEntity
+	36, // [36:36] is the sub-list for method output_type
+	36, // [36:36] is the sub-list for method input_type
+	36, // [36:36] is the sub-list for extension type_name
+	36, // [36:36] is the sub-list for extension extendee
+	0,  // [0:36] is the sub-list for field type_name
 }
 
 func init() { file_orchestrator_v1_host_proto_init() }
@@ -2036,6 +2464,7 @@ func file_orchestrator_v1_host_proto_init() {
 		(*HostEnvelope_Configure)(nil),
 		(*HostEnvelope_Shutdown)(nil),
 		(*HostEnvelope_Observation)(nil),
+		(*HostEnvelope_Command)(nil),
 	}
 	file_orchestrator_v1_host_proto_msgTypes[5].OneofWrappers = []any{
 		(*BotObservation_StatusChanged)(nil),
@@ -2049,14 +2478,16 @@ func file_orchestrator_v1_host_proto_init() {
 		(*BotObservation_ChunkUnloaded)(nil),
 		(*BotObservation_BlockUpdated)(nil),
 		(*BotObservation_MultiBlocksUpdated)(nil),
+		(*BotObservation_CommandResult)(nil),
+		(*BotObservation_EntitiesChanged)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_orchestrator_v1_host_proto_rawDesc), len(file_orchestrator_v1_host_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   25,
+			NumEnums:      2,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
