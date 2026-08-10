@@ -7,16 +7,13 @@ import {
 import { randomUUID } from "node:crypto";
 import net from "node:net";
 import {
-  BotConnectionState,
-  BotObservationSchema,
-  BotSpawnedSchema,
-  BotStatusChangedSchema,
-  HostConfigureSchema,
+  HostBlockUpdatedSchema,
   HostChunkLoadedSchema,
   HostChunkUnloadedSchema,
-  HostBlockUpdatedSchema,
   HostMultiBlocksUpdatedSchema,
   HostEffectsChangedSchema,
+  HostEntitiesChangedSchema,
+  HostEntitySchema,
   HostEnvelopeSchema,
   HostHelloSchema,
   HostInventoryChangedSchema,
@@ -30,11 +27,28 @@ import {
   HostVitalsChangedSchema,
   HostVitalsSchema,
   HostBotStateSchema,
+  BotConnectionState,
+  BotObservationSchema,
+  BotSpawnedSchema,
+  BotStatusChangedSchema,
+  ActionOutcomeSchema,
+  ControllerActionKind,
+  CommandStatus,
+  HostConfigureSchema,
+  ControllerStateSchema,
+  ControllerField,
+  RealityStateSchema,
+  Vec3iSchema,
   type BotConfiguration,
   type BotObservation,
   type HostEnvelope,
 } from "./gen/orchestrator/v1/host_pb.js";
-import { MineflayerAdapter, type BotStatus } from "./mineflayer_adapter.js";
+import {
+  MineflayerAdapter,
+  type BotStatus,
+  type ControllerActionOutcome,
+  type RealityState,
+} from "./mineflayer_adapter.js";
 import { FrameDecoder, encodeFrame } from "./socket_frame.js";
 import type {
   BotState,
@@ -56,18 +70,22 @@ const key = (value: Uint8Array): string => Buffer.from(value).toString("hex");
 type Send = (observation: BotObservation) => void;
 
 class Controller {
-  #adapter = new MineflayerAdapter(undefined, {
-    physicsDebug: process.env.MINEFLAYER_PHYSICS_DEBUG === "true",
-  });
+  #adapter: MineflayerAdapter;
   #session = "";
   #sequence = 0n;
   #retry = 1000;
   #retryScheduled = false;
   #stopped = false;
+  #actionOutcomes: ControllerActionOutcome[] = [];
   constructor(
     private readonly config: BotConfiguration,
     private readonly send: Send,
   ) {
+    this.#adapter = new MineflayerAdapter(undefined, {
+      physicsDebug: process.env.MINEFLAYER_PHYSICS_DEBUG === "true",
+      diagnosticProfileID: key(this.config.profileId),
+      diagnosticUsername: this.config.username,
+    });
     this.#adapter.on("status", (status: BotStatus, detail: string) => {
       this.status(status, detail);
       if (status === "connected") {
@@ -185,6 +203,58 @@ class Controller {
           }),
         }),
     );
+    this.#adapter.on(
+      "entitiesChanged",
+      (
+        added: {
+          entityId: number;
+          name: string;
+          x: number;
+          y: number;
+          z: number;
+          yaw: number;
+          pitch: number;
+        }[],
+        removed: number[],
+        moved: {
+          entityId: number;
+          name: string;
+          x: number;
+          y: number;
+          z: number;
+          yaw: number;
+          pitch: number;
+        }[],
+      ) =>
+        this.observe({
+          case: "entitiesChanged",
+          value: create(HostEntitiesChangedSchema, {
+            added: added.map((e) =>
+              create(HostEntitySchema, {
+                entityId: e.entityId,
+                name: e.name,
+                x: e.x,
+                y: e.y,
+                z: e.z,
+                yaw: e.yaw,
+                pitch: e.pitch,
+              }),
+            ),
+            removed,
+            moved: moved.map((e) =>
+              create(HostEntitySchema, {
+                entityId: e.entityId,
+                name: e.name,
+                x: e.x,
+                y: e.y,
+                z: e.z,
+                yaw: e.yaw,
+                pitch: e.pitch,
+              }),
+            ),
+          }),
+        }),
+    );
     this.#adapter.on("physicsDiagnostic", (event) =>
       console.log(
         JSON.stringify({
@@ -196,6 +266,51 @@ class Controller {
         }),
       ),
     );
+    this.#adapter.on("reality", (state: RealityState) => {
+      const rs = create(RealityStateSchema, {
+        profileId: this.config.profileId,
+        sequence: this.#sequence,
+		sessionId: this.#session,
+      });
+      if (state.arrivalDistance !== undefined) {
+        rs.arrivalDistance = state.arrivalDistance;
+      }
+      if (state.diggingBlock) {
+        rs.diggingBlock = create(Vec3iSchema, state.diggingBlock);
+      }
+      if (state.attackingEntity !== undefined) {
+        rs.attackingEntity = state.attackingEntity;
+      }
+      if (state.equippedItem !== undefined) {
+        rs.equippedItem = state.equippedItem;
+      }
+      if (state.gotoBlock) {
+        rs.gotoTarget = create(Vec3iSchema, state.gotoBlock);
+      }
+      rs.actionOutcomes = this.#actionOutcomes.splice(0).map((outcome) =>
+        create(ActionOutcomeSchema, {
+          controllerSequence: outcome.controllerSequence,
+          kind: controllerActionKind(outcome.kind),
+          status: outcome.succeeded
+            ? CommandStatus.COMPLETED
+            : CommandStatus.FAILED,
+          detail: outcome.detail,
+        }),
+      );
+      socket.write(
+        encodeFrame(
+          toBinary(
+            HostEnvelopeSchema,
+            create(HostEnvelopeSchema, {
+              payload: { case: "realityState", value: rs },
+            }),
+          ),
+        ),
+      );
+    });
+    this.#adapter.on("actionOutcome", (outcome: ControllerActionOutcome) =>
+      this.#actionOutcomes.push(outcome),
+    );
   }
   start(): void {
     this.connect();
@@ -204,8 +319,12 @@ class Controller {
     this.#stopped = true;
     void this.#adapter.disconnect();
   }
+  applyState(delta: Partial<{ goto: { x: number; y: number; z: number } | null; break: { x: number; y: number; z: number } | null; attack: number | null; craft: { itemName: string; count: number } | null; equip: string | null; consume: string | null; place: { x: number; y: number; z: number; fx: number; fy: number; fz: number } | null }>, sequence: bigint): void {
+    this.#adapter.applyState(delta, sequence);
+  }
   private connect(): void {
     if (this.#stopped) return;
+	this.#actionOutcomes = [];
     this.#session = randomUUID();
     this.#sequence = 0n;
     this.#retryScheduled = false;
@@ -297,7 +416,7 @@ function send(payload: HostEnvelope["payload"]): void {
 socket.on("connect", () =>
   send({
     case: "hello",
-    value: create(HostHelloSchema, { token, protocolVersion: 1 }),
+    value: create(HostHelloSchema, { token, protocolVersion: 2 }),
   }),
 );
 
@@ -321,11 +440,65 @@ socket.on("data", (chunk: Buffer) => {
         for (const controller of controllers.values()) controller.stop();
         socket.end();
         break;
+      case "controllerState": {
+        const cs = create(ControllerStateSchema, envelope.payload.value);
+        const profileKey = key(cs.profileId);
+        const ctl = controllers.get(profileKey);
+        if (ctl) {
+          const delta: Record<string, unknown> = {};
+          for (const field of cs.clearFields) {
+            switch (field) {
+              case ControllerField.GOTO_TARGET: delta.goto = null; break;
+              case ControllerField.BREAK_TARGET: delta.break = null; break;
+              case ControllerField.ATTACK_TARGET: delta.attack = null; break;
+              case ControllerField.CRAFT_TARGET: delta.craft = null; break;
+              case ControllerField.EQUIP_TARGET: delta.equip = null; break;
+              case ControllerField.PLACE_TARGET: delta.place = null; break;
+              case ControllerField.CONSUME_TARGET: delta.consume = null; break;
+            }
+          }
+          if (cs.goToTarget !== undefined) {
+            delta.goto = cs.goToTarget ? { x: cs.goToTarget.x, y: cs.goToTarget.y, z: cs.goToTarget.z } : null;
+          }
+          if (cs.breakTarget !== undefined) {
+            delta.break = cs.breakTarget ? { x: cs.breakTarget.x, y: cs.breakTarget.y, z: cs.breakTarget.z } : null;
+          }
+          if (cs.attackTarget !== undefined) {
+            delta.attack = cs.attackTarget ?? null;
+          }
+          if (cs.craftTarget !== undefined) {
+            delta.craft = cs.craftTarget ? { itemName: cs.craftTarget.itemName, count: cs.craftTarget.count } : null;
+          }
+          if (cs.equipTarget !== undefined) {
+            delta.equip = cs.equipTarget ?? null;
+          }
+          if (cs.consumeTarget !== undefined) {
+            delta.consume = cs.consumeTarget ?? null;
+          }
+          if (cs.placeTarget !== undefined) {
+            delta.place = cs.placeTarget ? { x: cs.placeTarget.x, y: cs.placeTarget.y, z: cs.placeTarget.z, fx: cs.placeTarget.faceX, fy: cs.placeTarget.faceY, fz: cs.placeTarget.faceZ } : null;
+          }
+          ctl.applyState(delta, cs.sequence);
+        }
+        break;
+      }
       default:
         break;
     }
   }
 });
+
+function controllerActionKind(kind: ControllerActionOutcome["kind"]): ControllerActionKind {
+  switch (kind) {
+    case "goto": return ControllerActionKind.GOTO;
+    case "break": return ControllerActionKind.BREAK;
+    case "craft": return ControllerActionKind.CRAFT;
+    case "consume": return ControllerActionKind.CONSUME;
+    case "place": return ControllerActionKind.PLACE;
+    case "attack": return ControllerActionKind.ATTACK;
+    case "equip": return ControllerActionKind.EQUIP;
+  }
+}
 socket.on("error", (error) => {
   console.error(error);
   process.exitCode = 1;

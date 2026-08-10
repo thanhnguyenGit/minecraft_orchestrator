@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+)
 
 type DimensionKey string
 
@@ -184,35 +187,35 @@ func (v *WorldViews) SetBlockStates(profileID ProfileID, attemptID uint64, updat
 	if !ok || view.AttemptID != attemptID || !view.HasActiveDimensionType {
 		return false
 	}
-	
+
 	if view.chunks == nil {
 		return false
 	}
-	
+
 	for _, b := range updates {
 		if b.Position.Y < view.ActiveDimensionType.MinY || b.Position.Y >= view.ActiveDimensionType.MinY+view.ActiveDimensionType.Height {
 			continue
 		}
-		
+
 		chunkKey := ChunkPosition{
-			X: floorChunk(b.Position.X), 
+			X: floorChunk(b.Position.X),
 			Z: floorChunk(b.Position.Z),
 		}
-		
+
 		column, found := view.chunks[chunkKey]
 		if !found {
 			continue
 		}
-		
+
 		if column.setBlockState(b.Position.X-chunkKey.X*chunkWidth, b.Position.Y, b.Position.Z-chunkKey.Z*chunkWidth, b.StateID) {
 			column.version++
 			view.chunks[chunkKey] = column
 		}
-		
+
 	}
-	
+
 	v.views[profileID] = view
-	
+
 	return true
 }
 
@@ -239,7 +242,19 @@ func (v *WorldViews) ChunkVersion(profileID ProfileID, position ChunkPosition) (
 }
 
 func (v *WorldView) GetChunks() map[ChunkPosition]ChunkColumn {
-	return v.chunks
+	_c := v.chunks
+	if _c == nil {
+		return nil
+	}
+
+	out := make(map[ChunkPosition]ChunkColumn, len(_c))
+	maps.Copy(out, _c)
+
+	return out
+}
+
+func (v *WorldView) ChunksCount() int {
+	return len(v.chunks)
 }
 
 func (v *WorldView) clearChunks() {
@@ -262,4 +277,208 @@ func (v WorldView) dimensionType(registryID int32) (DimensionType, bool) {
 		return DimensionType{}, false
 	}
 	return candidate, true
+}
+
+type Entity struct {
+	ID       int32
+	Name     string
+	Position Position
+	Yaw      float32
+	Pitch    float32
+}
+
+type EntityViews struct {
+	entities map[ProfileID]map[int32]Entity
+}
+
+func (v *EntityViews) AddEntities(profileID ProfileID, additions []Entity) {
+	if v.entities == nil {
+		v.entities = make(map[ProfileID]map[int32]Entity)
+	}
+
+	m, ok := v.entities[profileID]
+	if !ok {
+		m = make(map[int32]Entity)
+		v.entities[profileID] = m
+	}
+
+	for _, e := range additions {
+		m[e.ID] = e
+	}
+}
+
+func (v *EntityViews) RemoveEntities(profileID ProfileID, ids []int32) {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return
+	}
+
+	for _, id := range ids {
+		delete(m, id)
+	}
+}
+
+func (v *EntityViews) MoveEntities(profileID ProfileID, moves []Entity) {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return
+	}
+
+	for _, e := range moves {
+		if existing, exists := m[e.ID]; exists {
+			existing.Position = e.Position
+			existing.Yaw = e.Yaw
+			existing.Pitch = e.Pitch
+			m[e.ID] = existing
+		}
+	}
+}
+
+func (v *EntityViews) GetNearby(profileID ProfileID, pos Position, radius float64) []Entity {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return nil
+	}
+
+	result := make([]Entity, 0)
+	for _, e := range m {
+		dx := e.Position.X - pos.X
+		dy := e.Position.Y - pos.Y
+		dz := e.Position.Z - pos.Z
+		if dx*dx+dy*dy+dz*dz <= radius*radius {
+			result = append(result, e)
+		}
+	}
+
+	return result
+}
+
+func (v *EntityViews) GetAll(profileID ProfileID) map[int32]Entity {
+	m, ok := v.entities[profileID]
+	if !ok {
+		return nil
+	}
+
+	out := make(map[int32]Entity, len(m))
+	maps.Copy(out, m)
+
+	return out
+}
+
+type PerceivedEntity struct {
+	ID       int32
+	Name     string
+	Position Position
+	Distance float64
+	Angle    float64
+}
+
+type PerceptionView struct {
+	entities map[ProfileID][]PerceivedEntity
+}
+
+func (v *PerceptionView) Set(profileID ProfileID, ents []PerceivedEntity) {
+	if v.entities == nil {
+		v.entities = make(map[ProfileID][]PerceivedEntity)
+	}
+
+	stored := make([]PerceivedEntity, len(ents))
+	copy(stored, ents)
+	v.entities[profileID] = stored
+}
+
+func (v *PerceptionView) Get(profileID ProfileID) []PerceivedEntity {
+	_s := v.entities[profileID]
+	if _s == nil {
+		return nil
+	}
+
+	out := make([]PerceivedEntity, len(_s))
+	copy(out, _s)
+
+	return out
+}
+
+// ActionOutcomeStatus is the terminal status reported by the controller for a
+// correlated action. It mirrors the host wire status without importing the
+// transport-generated enum into the engine model.
+type ActionOutcomeStatus uint8
+
+const (
+	ActionOutcomeUnspecified ActionOutcomeStatus = iota
+	ActionOutcomeCompleted
+	ActionOutcomeFailed
+)
+
+// ActionOutcome is one controller result. Detail is the existing host wire
+// detail field; the current protocol has no separate reason field.
+type ActionOutcome struct {
+	ControllerSequence uint64
+	Action             ControllerAction
+	Status             ActionOutcomeStatus
+	Detail             string
+}
+
+type RealityState struct {
+	ArrivalDistance          *float64
+	DiggingBlock             *BlockPosition
+	AttackingEntity          *int32
+	EquippedItem             *string
+	GotoTarget               *BlockPosition
+	ActionOutcomes           []ActionOutcome
+	ActionFailed             bool
+	Failure                  string
+	ActionFailureCorrelation uint64
+}
+
+type RealityView struct {
+	states map[ProfileID]RealityState
+}
+
+func (v *RealityView) Set(profileID ProfileID, s RealityState) {
+	if v.states == nil {
+		v.states = make(map[ProfileID]RealityState)
+	}
+	v.states[profileID] = s
+}
+
+func (v *RealityView) Get(profileID ProfileID) (RealityState, bool) {
+	s, ok := v.states[profileID]
+	return s, ok
+}
+
+// Clear removes feedback belonging to a previous host session.
+func (v *RealityView) Clear(profileID ProfileID) {
+	delete(v.states, profileID)
+}
+
+type PerceptionBlock struct {
+	Position    BlockPosition
+	Name        string
+	Distance    float64
+	Angle       float64
+	VisibleFace BlockPosition
+}
+
+type PerceptionBlockView struct {
+	blocks map[ProfileID][]PerceptionBlock
+}
+
+func (v *PerceptionBlockView) Set(profileID ProfileID, blocks []PerceptionBlock) {
+	if v.blocks == nil {
+		v.blocks = make(map[ProfileID][]PerceptionBlock)
+	}
+	stored := make([]PerceptionBlock, len(blocks))
+	copy(stored, blocks)
+	v.blocks[profileID] = stored
+}
+
+func (v *PerceptionBlockView) Get(profileID ProfileID) []PerceptionBlock {
+	_s := v.blocks[profileID]
+	if _s == nil {
+		return nil
+	}
+	out := make([]PerceptionBlock, len(_s))
+	copy(out, _s)
+	return out
 }

@@ -14,12 +14,15 @@ const (
 	CPosition Component = iota
 	CVelocity
 	CHealth
+	CHunger
 	CBot
 	CRotation
 	CGameMode
 	CSession
 	CInventory
 	CEffects
+	CUtilityAI
+	CControllerSync
 	ComponentCount
 )
 
@@ -35,12 +38,15 @@ var componentNames = [...]string{
 	"Position",
 	"Velocity",
 	"Health",
+	"Hunger",
 	"Bot",
 	"Rotation",
 	"GameMode",
 	"Session",
 	"Inventory",
 	"Effects",
+	"UtilityAI",
+	"ControllerSync",
 }
 
 type ProfileID [16]byte
@@ -99,21 +105,46 @@ func (p SessionPhase) String() string {
 }
 
 type Session struct {
-	Phase          SessionPhase
-	AttemptID      uint64
-	PlayerEntityID int32
-	Failure        string
+	Phase           SessionPhase
+	AttemptID       uint64
+	PlayerEntityID  int32
+	Failure         string
 	RemoteSessionID string
 	LastSequence    uint64
 }
 
-type ItemStack struct { ID int32; Name string; Metadata int32; Count int32 }
-type InventorySlot struct { Slot int32; Item *ItemStack }
-type Inventory struct { SelectedHotbarSlot int32; Slots []InventorySlot }
-type Effect struct { ID int32; Name string; Amplifier int32; DurationTicks int32 }
-type Effects struct { Values []Effect }
+type ItemStack struct {
+	ID       int32
+	Name     string
+	Metadata int32
+	Count    int32
+}
+
+type InventorySlot struct {
+	Slot int32
+	Item *ItemStack
+}
+
+type Inventory struct {
+	SelectedHotbarSlot int32
+	Slots              []InventorySlot
+}
+
+type Effect struct {
+	ID            int32
+	Name          string
+	Amplifier     int32
+	DurationTicks int32
+}
+
+type Effects struct{ Values []Effect }
 
 type Health struct {
+	Current float64
+	Max     float64
+}
+
+type Hunger struct {
 	Current float64
 	Max     float64
 }
@@ -123,12 +154,15 @@ var (
 		CPosition,
 		CVelocity,
 		CHealth,
+		CHunger,
 		CBot,
 		CRotation,
 		CGameMode,
 		CSession,
 		CInventory,
 		CEffects,
+		CUtilityAI,
+		CControllerSync,
 	)
 )
 

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
+import { createRequire } from "node:module";
 import { describe, it } from "node:test";
 
 import { MineflayerAdapter } from "../src/mineflayer_adapter.js";
@@ -41,6 +42,98 @@ describe("MineflayerAdapter inventory readiness", () => {
   });
 });
 
+describe("MineflayerAdapter controller sessions", () => {
+  it("discards a stale dig completion after reconnect while a reused sequence executes normally", async () => {
+    const registry = createRequire(import.meta.url)("prismarine-registry")("1.21.1");
+    let resolveOldDig: (() => void) | undefined;
+    let secondDigCalls = 0;
+    const makeBot = (dig: () => Promise<void>) => Object.assign(new EventEmitter(), {
+      health: 20, food: 20, foodSaturation: 5, oxygenLevel: 20, quickBarSlot: 0,
+      physicsEnabled: true, registry, game: { dimension: "minecraft:overworld" },
+      entity: { id: 42, position: { x: 0, y: 64, z: 0, distanceTo: () => 1 }, yaw: 0, pitch: 0, velocity: { x: 0, y: 0, z: 0 }, effects: {} },
+      inventory: { slots: [], items: () => [] }, entities: {}, pathfinder: { setGoal() {}, setMovements() {} },
+      blockAt: () => ({ name: "oak_log", position: { x: 1, y: 64, z: 0 } }),
+      canSeeBlock: () => true, canDigBlock: () => true, dig,
+      loadPlugin() {}, quit() {},
+    });
+    const firstBot = makeBot(() => new Promise<void>((resolve) => { resolveOldDig = resolve; }));
+    const secondBot = makeBot(async () => { secondDigCalls++; });
+    const bots = [firstBot, secondBot];
+    const adapter = new MineflayerAdapter(() => bots.shift() as never);
+    const outcomes: Array<{ kind: string; controllerSequence: bigint; succeeded: boolean; detail: string }> = [];
+    adapter.on("actionOutcome", (outcome) => outcomes.push(outcome));
+    const options = { host: "127.0.0.1", port: 25565, username: "test_bot", auth: "offline", version: "1.21.11" };
+
+    await adapter.connect(options);
+    adapter.applyState({ break: { x: 1, y: 64, z: 0 } }, 9n);
+    firstBot.emit("spawn");
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    assert.ok(resolveOldDig);
+    firstBot.emit("end");
+
+    await adapter.connect(options);
+    adapter.applyState({ break: { x: 1, y: 64, z: 0 } }, 9n);
+    secondBot.emit("spawn");
+    resolveOldDig();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    secondBot.emit("end");
+
+    assert.equal(secondDigCalls, 1);
+    assert.deepEqual(outcomes, [{ kind: "break", controllerSequence: 9n, succeeded: true, detail: "dig_completed" }]);
+  });
+
+  it("accepts a reused kind and sequence after reconnect without replaying stale state", async () => {
+    const registry = createRequire(import.meta.url)("prismarine-registry")("1.21.1");
+    const makeBot = () => Object.assign(new EventEmitter(), {
+      health: 20,
+      food: 20,
+      foodSaturation: 5,
+      oxygenLevel: 20,
+      quickBarSlot: 0,
+      physicsEnabled: true,
+      registry,
+      game: { dimension: "minecraft:overworld" },
+      entity: {
+        id: 42,
+        position: { x: 0, y: 64, z: 0, distanceTo: () => 0 },
+        yaw: 0,
+        pitch: 0,
+        velocity: { x: 0, y: 0, z: 0 },
+        effects: {},
+      },
+      inventory: { slots: [], items: () => [] },
+      entities: {},
+      pathfinder: { setGoal() {}, setMovements() {} },
+      recipesFor: () => [{}],
+      craft: async () => {},
+      loadPlugin() {},
+      quit() {},
+    });
+    const firstBot = makeBot();
+    const secondBot = makeBot();
+    const bots = [firstBot, secondBot];
+    const adapter = new MineflayerAdapter(() => bots.shift() as never);
+    const outcomes: Array<{ kind: string; controllerSequence: bigint }> = [];
+    adapter.on("actionOutcome", (outcome) => outcomes.push(outcome));
+    const options = { host: "127.0.0.1", port: 25565, username: "test_bot", auth: "offline", version: "1.21.11" };
+
+    await adapter.connect(options);
+    adapter.applyState({ goto: { x: 1, y: 64, z: 1 }, craft: { itemName: "oak_planks", count: 1 } }, 7n);
+    firstBot.emit("spawn");
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    firstBot.emit("end");
+
+    await adapter.connect(options);
+    adapter.applyState({ craft: { itemName: "oak_planks", count: 1 } }, 7n);
+    secondBot.emit("spawn");
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    secondBot.emit("end");
+
+    assert.deepEqual(outcomes.filter((outcome) => outcome.kind === "craft").map((outcome) => outcome.controllerSequence), [7n, 7n]);
+    assert.equal(outcomes.filter((outcome) => outcome.kind === "goto").length, 1);
+  });
+});
+
 describe("MineflayerAdapter physics diagnostics", () => {
   it("reports the local player velocity packet only when diagnostics are enabled", async () => {
     const client = new EventEmitter();
@@ -64,7 +157,6 @@ describe("MineflayerAdapter physics diagnostics", () => {
     adapter.on("physicsDiagnostic", (event) => diagnostics.push(event));
 
     await adapter.connect({ host: "127.0.0.1", port: 25565, username: "test_bot", auth: "offline", version: "1.21.11" });
-    bot.emit("spawn");
     client.emit("entity_velocity", { entityId: 42, velocity: { x: 1, y: 2, z: 3 } });
     await new Promise<void>((resolve) => queueMicrotask(resolve));
 

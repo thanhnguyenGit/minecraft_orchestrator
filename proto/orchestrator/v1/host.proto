@@ -11,6 +11,16 @@ message HostEnvelope {
     HostConfigure configure = 2;
     HostShutdown shutdown = 3;
     BotObservation observation = 4;
+    // Deprecated control envelopes retained solely so older frames decode.
+    // New control is carried only by controller_state.
+    GotoCommand command = 5 [deprecated = true];
+    AttackCommand attack_command = 6 [deprecated = true];
+    BreakBlockCommand break_block = 7 [deprecated = true];
+    EquipCommand equip = 8 [deprecated = true];
+    CraftCommand craft = 9 [deprecated = true];
+    PlaceBlockCommand place_block = 10 [deprecated = true];
+    ControllerState controller_state = 11;
+    RealityState reality_state = 12;
   }
 }
 
@@ -53,6 +63,8 @@ message BotObservation {
     HostChunkUnloaded chunk_unloaded = 18;
     HostBlockUpdated block_updated = 19;
     HostMultiBlocksUpdated multi_blocks_updated = 20;
+    CommandResult command_result = 21;
+    HostEntitiesChanged entities_changed = 22;
   }
 }
 
@@ -175,4 +187,158 @@ message HostMultiBlocksUpdated {
     int32 state_id = 4;
   }
   repeated BlockRecord records = 1;
+}
+
+message GotoCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  int32 x = 3;
+  int32 y = 4;
+  int32 z = 5;
+}
+
+message AttackCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  int32 target_entity_id = 3;
+}
+
+message BreakBlockCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  int32 x = 3;
+  int32 y = 4;
+  int32 z = 5;
+}
+
+message EquipCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  string item_name = 3;
+}
+
+message CraftCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  string item_name = 3;
+  int32 count = 4;
+}
+
+message PlaceBlockCommand {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  int32 x = 3;
+  int32 y = 4;
+  int32 z = 5;
+  int32 face_x = 6;
+  int32 face_y = 7;
+  int32 face_z = 8;
+}
+
+enum CommandStatus {
+  COMMAND_STATUS_UNSPECIFIED = 0;
+  COMMAND_STATUS_COMPLETED = 1;
+  COMMAND_STATUS_FAILED = 2;
+}
+
+message CommandResult {
+  string profile_id = 1;
+  uint64 sequence = 2;
+  CommandStatus status = 3;
+}
+
+message HostEntity {
+  int32 entity_id = 1;
+  string name = 2;
+  double x = 3;
+  double y = 4;
+  double z = 5;
+  float yaw = 6;
+  float pitch = 7;
+}
+
+message HostEntitiesChanged {
+  repeated HostEntity added = 1;
+  repeated int32 removed = 2;
+  repeated HostEntity moved = 3;
+}
+
+message Vec3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Vec3i {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+}
+
+message CraftSpec {
+  string item_name = 1;
+  int32 count = 2;
+}
+
+message PlaceSpec {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+  int32 face_x = 4;
+  int32 face_y = 5;
+  int32 face_z = 6;
+}
+
+enum ControllerField {
+  CONTROLLER_FIELD_UNSPECIFIED = 0;
+  CONTROLLER_FIELD_GOTO_TARGET = 1;
+  CONTROLLER_FIELD_BREAK_TARGET = 2;
+  CONTROLLER_FIELD_ATTACK_TARGET = 3;
+  CONTROLLER_FIELD_CRAFT_TARGET = 4;
+  CONTROLLER_FIELD_EQUIP_TARGET = 5;
+  CONTROLLER_FIELD_PLACE_TARGET = 6;
+  CONTROLLER_FIELD_CONSUME_TARGET = 7;
+}
+
+enum ControllerActionKind {
+  CONTROLLER_ACTION_KIND_UNSPECIFIED = 0;
+  CONTROLLER_ACTION_KIND_GOTO = 1;
+  CONTROLLER_ACTION_KIND_BREAK = 2;
+  CONTROLLER_ACTION_KIND_CRAFT = 3;
+  CONTROLLER_ACTION_KIND_CONSUME = 4;
+  CONTROLLER_ACTION_KIND_PLACE = 5;
+  CONTROLLER_ACTION_KIND_ATTACK = 6;
+  CONTROLLER_ACTION_KIND_EQUIP = 7;
+}
+
+message ActionOutcome {
+  uint64 controller_sequence = 1;
+  ControllerActionKind kind = 2;
+  CommandStatus status = 3;
+  string detail = 4;
+}
+
+message ControllerState {
+  bytes profile_id = 1;
+  uint64 sequence = 2;
+  optional Vec3i go_to_target = 3;
+  optional Vec3i break_target = 4;
+  optional int32 attack_target = 5;
+  optional CraftSpec craft_target = 6;
+  optional string equip_target = 7;
+  optional PlaceSpec place_target = 8;
+  optional string consume_target = 9;
+  repeated ControllerField clear_fields = 10;
+}
+
+message RealityState {
+  bytes profile_id = 1;
+  uint64 sequence = 2;
+  optional double arrival_distance = 3;
+  optional Vec3i digging_block = 4;
+  optional int32 attacking_entity = 5;
+  optional string equipped_item = 6;
+  optional Vec3i goto_target = 7;
+  repeated ActionOutcome action_outcomes = 8;
+  string session_id = 9;
 }

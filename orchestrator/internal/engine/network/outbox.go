@@ -11,11 +11,13 @@ type IntentKind uint8
 const (
 	IntentStartHost IntentKind = iota
 	IntentStopHost
+	IntentControllerState
 )
 
 type Intent struct {
-	ProfileID model.ProfileID
-	Kind      IntentKind
+	ProfileID       model.ProfileID
+	Kind            IntentKind
+	ControllerState *ControllerState
 }
 
 // Outbox transports ECS lifecycle intent to the runtime. It has no socket or

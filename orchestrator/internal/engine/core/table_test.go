@@ -1,6 +1,7 @@
 package core
 
 import (
+	"reflect"
 	"testing"
 
 	"minecraft_orchestrator/internal/engine/model"
@@ -73,6 +74,119 @@ func TestNewColumn(t *testing.T) {
 	}
 	if col.Len() != 0 {
 		t.Fatalf("Len = %d, want 0", col.Len())
+	}
+}
+
+func TestTableStoresUtilityAIAndControllerSyncComponents(t *testing.T) {
+	mask := model.Components(model.CUtilityAI, model.CControllerSync)
+	table := NewTable(mask)
+
+	utility := model.UtilityAIState{CurrentGoal: model.Fight, Phase: model.GoalPhaseExecuting}
+	sync := model.ControllerSyncState{ControllerSequence: 9}
+	var bundle Bundle
+	bundle.Set(model.CUtilityAI, utility)
+	bundle.Set(model.CControllerSync, sync)
+
+	if _, err := table.AddEntity(Entity{Index: 1, Generation: 1}, bundle); err != nil {
+		t.Fatalf("AddEntity() error = %v", err)
+	}
+
+	if _, ok := table.columns[uint8(model.CUtilityAI)].(*Column[model.UtilityAIState]); !ok {
+		t.Fatalf("CUtilityAI column = %T, want *Column[model.UtilityAIState]", table.columns[uint8(model.CUtilityAI)])
+	}
+	if _, ok := table.columns[uint8(model.CControllerSync)].(*Column[model.ControllerSyncState]); !ok {
+		t.Fatalf("CControllerSync column = %T, want *Column[model.ControllerSyncState]", table.columns[uint8(model.CControllerSync)])
+	}
+
+	stored := table.bundleAt(0)
+	if got := stored.Get(model.CUtilityAI).(model.UtilityAIState); !reflect.DeepEqual(got, utility) {
+		t.Fatalf("stored utility state = %#v, want %#v", got, utility)
+	}
+	if got := stored.Get(model.CControllerSync).(model.ControllerSyncState); got != sync {
+		t.Fatalf("stored controller sync = %#v, want %#v", got, sync)
+	}
+}
+
+func TestTableOwnsPointerBearingUtilityAIComponents(t *testing.T) {
+	mask := model.Components(model.CUtilityAI, model.CControllerSync)
+	table := NewTable(mask)
+
+	hostiles := [model.RecentHostileMemoryCapacity]model.HostileMemory{{EntityID: 42, SeenTick: 10}}
+	gotoTarget := model.BlockPosition{X: 1, Y: 64, Z: 2}
+	sync := model.ControllerSyncState{
+		Desired:  model.ControllerState{GotoTarget: &gotoTarget},
+		LastSent: model.ControllerState{GotoTarget: &gotoTarget},
+	}
+	var bundle Bundle
+	bundle.Set(model.CUtilityAI, model.UtilityAIState{RecentHostiles: hostiles, RecentHostileCount: 1})
+	bundle.Set(model.CControllerSync, sync)
+	if _, err := table.AddEntity(Entity{Index: 1, Generation: 1}, bundle); err != nil {
+		t.Fatalf("AddEntity() error = %v", err)
+	}
+
+	hostiles[0].SeenTick = 99
+	gotoTarget.X = 99
+
+	stored := table.bundleAt(0)
+	utility := stored.Get(model.CUtilityAI).(model.UtilityAIState)
+	if got := utility.RecentHostiles[0].SeenTick; got != 10 {
+		t.Fatalf("stored hostile tick = %d, want 10 after source mutation", got)
+	}
+	controller := stored.Get(model.CControllerSync).(model.ControllerSyncState)
+	if got := controller.Desired.GotoTarget.X; got != 1 {
+		t.Fatalf("stored desired target = %d, want 1 after source mutation", got)
+	}
+
+	controller.Desired.GotoTarget.X = 7
+	if got := controller.LastSent.GotoTarget.X; got != 1 {
+		t.Fatalf("last sent target = %d, want independent snapshot", got)
+	}
+	storedAgain := table.bundleAt(0)
+	if got := storedAgain.Get(model.CControllerSync).(model.ControllerSyncState).Desired.GotoTarget.X; got != 1 {
+		t.Fatalf("stored desired target = %d, want read boundary copy", got)
+	}
+}
+
+func TestTableOwnsInventoryAndEffectsComponents(t *testing.T) {
+	mask := model.Components(model.CInventory, model.CEffects)
+	table := NewTable(mask)
+
+	slots := []model.InventorySlot{
+		{Slot: 0, Item: &model.ItemStack{ID: 1, Count: 3}},
+		{Slot: 1, Item: nil},
+	}
+	effects := []model.Effect{{ID: 2, DurationTicks: 40}}
+	var bundle Bundle
+	bundle.Set(model.CInventory, model.Inventory{Slots: slots})
+	bundle.Set(model.CEffects, model.Effects{Values: effects})
+	if _, err := table.AddEntity(Entity{Index: 1, Generation: 1}, bundle); err != nil {
+		t.Fatalf("AddEntity() error = %v", err)
+	}
+
+	slots[0].Item.Count = 99
+	effects[0].DurationTicks = 99
+
+	stored := table.bundleAt(0)
+	inventory := stored.Get(model.CInventory).(model.Inventory)
+	if got := inventory.Slots[0].Item.Count; got != 3 {
+		t.Fatalf("stored item count = %d, want 3 after source mutation", got)
+	}
+	if inventory.Slots[1].Item != nil {
+		t.Fatalf("stored nil inventory item = %#v, want nil", inventory.Slots[1].Item)
+	}
+	storedEffects := stored.Get(model.CEffects).(model.Effects)
+	if got := storedEffects.Values[0].DurationTicks; got != 40 {
+		t.Fatalf("stored effect duration = %d, want 40 after source mutation", got)
+	}
+
+	inventory.Slots[0].Item.Count = 7
+	storedEffects.Values[0].DurationTicks = 7
+	storedAgain := table.bundleAt(0)
+	if got := storedAgain.Get(model.CInventory).(model.Inventory).Slots[0].Item.Count; got != 3 {
+		t.Fatalf("stored item count = %d, want 3 after read mutation", got)
+	}
+	if got := storedAgain.Get(model.CEffects).(model.Effects).Values[0].DurationTicks; got != 40 {
+		t.Fatalf("stored effect duration = %d, want 40 after read mutation", got)
 	}
 }
 

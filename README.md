@@ -1,53 +1,57 @@
 # Minecraft Orchestrator
 
-The Go process is an ECS metadata runtime for multiple Minecraft bots. A single
-Node process hosts Mineflayer controllers, which own Minecraft connections,
-chunks, collision, passive physics, knockback, and respawning.
+> Autonomous Minecraft bots that make survival decisions from their live surroundings.
 
-```text
-Mineflayer host
-  -> framed protobuf observations
-  -> Go HostSupervisor
-  -> network.Inbox
-  -> fixed ECS tick
-  -> NetworkApply
-  -> ECS bot metadata
-```
+Minecraft Orchestrator is an experimental survival-behaviour runtime for
+Minecraft bots. Bots explore, seek useful visible resources, craft basic tools,
+manage hunger, and respond to threats by fighting or fleeing.
 
-The Mineflayer host never receives an ECS World pointer. `NetworkApply` is the
-sole boundary that mutates ECS state from network observations.
+## What it provides
 
-## Configuration
+- Bots that choose their next survival priority from the world around them
+- Visible-resource gathering and basic crafting progression
+- Hunger, combat, fleeing, and exploration behaviour
+- A configurable runtime for connecting bots to a Minecraft server
 
-Copy `.env.example` to `.env` and set the Minecraft server address:
+## Why it exists
+
+Rather than following one fixed task sequence, a bot continuously reassesses
+what it can see and changes its behaviour as its needs and surroundings change.
+The project explores how a Minecraft bot can make simple, reactive survival
+decisions on its own.
+
+In the longer term, the project aims to connect language models to bots and
+explore a simulated Minecraft civilization: autonomous inhabitants with their
+own goals, relationships, and decisions. Rather than following fixed scripts,
+they could gather, build, trade, cooperate, compete, and shape the world
+alongside real players. The aim is to make sparse survival servers feel more
+alive through an emergent population whose behaviour is not wholly predictable.
+
+## Current state
+
+This is an early MVP under active development. Bots can connect to a Minecraft
+server, wander, gather visible resources, craft basic tools, eat, fight, and
+flee.
+
+## Quick start
+
+You need a reachable Minecraft Java server (1.21.11), Go 1.26, Node.js, and npm.
+
+From the repository root:
 
 ```bash
-MINECRAFT_HOST=192.168.31.170
-MINECRAFT_PORT=64735
-```
+cp .env.example .env
+# Edit .env and set MINECRAFT_HOST and MINECRAFT_PORT.
 
-Optional settings are `MINEFLAYER_AUTH` (`offline` by default),
-`MINEFLAYER_VERSION` (`1.21.11` by default), `MINEFLAYER_NODE_BINARY`, and
-`MINEFLAYER_HOST_SCRIPT`. Set `MINEFLAYER_PHYSICS_DEBUG=true` only when
-investigating Mineflayer passive-physics behavior.
+cd bots
+npm ci
 
-## Run
-
-```bash
-cd orchestrator
+cd ../orchestrator
+go mod download
 go run ./cmd/orchestrator
 ```
 
-Go starts the local Node host and configures the bot profiles automatically.
+The orchestrator starts its bot host automatically. Stop it with `Ctrl-C`.
 
-## Verify
-
-```bash
-cd orchestrator
-go test ./...
-go vet ./...
-
-cd ../bots
-npm test
-npm run build
-```
+For authentication, protocol-version, and logging settings, see
+[`.env.example`](.env.example).
