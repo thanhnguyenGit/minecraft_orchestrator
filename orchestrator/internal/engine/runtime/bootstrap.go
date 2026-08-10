@@ -10,7 +10,7 @@ import (
 	"minecraft_orchestrator/internal/engine/model"
 )
 
-const BootstrapBotCount = 1
+const BootstrapBotCount = 7
 
 type BotSpec struct {
 	ProfileID model.ProfileID

@@ -128,6 +128,134 @@ func (CommandStatus) EnumDescriptor() ([]byte, []int) {
 	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{1}
 }
 
+type ControllerField int32
+
+const (
+	ControllerField_CONTROLLER_FIELD_UNSPECIFIED    ControllerField = 0
+	ControllerField_CONTROLLER_FIELD_GOTO_TARGET    ControllerField = 1
+	ControllerField_CONTROLLER_FIELD_BREAK_TARGET   ControllerField = 2
+	ControllerField_CONTROLLER_FIELD_ATTACK_TARGET  ControllerField = 3
+	ControllerField_CONTROLLER_FIELD_CRAFT_TARGET   ControllerField = 4
+	ControllerField_CONTROLLER_FIELD_EQUIP_TARGET   ControllerField = 5
+	ControllerField_CONTROLLER_FIELD_PLACE_TARGET   ControllerField = 6
+	ControllerField_CONTROLLER_FIELD_CONSUME_TARGET ControllerField = 7
+)
+
+// Enum value maps for ControllerField.
+var (
+	ControllerField_name = map[int32]string{
+		0: "CONTROLLER_FIELD_UNSPECIFIED",
+		1: "CONTROLLER_FIELD_GOTO_TARGET",
+		2: "CONTROLLER_FIELD_BREAK_TARGET",
+		3: "CONTROLLER_FIELD_ATTACK_TARGET",
+		4: "CONTROLLER_FIELD_CRAFT_TARGET",
+		5: "CONTROLLER_FIELD_EQUIP_TARGET",
+		6: "CONTROLLER_FIELD_PLACE_TARGET",
+		7: "CONTROLLER_FIELD_CONSUME_TARGET",
+	}
+	ControllerField_value = map[string]int32{
+		"CONTROLLER_FIELD_UNSPECIFIED":    0,
+		"CONTROLLER_FIELD_GOTO_TARGET":    1,
+		"CONTROLLER_FIELD_BREAK_TARGET":   2,
+		"CONTROLLER_FIELD_ATTACK_TARGET":  3,
+		"CONTROLLER_FIELD_CRAFT_TARGET":   4,
+		"CONTROLLER_FIELD_EQUIP_TARGET":   5,
+		"CONTROLLER_FIELD_PLACE_TARGET":   6,
+		"CONTROLLER_FIELD_CONSUME_TARGET": 7,
+	}
+)
+
+func (x ControllerField) Enum() *ControllerField {
+	p := new(ControllerField)
+	*p = x
+	return p
+}
+
+func (x ControllerField) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ControllerField) Descriptor() protoreflect.EnumDescriptor {
+	return file_orchestrator_v1_host_proto_enumTypes[2].Descriptor()
+}
+
+func (ControllerField) Type() protoreflect.EnumType {
+	return &file_orchestrator_v1_host_proto_enumTypes[2]
+}
+
+func (x ControllerField) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ControllerField.Descriptor instead.
+func (ControllerField) EnumDescriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{2}
+}
+
+type ControllerActionKind int32
+
+const (
+	ControllerActionKind_CONTROLLER_ACTION_KIND_UNSPECIFIED ControllerActionKind = 0
+	ControllerActionKind_CONTROLLER_ACTION_KIND_GOTO        ControllerActionKind = 1
+	ControllerActionKind_CONTROLLER_ACTION_KIND_BREAK       ControllerActionKind = 2
+	ControllerActionKind_CONTROLLER_ACTION_KIND_CRAFT       ControllerActionKind = 3
+	ControllerActionKind_CONTROLLER_ACTION_KIND_CONSUME     ControllerActionKind = 4
+	ControllerActionKind_CONTROLLER_ACTION_KIND_PLACE       ControllerActionKind = 5
+	ControllerActionKind_CONTROLLER_ACTION_KIND_ATTACK      ControllerActionKind = 6
+	ControllerActionKind_CONTROLLER_ACTION_KIND_EQUIP       ControllerActionKind = 7
+)
+
+// Enum value maps for ControllerActionKind.
+var (
+	ControllerActionKind_name = map[int32]string{
+		0: "CONTROLLER_ACTION_KIND_UNSPECIFIED",
+		1: "CONTROLLER_ACTION_KIND_GOTO",
+		2: "CONTROLLER_ACTION_KIND_BREAK",
+		3: "CONTROLLER_ACTION_KIND_CRAFT",
+		4: "CONTROLLER_ACTION_KIND_CONSUME",
+		5: "CONTROLLER_ACTION_KIND_PLACE",
+		6: "CONTROLLER_ACTION_KIND_ATTACK",
+		7: "CONTROLLER_ACTION_KIND_EQUIP",
+	}
+	ControllerActionKind_value = map[string]int32{
+		"CONTROLLER_ACTION_KIND_UNSPECIFIED": 0,
+		"CONTROLLER_ACTION_KIND_GOTO":        1,
+		"CONTROLLER_ACTION_KIND_BREAK":       2,
+		"CONTROLLER_ACTION_KIND_CRAFT":       3,
+		"CONTROLLER_ACTION_KIND_CONSUME":     4,
+		"CONTROLLER_ACTION_KIND_PLACE":       5,
+		"CONTROLLER_ACTION_KIND_ATTACK":      6,
+		"CONTROLLER_ACTION_KIND_EQUIP":       7,
+	}
+)
+
+func (x ControllerActionKind) Enum() *ControllerActionKind {
+	p := new(ControllerActionKind)
+	*p = x
+	return p
+}
+
+func (x ControllerActionKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ControllerActionKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_orchestrator_v1_host_proto_enumTypes[3].Descriptor()
+}
+
+func (ControllerActionKind) Type() protoreflect.EnumType {
+	return &file_orchestrator_v1_host_proto_enumTypes[3]
+}
+
+func (x ControllerActionKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ControllerActionKind.Descriptor instead.
+func (ControllerActionKind) EnumDescriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{3}
+}
+
 // HostEnvelope is the sole payload carried over the local framed socket.
 type HostEnvelope struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -138,6 +266,13 @@ type HostEnvelope struct {
 	//	*HostEnvelope_Shutdown
 	//	*HostEnvelope_Observation
 	//	*HostEnvelope_Command
+	//	*HostEnvelope_AttackCommand
+	//	*HostEnvelope_BreakBlock
+	//	*HostEnvelope_Equip
+	//	*HostEnvelope_Craft
+	//	*HostEnvelope_PlaceBlock
+	//	*HostEnvelope_ControllerState
+	//	*HostEnvelope_RealityState
 	Payload       isHostEnvelope_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -216,10 +351,79 @@ func (x *HostEnvelope) GetObservation() *BotObservation {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
 func (x *HostEnvelope) GetCommand() *GotoCommand {
 	if x != nil {
 		if x, ok := x.Payload.(*HostEnvelope_Command); ok {
 			return x.Command
+		}
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+func (x *HostEnvelope) GetAttackCommand() *AttackCommand {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_AttackCommand); ok {
+			return x.AttackCommand
+		}
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+func (x *HostEnvelope) GetBreakBlock() *BreakBlockCommand {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_BreakBlock); ok {
+			return x.BreakBlock
+		}
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+func (x *HostEnvelope) GetEquip() *EquipCommand {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_Equip); ok {
+			return x.Equip
+		}
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+func (x *HostEnvelope) GetCraft() *CraftCommand {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_Craft); ok {
+			return x.Craft
+		}
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+func (x *HostEnvelope) GetPlaceBlock() *PlaceBlockCommand {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_PlaceBlock); ok {
+			return x.PlaceBlock
+		}
+	}
+	return nil
+}
+
+func (x *HostEnvelope) GetControllerState() *ControllerState {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_ControllerState); ok {
+			return x.ControllerState
+		}
+	}
+	return nil
+}
+
+func (x *HostEnvelope) GetRealityState() *RealityState {
+	if x != nil {
+		if x, ok := x.Payload.(*HostEnvelope_RealityState); ok {
+			return x.RealityState
 		}
 	}
 	return nil
@@ -246,7 +450,44 @@ type HostEnvelope_Observation struct {
 }
 
 type HostEnvelope_Command struct {
+	// Deprecated control envelopes retained solely so older frames decode.
+	// New control is carried only by controller_state.
+	//
+	// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
 	Command *GotoCommand `protobuf:"bytes,5,opt,name=command,proto3,oneof"`
+}
+
+type HostEnvelope_AttackCommand struct {
+	// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+	AttackCommand *AttackCommand `protobuf:"bytes,6,opt,name=attack_command,json=attackCommand,proto3,oneof"`
+}
+
+type HostEnvelope_BreakBlock struct {
+	// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+	BreakBlock *BreakBlockCommand `protobuf:"bytes,7,opt,name=break_block,json=breakBlock,proto3,oneof"`
+}
+
+type HostEnvelope_Equip struct {
+	// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+	Equip *EquipCommand `protobuf:"bytes,8,opt,name=equip,proto3,oneof"`
+}
+
+type HostEnvelope_Craft struct {
+	// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+	Craft *CraftCommand `protobuf:"bytes,9,opt,name=craft,proto3,oneof"`
+}
+
+type HostEnvelope_PlaceBlock struct {
+	// Deprecated: Marked as deprecated in orchestrator/v1/host.proto.
+	PlaceBlock *PlaceBlockCommand `protobuf:"bytes,10,opt,name=place_block,json=placeBlock,proto3,oneof"`
+}
+
+type HostEnvelope_ControllerState struct {
+	ControllerState *ControllerState `protobuf:"bytes,11,opt,name=controller_state,json=controllerState,proto3,oneof"`
+}
+
+type HostEnvelope_RealityState struct {
+	RealityState *RealityState `protobuf:"bytes,12,opt,name=reality_state,json=realityState,proto3,oneof"`
 }
 
 func (*HostEnvelope_Hello) isHostEnvelope_Payload() {}
@@ -258,6 +499,20 @@ func (*HostEnvelope_Shutdown) isHostEnvelope_Payload() {}
 func (*HostEnvelope_Observation) isHostEnvelope_Payload() {}
 
 func (*HostEnvelope_Command) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_AttackCommand) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_BreakBlock) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_Equip) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_Craft) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_PlaceBlock) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_ControllerState) isHostEnvelope_Payload() {}
+
+func (*HostEnvelope_RealityState) isHostEnvelope_Payload() {}
 
 type HostHello struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
@@ -1913,6 +2168,370 @@ func (x *GotoCommand) GetZ() int32 {
 	return 0
 }
 
+type AttackCommand struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId      string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence       uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	TargetEntityId int32                  `protobuf:"varint,3,opt,name=target_entity_id,json=targetEntityId,proto3" json:"target_entity_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *AttackCommand) Reset() {
+	*x = AttackCommand{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AttackCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AttackCommand) ProtoMessage() {}
+
+func (x *AttackCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AttackCommand.ProtoReflect.Descriptor instead.
+func (*AttackCommand) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *AttackCommand) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *AttackCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *AttackCommand) GetTargetEntityId() int32 {
+	if x != nil {
+		return x.TargetEntityId
+	}
+	return 0
+}
+
+type BreakBlockCommand struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	X             int32                  `protobuf:"varint,3,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,4,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,5,opt,name=z,proto3" json:"z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BreakBlockCommand) Reset() {
+	*x = BreakBlockCommand{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BreakBlockCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BreakBlockCommand) ProtoMessage() {}
+
+func (x *BreakBlockCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BreakBlockCommand.ProtoReflect.Descriptor instead.
+func (*BreakBlockCommand) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *BreakBlockCommand) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *BreakBlockCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *BreakBlockCommand) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *BreakBlockCommand) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *BreakBlockCommand) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+type EquipCommand struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	ItemName      string                 `protobuf:"bytes,3,opt,name=item_name,json=itemName,proto3" json:"item_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EquipCommand) Reset() {
+	*x = EquipCommand{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EquipCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EquipCommand) ProtoMessage() {}
+
+func (x *EquipCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EquipCommand.ProtoReflect.Descriptor instead.
+func (*EquipCommand) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *EquipCommand) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *EquipCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *EquipCommand) GetItemName() string {
+	if x != nil {
+		return x.ItemName
+	}
+	return ""
+}
+
+type CraftCommand struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	ItemName      string                 `protobuf:"bytes,3,opt,name=item_name,json=itemName,proto3" json:"item_name,omitempty"`
+	Count         int32                  `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CraftCommand) Reset() {
+	*x = CraftCommand{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CraftCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CraftCommand) ProtoMessage() {}
+
+func (x *CraftCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CraftCommand.ProtoReflect.Descriptor instead.
+func (*CraftCommand) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CraftCommand) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *CraftCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *CraftCommand) GetItemName() string {
+	if x != nil {
+		return x.ItemName
+	}
+	return ""
+}
+
+func (x *CraftCommand) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type PlaceBlockCommand struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	X             int32                  `protobuf:"varint,3,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,4,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,5,opt,name=z,proto3" json:"z,omitempty"`
+	FaceX         int32                  `protobuf:"varint,6,opt,name=face_x,json=faceX,proto3" json:"face_x,omitempty"`
+	FaceY         int32                  `protobuf:"varint,7,opt,name=face_y,json=faceY,proto3" json:"face_y,omitempty"`
+	FaceZ         int32                  `protobuf:"varint,8,opt,name=face_z,json=faceZ,proto3" json:"face_z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlaceBlockCommand) Reset() {
+	*x = PlaceBlockCommand{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlaceBlockCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlaceBlockCommand) ProtoMessage() {}
+
+func (x *PlaceBlockCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlaceBlockCommand.ProtoReflect.Descriptor instead.
+func (*PlaceBlockCommand) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *PlaceBlockCommand) GetProfileId() string {
+	if x != nil {
+		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *PlaceBlockCommand) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *PlaceBlockCommand) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *PlaceBlockCommand) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *PlaceBlockCommand) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+func (x *PlaceBlockCommand) GetFaceX() int32 {
+	if x != nil {
+		return x.FaceX
+	}
+	return 0
+}
+
+func (x *PlaceBlockCommand) GetFaceY() int32 {
+	if x != nil {
+		return x.FaceY
+	}
+	return 0
+}
+
+func (x *PlaceBlockCommand) GetFaceZ() int32 {
+	if x != nil {
+		return x.FaceZ
+	}
+	return 0
+}
+
 type CommandResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProfileId     string                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
@@ -1924,7 +2543,7 @@ type CommandResult struct {
 
 func (x *CommandResult) Reset() {
 	*x = CommandResult{}
-	mi := &file_orchestrator_v1_host_proto_msgTypes[25]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1936,7 +2555,7 @@ func (x *CommandResult) String() string {
 func (*CommandResult) ProtoMessage() {}
 
 func (x *CommandResult) ProtoReflect() protoreflect.Message {
-	mi := &file_orchestrator_v1_host_proto_msgTypes[25]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1949,7 +2568,7 @@ func (x *CommandResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandResult.ProtoReflect.Descriptor instead.
 func (*CommandResult) Descriptor() ([]byte, []int) {
-	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{25}
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CommandResult) GetProfileId() string {
@@ -1988,7 +2607,7 @@ type HostEntity struct {
 
 func (x *HostEntity) Reset() {
 	*x = HostEntity{}
-	mi := &file_orchestrator_v1_host_proto_msgTypes[26]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2000,7 +2619,7 @@ func (x *HostEntity) String() string {
 func (*HostEntity) ProtoMessage() {}
 
 func (x *HostEntity) ProtoReflect() protoreflect.Message {
-	mi := &file_orchestrator_v1_host_proto_msgTypes[26]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2013,7 +2632,7 @@ func (x *HostEntity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostEntity.ProtoReflect.Descriptor instead.
 func (*HostEntity) Descriptor() ([]byte, []int) {
-	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{26}
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *HostEntity) GetEntityId() int32 {
@@ -2076,7 +2695,7 @@ type HostEntitiesChanged struct {
 
 func (x *HostEntitiesChanged) Reset() {
 	*x = HostEntitiesChanged{}
-	mi := &file_orchestrator_v1_host_proto_msgTypes[27]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2088,7 +2707,7 @@ func (x *HostEntitiesChanged) String() string {
 func (*HostEntitiesChanged) ProtoMessage() {}
 
 func (x *HostEntitiesChanged) ProtoReflect() protoreflect.Message {
-	mi := &file_orchestrator_v1_host_proto_msgTypes[27]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2101,7 +2720,7 @@ func (x *HostEntitiesChanged) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostEntitiesChanged.ProtoReflect.Descriptor instead.
 func (*HostEntitiesChanged) Descriptor() ([]byte, []int) {
-	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{27}
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *HostEntitiesChanged) GetAdded() []*HostEntity {
@@ -2125,6 +2744,554 @@ func (x *HostEntitiesChanged) GetMoved() []*HostEntity {
 	return nil
 }
 
+type Vec3 struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             float64                `protobuf:"fixed64,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float64                `protobuf:"fixed64,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z             float64                `protobuf:"fixed64,3,opt,name=z,proto3" json:"z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Vec3) Reset() {
+	*x = Vec3{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Vec3) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Vec3) ProtoMessage() {}
+
+func (x *Vec3) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Vec3.ProtoReflect.Descriptor instead.
+func (*Vec3) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *Vec3) GetX() float64 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *Vec3) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *Vec3) GetZ() float64 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+type Vec3I struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,3,opt,name=z,proto3" json:"z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Vec3I) Reset() {
+	*x = Vec3I{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Vec3I) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Vec3I) ProtoMessage() {}
+
+func (x *Vec3I) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Vec3I.ProtoReflect.Descriptor instead.
+func (*Vec3I) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *Vec3I) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *Vec3I) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *Vec3I) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+type CraftSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemName      string                 `protobuf:"bytes,1,opt,name=item_name,json=itemName,proto3" json:"item_name,omitempty"`
+	Count         int32                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CraftSpec) Reset() {
+	*x = CraftSpec{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CraftSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CraftSpec) ProtoMessage() {}
+
+func (x *CraftSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CraftSpec.ProtoReflect.Descriptor instead.
+func (*CraftSpec) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *CraftSpec) GetItemName() string {
+	if x != nil {
+		return x.ItemName
+	}
+	return ""
+}
+
+func (x *CraftSpec) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type PlaceSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z             int32                  `protobuf:"varint,3,opt,name=z,proto3" json:"z,omitempty"`
+	FaceX         int32                  `protobuf:"varint,4,opt,name=face_x,json=faceX,proto3" json:"face_x,omitempty"`
+	FaceY         int32                  `protobuf:"varint,5,opt,name=face_y,json=faceY,proto3" json:"face_y,omitempty"`
+	FaceZ         int32                  `protobuf:"varint,6,opt,name=face_z,json=faceZ,proto3" json:"face_z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlaceSpec) Reset() {
+	*x = PlaceSpec{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlaceSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlaceSpec) ProtoMessage() {}
+
+func (x *PlaceSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlaceSpec.ProtoReflect.Descriptor instead.
+func (*PlaceSpec) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *PlaceSpec) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *PlaceSpec) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *PlaceSpec) GetZ() int32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+func (x *PlaceSpec) GetFaceX() int32 {
+	if x != nil {
+		return x.FaceX
+	}
+	return 0
+}
+
+func (x *PlaceSpec) GetFaceY() int32 {
+	if x != nil {
+		return x.FaceY
+	}
+	return 0
+}
+
+func (x *PlaceSpec) GetFaceZ() int32 {
+	if x != nil {
+		return x.FaceZ
+	}
+	return 0
+}
+
+type ActionOutcome struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	ControllerSequence uint64                 `protobuf:"varint,1,opt,name=controller_sequence,json=controllerSequence,proto3" json:"controller_sequence,omitempty"`
+	Kind               ControllerActionKind   `protobuf:"varint,2,opt,name=kind,proto3,enum=orchestrator.v1.ControllerActionKind" json:"kind,omitempty"`
+	Status             CommandStatus          `protobuf:"varint,3,opt,name=status,proto3,enum=orchestrator.v1.CommandStatus" json:"status,omitempty"`
+	Detail             string                 `protobuf:"bytes,4,opt,name=detail,proto3" json:"detail,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *ActionOutcome) Reset() {
+	*x = ActionOutcome{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActionOutcome) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActionOutcome) ProtoMessage() {}
+
+func (x *ActionOutcome) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActionOutcome.ProtoReflect.Descriptor instead.
+func (*ActionOutcome) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *ActionOutcome) GetControllerSequence() uint64 {
+	if x != nil {
+		return x.ControllerSequence
+	}
+	return 0
+}
+
+func (x *ActionOutcome) GetKind() ControllerActionKind {
+	if x != nil {
+		return x.Kind
+	}
+	return ControllerActionKind_CONTROLLER_ACTION_KIND_UNSPECIFIED
+}
+
+func (x *ActionOutcome) GetStatus() CommandStatus {
+	if x != nil {
+		return x.Status
+	}
+	return CommandStatus_COMMAND_STATUS_UNSPECIFIED
+}
+
+func (x *ActionOutcome) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
+type ControllerState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId     []byte                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence      uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	GoToTarget    *Vec3I                 `protobuf:"bytes,3,opt,name=go_to_target,json=goToTarget,proto3,oneof" json:"go_to_target,omitempty"`
+	BreakTarget   *Vec3I                 `protobuf:"bytes,4,opt,name=break_target,json=breakTarget,proto3,oneof" json:"break_target,omitempty"`
+	AttackTarget  *int32                 `protobuf:"varint,5,opt,name=attack_target,json=attackTarget,proto3,oneof" json:"attack_target,omitempty"`
+	CraftTarget   *CraftSpec             `protobuf:"bytes,6,opt,name=craft_target,json=craftTarget,proto3,oneof" json:"craft_target,omitempty"`
+	EquipTarget   *string                `protobuf:"bytes,7,opt,name=equip_target,json=equipTarget,proto3,oneof" json:"equip_target,omitempty"`
+	PlaceTarget   *PlaceSpec             `protobuf:"bytes,8,opt,name=place_target,json=placeTarget,proto3,oneof" json:"place_target,omitempty"`
+	ConsumeTarget *string                `protobuf:"bytes,9,opt,name=consume_target,json=consumeTarget,proto3,oneof" json:"consume_target,omitempty"`
+	ClearFields   []ControllerField      `protobuf:"varint,10,rep,packed,name=clear_fields,json=clearFields,proto3,enum=orchestrator.v1.ControllerField" json:"clear_fields,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ControllerState) Reset() {
+	*x = ControllerState{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ControllerState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ControllerState) ProtoMessage() {}
+
+func (x *ControllerState) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ControllerState.ProtoReflect.Descriptor instead.
+func (*ControllerState) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ControllerState) GetProfileId() []byte {
+	if x != nil {
+		return x.ProfileId
+	}
+	return nil
+}
+
+func (x *ControllerState) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *ControllerState) GetGoToTarget() *Vec3I {
+	if x != nil {
+		return x.GoToTarget
+	}
+	return nil
+}
+
+func (x *ControllerState) GetBreakTarget() *Vec3I {
+	if x != nil {
+		return x.BreakTarget
+	}
+	return nil
+}
+
+func (x *ControllerState) GetAttackTarget() int32 {
+	if x != nil && x.AttackTarget != nil {
+		return *x.AttackTarget
+	}
+	return 0
+}
+
+func (x *ControllerState) GetCraftTarget() *CraftSpec {
+	if x != nil {
+		return x.CraftTarget
+	}
+	return nil
+}
+
+func (x *ControllerState) GetEquipTarget() string {
+	if x != nil && x.EquipTarget != nil {
+		return *x.EquipTarget
+	}
+	return ""
+}
+
+func (x *ControllerState) GetPlaceTarget() *PlaceSpec {
+	if x != nil {
+		return x.PlaceTarget
+	}
+	return nil
+}
+
+func (x *ControllerState) GetConsumeTarget() string {
+	if x != nil && x.ConsumeTarget != nil {
+		return *x.ConsumeTarget
+	}
+	return ""
+}
+
+func (x *ControllerState) GetClearFields() []ControllerField {
+	if x != nil {
+		return x.ClearFields
+	}
+	return nil
+}
+
+type RealityState struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ProfileId       []byte                 `protobuf:"bytes,1,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Sequence        uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	ArrivalDistance *float64               `protobuf:"fixed64,3,opt,name=arrival_distance,json=arrivalDistance,proto3,oneof" json:"arrival_distance,omitempty"`
+	DiggingBlock    *Vec3I                 `protobuf:"bytes,4,opt,name=digging_block,json=diggingBlock,proto3,oneof" json:"digging_block,omitempty"`
+	AttackingEntity *int32                 `protobuf:"varint,5,opt,name=attacking_entity,json=attackingEntity,proto3,oneof" json:"attacking_entity,omitempty"`
+	EquippedItem    *string                `protobuf:"bytes,6,opt,name=equipped_item,json=equippedItem,proto3,oneof" json:"equipped_item,omitempty"`
+	GotoTarget      *Vec3I                 `protobuf:"bytes,7,opt,name=goto_target,json=gotoTarget,proto3,oneof" json:"goto_target,omitempty"`
+	ActionOutcomes  []*ActionOutcome       `protobuf:"bytes,8,rep,name=action_outcomes,json=actionOutcomes,proto3" json:"action_outcomes,omitempty"`
+	SessionId       string                 `protobuf:"bytes,9,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *RealityState) Reset() {
+	*x = RealityState{}
+	mi := &file_orchestrator_v1_host_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RealityState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RealityState) ProtoMessage() {}
+
+func (x *RealityState) ProtoReflect() protoreflect.Message {
+	mi := &file_orchestrator_v1_host_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RealityState.ProtoReflect.Descriptor instead.
+func (*RealityState) Descriptor() ([]byte, []int) {
+	return file_orchestrator_v1_host_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *RealityState) GetProfileId() []byte {
+	if x != nil {
+		return x.ProfileId
+	}
+	return nil
+}
+
+func (x *RealityState) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *RealityState) GetArrivalDistance() float64 {
+	if x != nil && x.ArrivalDistance != nil {
+		return *x.ArrivalDistance
+	}
+	return 0
+}
+
+func (x *RealityState) GetDiggingBlock() *Vec3I {
+	if x != nil {
+		return x.DiggingBlock
+	}
+	return nil
+}
+
+func (x *RealityState) GetAttackingEntity() int32 {
+	if x != nil && x.AttackingEntity != nil {
+		return *x.AttackingEntity
+	}
+	return 0
+}
+
+func (x *RealityState) GetEquippedItem() string {
+	if x != nil && x.EquippedItem != nil {
+		return *x.EquippedItem
+	}
+	return ""
+}
+
+func (x *RealityState) GetGotoTarget() *Vec3I {
+	if x != nil {
+		return x.GotoTarget
+	}
+	return nil
+}
+
+func (x *RealityState) GetActionOutcomes() []*ActionOutcome {
+	if x != nil {
+		return x.ActionOutcomes
+	}
+	return nil
+}
+
+func (x *RealityState) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type HostMultiBlocksUpdated_BlockRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
@@ -2137,7 +3304,7 @@ type HostMultiBlocksUpdated_BlockRecord struct {
 
 func (x *HostMultiBlocksUpdated_BlockRecord) Reset() {
 	*x = HostMultiBlocksUpdated_BlockRecord{}
-	mi := &file_orchestrator_v1_host_proto_msgTypes[28]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2149,7 +3316,7 @@ func (x *HostMultiBlocksUpdated_BlockRecord) String() string {
 func (*HostMultiBlocksUpdated_BlockRecord) ProtoMessage() {}
 
 func (x *HostMultiBlocksUpdated_BlockRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_orchestrator_v1_host_proto_msgTypes[28]
+	mi := &file_orchestrator_v1_host_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2197,13 +3364,23 @@ var File_orchestrator_v1_host_proto protoreflect.FileDescriptor
 
 const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\n" +
-	"\x1aorchestrator/v1/host.proto\x12\x0forchestrator.v1\"\xc9\x02\n" +
+	"\x1aorchestrator/v1/host.proto\x12\x0forchestrator.v1\"\xbb\x06\n" +
 	"\fHostEnvelope\x122\n" +
 	"\x05hello\x18\x01 \x01(\v2\x1a.orchestrator.v1.HostHelloH\x00R\x05hello\x12>\n" +
 	"\tconfigure\x18\x02 \x01(\v2\x1e.orchestrator.v1.HostConfigureH\x00R\tconfigure\x12;\n" +
 	"\bshutdown\x18\x03 \x01(\v2\x1d.orchestrator.v1.HostShutdownH\x00R\bshutdown\x12C\n" +
-	"\vobservation\x18\x04 \x01(\v2\x1f.orchestrator.v1.BotObservationH\x00R\vobservation\x128\n" +
-	"\acommand\x18\x05 \x01(\v2\x1c.orchestrator.v1.GotoCommandH\x00R\acommandB\t\n" +
+	"\vobservation\x18\x04 \x01(\v2\x1f.orchestrator.v1.BotObservationH\x00R\vobservation\x12<\n" +
+	"\acommand\x18\x05 \x01(\v2\x1c.orchestrator.v1.GotoCommandB\x02\x18\x01H\x00R\acommand\x12K\n" +
+	"\x0eattack_command\x18\x06 \x01(\v2\x1e.orchestrator.v1.AttackCommandB\x02\x18\x01H\x00R\rattackCommand\x12I\n" +
+	"\vbreak_block\x18\a \x01(\v2\".orchestrator.v1.BreakBlockCommandB\x02\x18\x01H\x00R\n" +
+	"breakBlock\x129\n" +
+	"\x05equip\x18\b \x01(\v2\x1d.orchestrator.v1.EquipCommandB\x02\x18\x01H\x00R\x05equip\x129\n" +
+	"\x05craft\x18\t \x01(\v2\x1d.orchestrator.v1.CraftCommandB\x02\x18\x01H\x00R\x05craft\x12I\n" +
+	"\vplace_block\x18\n" +
+	" \x01(\v2\".orchestrator.v1.PlaceBlockCommandB\x02\x18\x01H\x00R\n" +
+	"placeBlock\x12M\n" +
+	"\x10controller_state\x18\v \x01(\v2 .orchestrator.v1.ControllerStateH\x00R\x0fcontrollerState\x12D\n" +
+	"\rreality_state\x18\f \x01(\v2\x1d.orchestrator.v1.RealityStateH\x00R\frealityStateB\t\n" +
 	"\apayload\"L\n" +
 	"\tHostHello\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12)\n" +
@@ -2332,7 +3509,40 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12\f\n" +
 	"\x01x\x18\x03 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x04 \x01(\x05R\x01y\x12\f\n" +
-	"\x01z\x18\x05 \x01(\x05R\x01z\"\x82\x01\n" +
+	"\x01z\x18\x05 \x01(\x05R\x01z\"t\n" +
+	"\rAttackCommand\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12(\n" +
+	"\x10target_entity_id\x18\x03 \x01(\x05R\x0etargetEntityId\"x\n" +
+	"\x11BreakBlockCommand\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12\f\n" +
+	"\x01x\x18\x03 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x04 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x05 \x01(\x05R\x01z\"f\n" +
+	"\fEquipCommand\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12\x1b\n" +
+	"\titem_name\x18\x03 \x01(\tR\bitemName\"|\n" +
+	"\fCraftCommand\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12\x1b\n" +
+	"\titem_name\x18\x03 \x01(\tR\bitemName\x12\x14\n" +
+	"\x05count\x18\x04 \x01(\x05R\x05count\"\xbd\x01\n" +
+	"\x11PlaceBlockCommand\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12\f\n" +
+	"\x01x\x18\x03 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x04 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x05 \x01(\x05R\x01z\x12\x15\n" +
+	"\x06face_x\x18\x06 \x01(\x05R\x05faceX\x12\x15\n" +
+	"\x06face_y\x18\a \x01(\x05R\x05faceY\x12\x15\n" +
+	"\x06face_z\x18\b \x01(\x05R\x05faceZ\"\x82\x01\n" +
 	"\rCommandResult\x12\x1d\n" +
 	"\n" +
 	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
@@ -2350,7 +3560,69 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\x13HostEntitiesChanged\x121\n" +
 	"\x05added\x18\x01 \x03(\v2\x1b.orchestrator.v1.HostEntityR\x05added\x12\x18\n" +
 	"\aremoved\x18\x02 \x03(\x05R\aremoved\x121\n" +
-	"\x05moved\x18\x03 \x03(\v2\x1b.orchestrator.v1.HostEntityR\x05moved*\xeb\x01\n" +
+	"\x05moved\x18\x03 \x03(\v2\x1b.orchestrator.v1.HostEntityR\x05moved\"0\n" +
+	"\x04Vec3\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x01R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x01R\x01y\x12\f\n" +
+	"\x01z\x18\x03 \x01(\x01R\x01z\"1\n" +
+	"\x05Vec3i\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x03 \x01(\x05R\x01z\">\n" +
+	"\tCraftSpec\x12\x1b\n" +
+	"\titem_name\x18\x01 \x01(\tR\bitemName\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"z\n" +
+	"\tPlaceSpec\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\x12\f\n" +
+	"\x01z\x18\x03 \x01(\x05R\x01z\x12\x15\n" +
+	"\x06face_x\x18\x04 \x01(\x05R\x05faceX\x12\x15\n" +
+	"\x06face_y\x18\x05 \x01(\x05R\x05faceY\x12\x15\n" +
+	"\x06face_z\x18\x06 \x01(\x05R\x05faceZ\"\xcb\x01\n" +
+	"\rActionOutcome\x12/\n" +
+	"\x13controller_sequence\x18\x01 \x01(\x04R\x12controllerSequence\x129\n" +
+	"\x04kind\x18\x02 \x01(\x0e2%.orchestrator.v1.ControllerActionKindR\x04kind\x126\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1e.orchestrator.v1.CommandStatusR\x06status\x12\x16\n" +
+	"\x06detail\x18\x04 \x01(\tR\x06detail\"\x90\x05\n" +
+	"\x0fControllerState\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\fR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12=\n" +
+	"\fgo_to_target\x18\x03 \x01(\v2\x16.orchestrator.v1.Vec3iH\x00R\n" +
+	"goToTarget\x88\x01\x01\x12>\n" +
+	"\fbreak_target\x18\x04 \x01(\v2\x16.orchestrator.v1.Vec3iH\x01R\vbreakTarget\x88\x01\x01\x12(\n" +
+	"\rattack_target\x18\x05 \x01(\x05H\x02R\fattackTarget\x88\x01\x01\x12B\n" +
+	"\fcraft_target\x18\x06 \x01(\v2\x1a.orchestrator.v1.CraftSpecH\x03R\vcraftTarget\x88\x01\x01\x12&\n" +
+	"\fequip_target\x18\a \x01(\tH\x04R\vequipTarget\x88\x01\x01\x12B\n" +
+	"\fplace_target\x18\b \x01(\v2\x1a.orchestrator.v1.PlaceSpecH\x05R\vplaceTarget\x88\x01\x01\x12*\n" +
+	"\x0econsume_target\x18\t \x01(\tH\x06R\rconsumeTarget\x88\x01\x01\x12C\n" +
+	"\fclear_fields\x18\n" +
+	" \x03(\x0e2 .orchestrator.v1.ControllerFieldR\vclearFieldsB\x0f\n" +
+	"\r_go_to_targetB\x0f\n" +
+	"\r_break_targetB\x10\n" +
+	"\x0e_attack_targetB\x0f\n" +
+	"\r_craft_targetB\x0f\n" +
+	"\r_equip_targetB\x0f\n" +
+	"\r_place_targetB\x11\n" +
+	"\x0f_consume_target\"\x99\x04\n" +
+	"\fRealityState\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\fR\tprofileId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x12.\n" +
+	"\x10arrival_distance\x18\x03 \x01(\x01H\x00R\x0farrivalDistance\x88\x01\x01\x12@\n" +
+	"\rdigging_block\x18\x04 \x01(\v2\x16.orchestrator.v1.Vec3iH\x01R\fdiggingBlock\x88\x01\x01\x12.\n" +
+	"\x10attacking_entity\x18\x05 \x01(\x05H\x02R\x0fattackingEntity\x88\x01\x01\x12(\n" +
+	"\requipped_item\x18\x06 \x01(\tH\x03R\fequippedItem\x88\x01\x01\x12<\n" +
+	"\vgoto_target\x18\a \x01(\v2\x16.orchestrator.v1.Vec3iH\x04R\n" +
+	"gotoTarget\x88\x01\x01\x12G\n" +
+	"\x0faction_outcomes\x18\b \x03(\v2\x1e.orchestrator.v1.ActionOutcomeR\x0eactionOutcomes\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\t \x01(\tR\tsessionIdB\x13\n" +
+	"\x11_arrival_distanceB\x10\n" +
+	"\x0e_digging_blockB\x13\n" +
+	"\x11_attacking_entityB\x10\n" +
+	"\x0e_equipped_itemB\x0e\n" +
+	"\f_goto_target*\xeb\x01\n" +
 	"\x12BotConnectionState\x12$\n" +
 	" BOT_CONNECTION_STATE_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fBOT_CONNECTION_STATE_CONNECTING\x10\x01\x12\"\n" +
@@ -2361,7 +3633,25 @@ const file_orchestrator_v1_host_proto_rawDesc = "" +
 	"\rCommandStatus\x12\x1e\n" +
 	"\x1aCOMMAND_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18COMMAND_STATUS_COMPLETED\x10\x01\x12\x19\n" +
-	"\x15COMMAND_STATUS_FAILED\x10\x02BDZBminecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1b\x06proto3"
+	"\x15COMMAND_STATUS_FAILED\x10\x02*\xaa\x02\n" +
+	"\x0fControllerField\x12 \n" +
+	"\x1cCONTROLLER_FIELD_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cCONTROLLER_FIELD_GOTO_TARGET\x10\x01\x12!\n" +
+	"\x1dCONTROLLER_FIELD_BREAK_TARGET\x10\x02\x12\"\n" +
+	"\x1eCONTROLLER_FIELD_ATTACK_TARGET\x10\x03\x12!\n" +
+	"\x1dCONTROLLER_FIELD_CRAFT_TARGET\x10\x04\x12!\n" +
+	"\x1dCONTROLLER_FIELD_EQUIP_TARGET\x10\x05\x12!\n" +
+	"\x1dCONTROLLER_FIELD_PLACE_TARGET\x10\x06\x12#\n" +
+	"\x1fCONTROLLER_FIELD_CONSUME_TARGET\x10\a*\xae\x02\n" +
+	"\x14ControllerActionKind\x12&\n" +
+	"\"CONTROLLER_ACTION_KIND_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bCONTROLLER_ACTION_KIND_GOTO\x10\x01\x12 \n" +
+	"\x1cCONTROLLER_ACTION_KIND_BREAK\x10\x02\x12 \n" +
+	"\x1cCONTROLLER_ACTION_KIND_CRAFT\x10\x03\x12\"\n" +
+	"\x1eCONTROLLER_ACTION_KIND_CONSUME\x10\x04\x12 \n" +
+	"\x1cCONTROLLER_ACTION_KIND_PLACE\x10\x05\x12!\n" +
+	"\x1dCONTROLLER_ACTION_KIND_ATTACK\x10\x06\x12 \n" +
+	"\x1cCONTROLLER_ACTION_KIND_EQUIP\x10\aBDZBminecraft_orchestrator/internal/gen/orchestrator/v1;orchestratorv1b\x06proto3"
 
 var (
 	file_orchestrator_v1_host_proto_rawDescOnce sync.Once
@@ -2375,83 +3665,114 @@ func file_orchestrator_v1_host_proto_rawDescGZIP() []byte {
 	return file_orchestrator_v1_host_proto_rawDescData
 }
 
-var file_orchestrator_v1_host_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_orchestrator_v1_host_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_orchestrator_v1_host_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_orchestrator_v1_host_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_orchestrator_v1_host_proto_goTypes = []any{
 	(BotConnectionState)(0),                    // 0: orchestrator.v1.BotConnectionState
 	(CommandStatus)(0),                         // 1: orchestrator.v1.CommandStatus
-	(*HostEnvelope)(nil),                       // 2: orchestrator.v1.HostEnvelope
-	(*HostHello)(nil),                          // 3: orchestrator.v1.HostHello
-	(*HostConfigure)(nil),                      // 4: orchestrator.v1.HostConfigure
-	(*HostShutdown)(nil),                       // 5: orchestrator.v1.HostShutdown
-	(*BotConfiguration)(nil),                   // 6: orchestrator.v1.BotConfiguration
-	(*BotObservation)(nil),                     // 7: orchestrator.v1.BotObservation
-	(*BotStatusChanged)(nil),                   // 8: orchestrator.v1.BotStatusChanged
-	(*BotSpawned)(nil),                         // 9: orchestrator.v1.BotSpawned
-	(*HostStateSnapshot)(nil),                  // 10: orchestrator.v1.HostStateSnapshot
-	(*HostVitalsChanged)(nil),                  // 11: orchestrator.v1.HostVitalsChanged
-	(*HostEffectsChanged)(nil),                 // 12: orchestrator.v1.HostEffectsChanged
-	(*HostPositionChanged)(nil),                // 13: orchestrator.v1.HostPositionChanged
-	(*HostInventoryChanged)(nil),               // 14: orchestrator.v1.HostInventoryChanged
-	(*HostBotState)(nil),                       // 15: orchestrator.v1.HostBotState
-	(*HostVitals)(nil),                         // 16: orchestrator.v1.HostVitals
-	(*HostPotionEffect)(nil),                   // 17: orchestrator.v1.HostPotionEffect
-	(*HostPosition)(nil),                       // 18: orchestrator.v1.HostPosition
-	(*HostInventory)(nil),                      // 19: orchestrator.v1.HostInventory
-	(*HostInventorySlot)(nil),                  // 20: orchestrator.v1.HostInventorySlot
-	(*HostItemStack)(nil),                      // 21: orchestrator.v1.HostItemStack
-	(*HostChunkLoaded)(nil),                    // 22: orchestrator.v1.HostChunkLoaded
-	(*HostChunkUnloaded)(nil),                  // 23: orchestrator.v1.HostChunkUnloaded
-	(*HostBlockUpdated)(nil),                   // 24: orchestrator.v1.HostBlockUpdated
-	(*HostMultiBlocksUpdated)(nil),             // 25: orchestrator.v1.HostMultiBlocksUpdated
-	(*GotoCommand)(nil),                        // 26: orchestrator.v1.GotoCommand
-	(*CommandResult)(nil),                      // 27: orchestrator.v1.CommandResult
-	(*HostEntity)(nil),                         // 28: orchestrator.v1.HostEntity
-	(*HostEntitiesChanged)(nil),                // 29: orchestrator.v1.HostEntitiesChanged
-	(*HostMultiBlocksUpdated_BlockRecord)(nil), // 30: orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
+	(ControllerField)(0),                       // 2: orchestrator.v1.ControllerField
+	(ControllerActionKind)(0),                  // 3: orchestrator.v1.ControllerActionKind
+	(*HostEnvelope)(nil),                       // 4: orchestrator.v1.HostEnvelope
+	(*HostHello)(nil),                          // 5: orchestrator.v1.HostHello
+	(*HostConfigure)(nil),                      // 6: orchestrator.v1.HostConfigure
+	(*HostShutdown)(nil),                       // 7: orchestrator.v1.HostShutdown
+	(*BotConfiguration)(nil),                   // 8: orchestrator.v1.BotConfiguration
+	(*BotObservation)(nil),                     // 9: orchestrator.v1.BotObservation
+	(*BotStatusChanged)(nil),                   // 10: orchestrator.v1.BotStatusChanged
+	(*BotSpawned)(nil),                         // 11: orchestrator.v1.BotSpawned
+	(*HostStateSnapshot)(nil),                  // 12: orchestrator.v1.HostStateSnapshot
+	(*HostVitalsChanged)(nil),                  // 13: orchestrator.v1.HostVitalsChanged
+	(*HostEffectsChanged)(nil),                 // 14: orchestrator.v1.HostEffectsChanged
+	(*HostPositionChanged)(nil),                // 15: orchestrator.v1.HostPositionChanged
+	(*HostInventoryChanged)(nil),               // 16: orchestrator.v1.HostInventoryChanged
+	(*HostBotState)(nil),                       // 17: orchestrator.v1.HostBotState
+	(*HostVitals)(nil),                         // 18: orchestrator.v1.HostVitals
+	(*HostPotionEffect)(nil),                   // 19: orchestrator.v1.HostPotionEffect
+	(*HostPosition)(nil),                       // 20: orchestrator.v1.HostPosition
+	(*HostInventory)(nil),                      // 21: orchestrator.v1.HostInventory
+	(*HostInventorySlot)(nil),                  // 22: orchestrator.v1.HostInventorySlot
+	(*HostItemStack)(nil),                      // 23: orchestrator.v1.HostItemStack
+	(*HostChunkLoaded)(nil),                    // 24: orchestrator.v1.HostChunkLoaded
+	(*HostChunkUnloaded)(nil),                  // 25: orchestrator.v1.HostChunkUnloaded
+	(*HostBlockUpdated)(nil),                   // 26: orchestrator.v1.HostBlockUpdated
+	(*HostMultiBlocksUpdated)(nil),             // 27: orchestrator.v1.HostMultiBlocksUpdated
+	(*GotoCommand)(nil),                        // 28: orchestrator.v1.GotoCommand
+	(*AttackCommand)(nil),                      // 29: orchestrator.v1.AttackCommand
+	(*BreakBlockCommand)(nil),                  // 30: orchestrator.v1.BreakBlockCommand
+	(*EquipCommand)(nil),                       // 31: orchestrator.v1.EquipCommand
+	(*CraftCommand)(nil),                       // 32: orchestrator.v1.CraftCommand
+	(*PlaceBlockCommand)(nil),                  // 33: orchestrator.v1.PlaceBlockCommand
+	(*CommandResult)(nil),                      // 34: orchestrator.v1.CommandResult
+	(*HostEntity)(nil),                         // 35: orchestrator.v1.HostEntity
+	(*HostEntitiesChanged)(nil),                // 36: orchestrator.v1.HostEntitiesChanged
+	(*Vec3)(nil),                               // 37: orchestrator.v1.Vec3
+	(*Vec3I)(nil),                              // 38: orchestrator.v1.Vec3i
+	(*CraftSpec)(nil),                          // 39: orchestrator.v1.CraftSpec
+	(*PlaceSpec)(nil),                          // 40: orchestrator.v1.PlaceSpec
+	(*ActionOutcome)(nil),                      // 41: orchestrator.v1.ActionOutcome
+	(*ControllerState)(nil),                    // 42: orchestrator.v1.ControllerState
+	(*RealityState)(nil),                       // 43: orchestrator.v1.RealityState
+	(*HostMultiBlocksUpdated_BlockRecord)(nil), // 44: orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
 }
 var file_orchestrator_v1_host_proto_depIdxs = []int32{
-	3,  // 0: orchestrator.v1.HostEnvelope.hello:type_name -> orchestrator.v1.HostHello
-	4,  // 1: orchestrator.v1.HostEnvelope.configure:type_name -> orchestrator.v1.HostConfigure
-	5,  // 2: orchestrator.v1.HostEnvelope.shutdown:type_name -> orchestrator.v1.HostShutdown
-	7,  // 3: orchestrator.v1.HostEnvelope.observation:type_name -> orchestrator.v1.BotObservation
-	26, // 4: orchestrator.v1.HostEnvelope.command:type_name -> orchestrator.v1.GotoCommand
-	6,  // 5: orchestrator.v1.HostConfigure.bots:type_name -> orchestrator.v1.BotConfiguration
-	8,  // 6: orchestrator.v1.BotObservation.status_changed:type_name -> orchestrator.v1.BotStatusChanged
-	9,  // 7: orchestrator.v1.BotObservation.spawned:type_name -> orchestrator.v1.BotSpawned
-	10, // 8: orchestrator.v1.BotObservation.state_snapshot:type_name -> orchestrator.v1.HostStateSnapshot
-	11, // 9: orchestrator.v1.BotObservation.vitals_changed:type_name -> orchestrator.v1.HostVitalsChanged
-	12, // 10: orchestrator.v1.BotObservation.effects_changed:type_name -> orchestrator.v1.HostEffectsChanged
-	13, // 11: orchestrator.v1.BotObservation.position_changed:type_name -> orchestrator.v1.HostPositionChanged
-	14, // 12: orchestrator.v1.BotObservation.inventory_changed:type_name -> orchestrator.v1.HostInventoryChanged
-	22, // 13: orchestrator.v1.BotObservation.chunk_loaded:type_name -> orchestrator.v1.HostChunkLoaded
-	23, // 14: orchestrator.v1.BotObservation.chunk_unloaded:type_name -> orchestrator.v1.HostChunkUnloaded
-	24, // 15: orchestrator.v1.BotObservation.block_updated:type_name -> orchestrator.v1.HostBlockUpdated
-	25, // 16: orchestrator.v1.BotObservation.multi_blocks_updated:type_name -> orchestrator.v1.HostMultiBlocksUpdated
-	27, // 17: orchestrator.v1.BotObservation.command_result:type_name -> orchestrator.v1.CommandResult
-	29, // 18: orchestrator.v1.BotObservation.entities_changed:type_name -> orchestrator.v1.HostEntitiesChanged
-	0,  // 19: orchestrator.v1.BotStatusChanged.state:type_name -> orchestrator.v1.BotConnectionState
-	15, // 20: orchestrator.v1.BotSpawned.state:type_name -> orchestrator.v1.HostBotState
-	15, // 21: orchestrator.v1.HostStateSnapshot.state:type_name -> orchestrator.v1.HostBotState
-	16, // 22: orchestrator.v1.HostVitalsChanged.vitals:type_name -> orchestrator.v1.HostVitals
-	17, // 23: orchestrator.v1.HostEffectsChanged.effects:type_name -> orchestrator.v1.HostPotionEffect
-	18, // 24: orchestrator.v1.HostPositionChanged.position:type_name -> orchestrator.v1.HostPosition
-	20, // 25: orchestrator.v1.HostInventoryChanged.slots:type_name -> orchestrator.v1.HostInventorySlot
-	16, // 26: orchestrator.v1.HostBotState.vitals:type_name -> orchestrator.v1.HostVitals
-	17, // 27: orchestrator.v1.HostBotState.effects:type_name -> orchestrator.v1.HostPotionEffect
-	18, // 28: orchestrator.v1.HostBotState.position:type_name -> orchestrator.v1.HostPosition
-	19, // 29: orchestrator.v1.HostBotState.inventory:type_name -> orchestrator.v1.HostInventory
-	20, // 30: orchestrator.v1.HostInventory.slots:type_name -> orchestrator.v1.HostInventorySlot
-	21, // 31: orchestrator.v1.HostInventorySlot.item:type_name -> orchestrator.v1.HostItemStack
-	30, // 32: orchestrator.v1.HostMultiBlocksUpdated.records:type_name -> orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
-	1,  // 33: orchestrator.v1.CommandResult.status:type_name -> orchestrator.v1.CommandStatus
-	28, // 34: orchestrator.v1.HostEntitiesChanged.added:type_name -> orchestrator.v1.HostEntity
-	28, // 35: orchestrator.v1.HostEntitiesChanged.moved:type_name -> orchestrator.v1.HostEntity
-	36, // [36:36] is the sub-list for method output_type
-	36, // [36:36] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	5,  // 0: orchestrator.v1.HostEnvelope.hello:type_name -> orchestrator.v1.HostHello
+	6,  // 1: orchestrator.v1.HostEnvelope.configure:type_name -> orchestrator.v1.HostConfigure
+	7,  // 2: orchestrator.v1.HostEnvelope.shutdown:type_name -> orchestrator.v1.HostShutdown
+	9,  // 3: orchestrator.v1.HostEnvelope.observation:type_name -> orchestrator.v1.BotObservation
+	28, // 4: orchestrator.v1.HostEnvelope.command:type_name -> orchestrator.v1.GotoCommand
+	29, // 5: orchestrator.v1.HostEnvelope.attack_command:type_name -> orchestrator.v1.AttackCommand
+	30, // 6: orchestrator.v1.HostEnvelope.break_block:type_name -> orchestrator.v1.BreakBlockCommand
+	31, // 7: orchestrator.v1.HostEnvelope.equip:type_name -> orchestrator.v1.EquipCommand
+	32, // 8: orchestrator.v1.HostEnvelope.craft:type_name -> orchestrator.v1.CraftCommand
+	33, // 9: orchestrator.v1.HostEnvelope.place_block:type_name -> orchestrator.v1.PlaceBlockCommand
+	42, // 10: orchestrator.v1.HostEnvelope.controller_state:type_name -> orchestrator.v1.ControllerState
+	43, // 11: orchestrator.v1.HostEnvelope.reality_state:type_name -> orchestrator.v1.RealityState
+	8,  // 12: orchestrator.v1.HostConfigure.bots:type_name -> orchestrator.v1.BotConfiguration
+	10, // 13: orchestrator.v1.BotObservation.status_changed:type_name -> orchestrator.v1.BotStatusChanged
+	11, // 14: orchestrator.v1.BotObservation.spawned:type_name -> orchestrator.v1.BotSpawned
+	12, // 15: orchestrator.v1.BotObservation.state_snapshot:type_name -> orchestrator.v1.HostStateSnapshot
+	13, // 16: orchestrator.v1.BotObservation.vitals_changed:type_name -> orchestrator.v1.HostVitalsChanged
+	14, // 17: orchestrator.v1.BotObservation.effects_changed:type_name -> orchestrator.v1.HostEffectsChanged
+	15, // 18: orchestrator.v1.BotObservation.position_changed:type_name -> orchestrator.v1.HostPositionChanged
+	16, // 19: orchestrator.v1.BotObservation.inventory_changed:type_name -> orchestrator.v1.HostInventoryChanged
+	24, // 20: orchestrator.v1.BotObservation.chunk_loaded:type_name -> orchestrator.v1.HostChunkLoaded
+	25, // 21: orchestrator.v1.BotObservation.chunk_unloaded:type_name -> orchestrator.v1.HostChunkUnloaded
+	26, // 22: orchestrator.v1.BotObservation.block_updated:type_name -> orchestrator.v1.HostBlockUpdated
+	27, // 23: orchestrator.v1.BotObservation.multi_blocks_updated:type_name -> orchestrator.v1.HostMultiBlocksUpdated
+	34, // 24: orchestrator.v1.BotObservation.command_result:type_name -> orchestrator.v1.CommandResult
+	36, // 25: orchestrator.v1.BotObservation.entities_changed:type_name -> orchestrator.v1.HostEntitiesChanged
+	0,  // 26: orchestrator.v1.BotStatusChanged.state:type_name -> orchestrator.v1.BotConnectionState
+	17, // 27: orchestrator.v1.BotSpawned.state:type_name -> orchestrator.v1.HostBotState
+	17, // 28: orchestrator.v1.HostStateSnapshot.state:type_name -> orchestrator.v1.HostBotState
+	18, // 29: orchestrator.v1.HostVitalsChanged.vitals:type_name -> orchestrator.v1.HostVitals
+	19, // 30: orchestrator.v1.HostEffectsChanged.effects:type_name -> orchestrator.v1.HostPotionEffect
+	20, // 31: orchestrator.v1.HostPositionChanged.position:type_name -> orchestrator.v1.HostPosition
+	22, // 32: orchestrator.v1.HostInventoryChanged.slots:type_name -> orchestrator.v1.HostInventorySlot
+	18, // 33: orchestrator.v1.HostBotState.vitals:type_name -> orchestrator.v1.HostVitals
+	19, // 34: orchestrator.v1.HostBotState.effects:type_name -> orchestrator.v1.HostPotionEffect
+	20, // 35: orchestrator.v1.HostBotState.position:type_name -> orchestrator.v1.HostPosition
+	21, // 36: orchestrator.v1.HostBotState.inventory:type_name -> orchestrator.v1.HostInventory
+	22, // 37: orchestrator.v1.HostInventory.slots:type_name -> orchestrator.v1.HostInventorySlot
+	23, // 38: orchestrator.v1.HostInventorySlot.item:type_name -> orchestrator.v1.HostItemStack
+	44, // 39: orchestrator.v1.HostMultiBlocksUpdated.records:type_name -> orchestrator.v1.HostMultiBlocksUpdated.BlockRecord
+	1,  // 40: orchestrator.v1.CommandResult.status:type_name -> orchestrator.v1.CommandStatus
+	35, // 41: orchestrator.v1.HostEntitiesChanged.added:type_name -> orchestrator.v1.HostEntity
+	35, // 42: orchestrator.v1.HostEntitiesChanged.moved:type_name -> orchestrator.v1.HostEntity
+	3,  // 43: orchestrator.v1.ActionOutcome.kind:type_name -> orchestrator.v1.ControllerActionKind
+	1,  // 44: orchestrator.v1.ActionOutcome.status:type_name -> orchestrator.v1.CommandStatus
+	38, // 45: orchestrator.v1.ControllerState.go_to_target:type_name -> orchestrator.v1.Vec3i
+	38, // 46: orchestrator.v1.ControllerState.break_target:type_name -> orchestrator.v1.Vec3i
+	39, // 47: orchestrator.v1.ControllerState.craft_target:type_name -> orchestrator.v1.CraftSpec
+	40, // 48: orchestrator.v1.ControllerState.place_target:type_name -> orchestrator.v1.PlaceSpec
+	2,  // 49: orchestrator.v1.ControllerState.clear_fields:type_name -> orchestrator.v1.ControllerField
+	38, // 50: orchestrator.v1.RealityState.digging_block:type_name -> orchestrator.v1.Vec3i
+	38, // 51: orchestrator.v1.RealityState.goto_target:type_name -> orchestrator.v1.Vec3i
+	41, // 52: orchestrator.v1.RealityState.action_outcomes:type_name -> orchestrator.v1.ActionOutcome
+	53, // [53:53] is the sub-list for method output_type
+	53, // [53:53] is the sub-list for method input_type
+	53, // [53:53] is the sub-list for extension type_name
+	53, // [53:53] is the sub-list for extension extendee
+	0,  // [0:53] is the sub-list for field type_name
 }
 
 func init() { file_orchestrator_v1_host_proto_init() }
@@ -2465,6 +3786,13 @@ func file_orchestrator_v1_host_proto_init() {
 		(*HostEnvelope_Shutdown)(nil),
 		(*HostEnvelope_Observation)(nil),
 		(*HostEnvelope_Command)(nil),
+		(*HostEnvelope_AttackCommand)(nil),
+		(*HostEnvelope_BreakBlock)(nil),
+		(*HostEnvelope_Equip)(nil),
+		(*HostEnvelope_Craft)(nil),
+		(*HostEnvelope_PlaceBlock)(nil),
+		(*HostEnvelope_ControllerState)(nil),
+		(*HostEnvelope_RealityState)(nil),
 	}
 	file_orchestrator_v1_host_proto_msgTypes[5].OneofWrappers = []any{
 		(*BotObservation_StatusChanged)(nil),
@@ -2481,13 +3809,15 @@ func file_orchestrator_v1_host_proto_init() {
 		(*BotObservation_CommandResult)(nil),
 		(*BotObservation_EntitiesChanged)(nil),
 	}
+	file_orchestrator_v1_host_proto_msgTypes[38].OneofWrappers = []any{}
+	file_orchestrator_v1_host_proto_msgTypes[39].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_orchestrator_v1_host_proto_rawDesc), len(file_orchestrator_v1_host_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   29,
+			NumEnums:      4,
+			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

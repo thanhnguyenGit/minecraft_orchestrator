@@ -100,16 +100,18 @@ type Table struct {
 }
 
 var columnConstructors = map[model.Component]func() ComponentColumn{
-	model.CPosition:     func() ComponentColumn { return NewColumn[model.Position]() },
-	model.CVelocity:     func() ComponentColumn { return NewColumn[model.Velocity]() },
-	model.CHealth:       func() ComponentColumn { return NewColumn[model.Health]() },
-	model.CHunger:       func() ComponentColumn { return NewColumn[model.Hunger]() },
-	model.CBot:          func() ComponentColumn { return NewColumn[model.Bot]() },
-	model.CRotation:     func() ComponentColumn { return NewColumn[model.Rotation]() },
-	model.CGameMode:     func() ComponentColumn { return NewColumn[model.GameMode]() },
-	model.CSession:      func() ComponentColumn { return NewColumn[model.Session]() },
-	model.CInventory:    func() ComponentColumn { return NewColumn[model.Inventory]() },
-	model.CEffects:      func() ComponentColumn { return NewColumn[model.Effects]() },
+	model.CPosition:       func() ComponentColumn { return NewColumn[model.Position]() },
+	model.CVelocity:       func() ComponentColumn { return NewColumn[model.Velocity]() },
+	model.CHealth:         func() ComponentColumn { return NewColumn[model.Health]() },
+	model.CHunger:         func() ComponentColumn { return NewColumn[model.Hunger]() },
+	model.CBot:            func() ComponentColumn { return NewColumn[model.Bot]() },
+	model.CRotation:       func() ComponentColumn { return NewColumn[model.Rotation]() },
+	model.CGameMode:       func() ComponentColumn { return NewColumn[model.GameMode]() },
+	model.CSession:        func() ComponentColumn { return NewColumn[model.Session]() },
+	model.CInventory:      func() ComponentColumn { return NewColumn[model.Inventory]() },
+	model.CEffects:        func() ComponentColumn { return NewColumn[model.Effects]() },
+	model.CUtilityAI:      func() ComponentColumn { return NewColumn[model.UtilityAIState]() },
+	model.CControllerSync: func() ComponentColumn { return NewColumn[model.ControllerSyncState]() },
 }
 
 func NewTable(mask model.Mask) *Table {
@@ -167,7 +169,7 @@ func (tbl *Table) AddEntity(e Entity, b Bundle) (int, error) {
 
 	for c := range model.ComponentCount {
 		if tbl.mask.Has(c) {
-			tbl.columns[uint8(c)].AppendRaw(b.Components[c])
+			tbl.columns[uint8(c)].AppendRaw(cloneComponent(c, b.Components[c]))
 		}
 	}
 
@@ -194,11 +196,51 @@ func (t *Table) bundleAt(row int) Bundle {
 
 	for c := range model.ComponentCount {
 		if t.mask.Has(c) {
-			bundle.Components[c] = t.columns[uint8(c)].GetRaw(row)
+			bundle.Components[c] = cloneComponent(c, t.columns[uint8(c)].GetRaw(row))
 		}
 	}
 
 	return bundle
+}
+
+func cloneComponent(component model.Component, value any) any {
+	switch component {
+	case model.CInventory:
+		return cloneInventory(value.(model.Inventory))
+	case model.CEffects:
+		return cloneEffects(value.(model.Effects))
+	case model.CControllerSync:
+		return value.(model.ControllerSyncState).Clone()
+	default:
+		return value
+	}
+}
+
+func cloneInventory(inventory model.Inventory) model.Inventory {
+	if inventory.Slots == nil {
+		return inventory
+	}
+
+	out := inventory
+	out.Slots = make([]model.InventorySlot, len(inventory.Slots))
+	for index, slot := range inventory.Slots {
+		out.Slots[index] = slot
+		if slot.Item != nil {
+			item := *slot.Item
+			out.Slots[index].Item = &item
+		}
+	}
+	return out
+}
+
+func cloneEffects(effects model.Effects) model.Effects {
+	if effects.Values == nil {
+		return effects
+	}
+
+	out := effects
+	out.Values = append([]model.Effect(nil), effects.Values...)
+	return out
 }
 
 func (t *Table) removeSwap(row int) (removed Bundle, moved Entity, didMove bool, err error) {

@@ -1,17 +1,19 @@
 package ai
 
-type GoalType uint8
+import "minecraft_orchestrator/internal/engine/model"
+
+type GoalType = model.GoalType
 
 const (
-	Idle GoalType = iota
-	Eat
-	CraftTool
-	FindFood
-	Flee
-	Fight
-	GatherResource
-	Hunt
-	ReturnToShelter
+	Idle            = model.Idle
+	Eat             = model.Eat
+	CraftTool       = model.CraftTool
+	FindFood        = model.FindFood
+	Flee            = model.Flee
+	Fight           = model.Fight
+	GatherResource  = model.GatherResource
+	Hunt            = model.Hunt
+	ReturnToShelter = model.ReturnToShelter
 )
 
 type CurrentGoal struct {
@@ -19,13 +21,13 @@ type CurrentGoal struct {
 }
 
 type Capability struct {
-	CombatPower float32
+	CombatPower  float32
 	DefensePower float32
-	MiningPower float32
+	MiningPower  float32
 	HuntingPower float32
 }
 
 type DecisionResult struct {
 	GoalType GoalType
-	Score float32
+	Score    float32
 }

@@ -72,7 +72,7 @@ func ObservationToEvent(
 		event.Kind = network.EventHostInventory
 		inventory := inventory(&orchestratorv1.HostInventory{
 			SelectedHotbarSlot: payload.InventoryChanged.GetSelectedHotbarSlot(),
-			Slots:               payload.InventoryChanged.GetSlots(),
+			Slots:              payload.InventoryChanged.GetSlots(),
 		})
 		event.Inventory = &inventory
 	case *orchestratorv1.BotObservation_ChunkLoaded:
@@ -118,6 +118,119 @@ func ObservationToEvent(
 		return network.Event{}, fmt.Errorf("host observation has no payload")
 	}
 	return event, nil
+}
+
+func RealityStateToEvent(
+	reality *orchestratorv1.RealityState,
+	allowed map[model.ProfileID]struct{},
+) (network.Event, error) {
+	if reality == nil {
+		return network.Event{}, fmt.Errorf("reality state is nil")
+	}
+
+	if len(reality.GetProfileId()) != len(model.ProfileID{}) {
+		return network.Event{}, fmt.Errorf("reality profile id has length %d, want 16", len(reality.GetProfileId()))
+	}
+
+	var profileID model.ProfileID
+	copy(profileID[:], reality.GetProfileId())
+	if _, ok := allowed[profileID]; !ok {
+		return network.Event{}, fmt.Errorf("reality state has unknown profile id")
+	}
+
+	rs := &network.RealityState{}
+
+	if reality.ArrivalDistance != nil {
+		v := reality.GetArrivalDistance()
+		rs.ArrivalDistance = &v
+	}
+	if reality.DiggingBlock != nil {
+		bp := model.BlockPosition{
+			X: reality.DiggingBlock.GetX(),
+			Y: reality.DiggingBlock.GetY(),
+			Z: reality.DiggingBlock.GetZ(),
+		}
+		rs.DiggingBlock = &bp
+	}
+	if reality.AttackingEntity != nil {
+		v := reality.GetAttackingEntity()
+		rs.AttackingEntity = &v
+	}
+	if reality.EquippedItem != nil {
+		v := reality.GetEquippedItem()
+		rs.EquippedItem = &v
+	}
+	if reality.GotoTarget != nil {
+		bp := model.BlockPosition{
+			X: reality.GotoTarget.GetX(),
+			Y: reality.GotoTarget.GetY(),
+			Z: reality.GotoTarget.GetZ(),
+		}
+		rs.GotoTarget = &bp
+	}
+	for _, outcome := range reality.GetActionOutcomes() {
+		mapped, ok := actionOutcome(outcome)
+		if !ok {
+			continue
+		}
+		rs.ActionOutcomes = append(rs.ActionOutcomes, mapped)
+		if !rs.ActionFailed && mapped.Status == model.ActionOutcomeFailed {
+			rs.ActionFailed = true
+			rs.Failure = mapped.Detail
+			rs.ActionFailureCorrelation = mapped.ControllerSequence
+		}
+	}
+
+	return network.Event{
+		ProfileID:       profileID,
+		Kind:            network.EventRealityState,
+		RemoteSessionID: reality.GetSessionId(),
+		Sequence:        reality.GetSequence(),
+		RealityState:    rs,
+	}, nil
+}
+
+func actionOutcome(outcome *orchestratorv1.ActionOutcome) (model.ActionOutcome, bool) {
+	if outcome == nil {
+		return model.ActionOutcome{}, false
+	}
+
+	var action model.ControllerAction
+	switch outcome.GetKind() {
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_GOTO:
+		action = model.ControllerActionGoto
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_BREAK:
+		action = model.ControllerActionBreak
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_ATTACK:
+		action = model.ControllerActionAttack
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_CRAFT:
+		action = model.ControllerActionCraft
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_EQUIP:
+		action = model.ControllerActionEquip
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_PLACE:
+		action = model.ControllerActionPlace
+	case orchestratorv1.ControllerActionKind_CONTROLLER_ACTION_KIND_CONSUME:
+		action = model.ControllerActionConsume
+	default:
+		return model.ActionOutcome{}, false
+	}
+
+	var status model.ActionOutcomeStatus
+	switch outcome.GetStatus() {
+	case orchestratorv1.CommandStatus_COMMAND_STATUS_COMPLETED:
+		status = model.ActionOutcomeCompleted
+	case orchestratorv1.CommandStatus_COMMAND_STATUS_FAILED:
+		status = model.ActionOutcomeFailed
+	default:
+		return model.ActionOutcome{}, false
+	}
+
+	return model.ActionOutcome{
+		ControllerSequence: outcome.GetControllerSequence(),
+		Action:             action,
+		Status:             status,
+		Detail:             outcome.GetDetail(),
+	}, true
 }
 
 func hostStatus(status *orchestratorv1.BotStatusChanged) (network.HostStatus, string) {

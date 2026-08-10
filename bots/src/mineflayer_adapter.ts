@@ -1,6 +1,11 @@
 import { EventEmitter } from "node:events";
+import { createRequire } from "node:module";
+import type { Vec3 } from "vec3";
 import mineflayer from "mineflayer";
 import pf from "mineflayer-pathfinder";
+
+const require = createRequire(import.meta.url);
+const vec3 = require("vec3") as (x: number, y: number, z: number) => Vec3;
 import {
   buildStateSnapshot,
   coalesceInventoryUpdates,
@@ -50,14 +55,55 @@ export type PhysicsDiagnostic = {
 
 export type MineflayerAdapterOptions = {
   physicsDebug?: boolean;
+  diagnosticProfileID?: string;
+  diagnosticUsername?: string;
 };
+
+export type ControllerState = {
+  goto?: { x: number; y: number; z: number } | null;
+  break?: { x: number; y: number; z: number } | null;
+  attack?: number | null;
+  craft?: { itemName: string; count: number } | null;
+  equip?: string | null;
+  consume?: string | null;
+  place?: { x: number; y: number; z: number; fx: number; fy: number; fz: number } | null;
+};
+
+// ControllerState carries deltas: an omitted field keeps its previous target,
+// while null explicitly clears that target.
+export function mergeControllerState(
+  state: ControllerState,
+  delta: Partial<ControllerState>,
+): ControllerState {
+  return { ...state, ...delta };
+}
+
+export type RealityState = {
+  arrivalDistance?: number;
+  diggingBlock?: { x: number; y: number; z: number };
+  attackingEntity?: number;
+  equippedItem?: string;
+  gotoBlock?: { x: number; y: number; z: number };
+};
+
+export type ControllerActionOutcome = {
+  controllerSequence: bigint;
+  kind: "goto" | "break" | "attack" | "craft" | "equip" | "consume" | "place";
+  succeeded: boolean;
+  detail: string;
+};
+
+// ControllerDiagnosticDetailMaxLength bounds error-derived controller details
+// before they reach either local diagnostics or host reality emissions.
+export const ControllerDiagnosticDetailMaxLength = 256;
+const controllerDetailTruncationSuffix = "...";
 
 export interface BotAdapter {
   connect(options: ConnectOptions): Promise<void>;
   disconnect(): Promise<void>;
   status(): BotStatus;
   sendChat(message: string): Promise<void>;
-  gotoDestination(x: number, y: number, z: number): void;
+  applyState(delta: Partial<ControllerState>): void;
 }
 
 export type MineflayerAdapterEvents = {
@@ -109,6 +155,8 @@ export type MineflayerAdapterEvents = {
       pitch: number;
     }[],
   ];
+  reality: [state: RealityState];
+  actionOutcome: [outcome: ControllerActionOutcome];
 };
 
 export class MineflayerAdapter extends EventEmitter implements BotAdapter {
@@ -122,11 +170,43 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
   #inventoryFlushQueued = false;
   #selectedHotbarSlotChanged = false;
   #pendingEntities: {
-    added: Map<number, { entityId: number; name: string; x: number; y: number; z: number; yaw: number; pitch: number }>;
+    added: Map<
+      number,
+      {
+        entityId: number;
+        name: string;
+        x: number;
+        y: number;
+        z: number;
+        yaw: number;
+        pitch: number;
+      }
+    >;
     removed: Set<number>;
-    moved: Map<number, { entityId: number; name: string; x: number; y: number; z: number; yaw: number; pitch: number }>;
+    moved: Map<
+      number,
+      {
+        entityId: number;
+        name: string;
+        x: number;
+        y: number;
+        z: number;
+        yaw: number;
+        pitch: number;
+      }
+    >;
   } = { added: new Map(), removed: new Set(), moved: new Map() };
   #entityFlushTimer: ReturnType<typeof setTimeout> | undefined;
+  #tickTimer: ReturnType<typeof setInterval> | undefined;
+  #state: ControllerState = {};
+  #actionSequences: Partial<Record<ControllerActionOutcome["kind"], bigint>> = {};
+  #lastAppliedControllerSequence = 0n;
+  #controllerSessionEpoch = 0;
+  #reportedOutcomes = new Set<string>();
+  #startedActions = new Set<string>();
+  #terminalActions = new Set<string>();
+  #diagnosticProfileID: string;
+  #diagnosticUsername: string;
 
   constructor(
     botFactory: MineflayerBotFactory = mineflayer.createBot,
@@ -135,11 +215,14 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
     super();
     this.#botFactory = botFactory;
     this.#physicsDebug = options.physicsDebug ?? false;
+    this.#diagnosticProfileID = options.diagnosticProfileID ?? "";
+    this.#diagnosticUsername = options.diagnosticUsername ?? "";
   }
 
   async connect(options: ConnectOptions): Promise<void> {
     if (this.#bot) return;
 
+	this.#resetControllerSession();
     this.#status = "connecting";
     this.emit("status", this.#status, "connecting");
 
@@ -175,6 +258,8 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       moves.canDig = false;
       moves.allowFreeMotion = false;
       (this.#bot! as any).pathfinder.setMovements(moves);
+
+      this.#startTick();
     });
     this.#bot.on("chat", (username: string, message: string) => {
       this.emit("chat", username, message);
@@ -193,9 +278,23 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
     this.#bot.on("end", () => {
       this.#status = "disconnected";
       this.emit("status", this.#status, "ended");
+      this.#stopTick();
       this.#bot = undefined;
     });
   }
+
+	// Controller sequences and action targets are scoped to one host session.
+	// A reconnect may reuse sequence numbers, so neither stale targets nor
+	// prior outcome de-duplication may survive into the new bot instance.
+	#resetControllerSession(): void {
+		this.#controllerSessionEpoch++;
+		this.#state = {};
+		this.#actionSequences = {};
+		this.#lastAppliedControllerSequence = 0n;
+		this.#reportedOutcomes.clear();
+		this.#startedActions.clear();
+		this.#terminalActions.clear();
+	}
 
   async disconnect(): Promise<void> {
     if (!this.#bot) return;
@@ -213,11 +312,353 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
     this.#bot.chat(message);
   }
 
-  gotoDestination(x: number, y: number, z: number): void {
-    if (!this.#bot) return;
-    const bot = this.#bot as any;
-    const GoalNear = (pf.goals as any).GoalNear;
-    bot.pathfinder.setGoal(new GoalNear(x, y, z, 1));
+  applyState(delta: Partial<ControllerState>, controllerSequence = 0n): void {
+    this.#lastAppliedControllerSequence = controllerSequence;
+    this.#state = mergeControllerState(this.#state, delta);
+    this.#recordActionSequences(delta, controllerSequence);
+    if (delta.goto !== undefined) {
+      if (delta.goto === null) (this.#bot as any)?.pathfinder?.setGoal(null);
+    }
+    if (delta.break !== undefined) {
+      if (delta.break === null && this.#bot?.targetDigBlock) this.#bot.stopDigging();
+    }
+    this.#diagnostic("controller.state_applied");
+  }
+
+  #recordActionSequences(delta: Partial<ControllerState>, sequence: bigint): void {
+    const fields: [keyof ControllerState, ControllerActionOutcome["kind"]][] = [
+      ["goto", "goto"],
+      ["break", "break"],
+      ["attack", "attack"],
+      ["craft", "craft"],
+      ["equip", "equip"],
+      ["consume", "consume"],
+      ["place", "place"],
+    ];
+    for (const [field, kind] of fields) {
+      if (delta[field] === undefined) continue;
+      if (delta[field] === null) {
+        delete this.#actionSequences[kind];
+        continue;
+      }
+      this.#actionSequences[kind] = sequence;
+    }
+  }
+
+  #startTick(): void {
+    if (this.#tickTimer) return;
+    this.#tickTimer = setInterval(() => this.#tick(), 100);
+  }
+
+  #stopTick(): void {
+    if (this.#tickTimer) {
+      clearInterval(this.#tickTimer);
+      this.#tickTimer = undefined;
+    }
+  }
+
+  #tick(): void {
+    const bot = this.#bot!;
+    if (!bot) return;
+
+    const state = this.#state;
+    const gotoDistance = state.goto
+      ? bot.entity!.position.distanceTo(vec3(state.goto.x, state.goto.y, state.goto.z))
+      : null;
+    this.#diagnostic("controller.tick", {
+      goto_distance: gotoDistance,
+      digging: Boolean(bot.targetDigBlock),
+      digging_block: bot.targetDigBlock ? this.#blockPosition(bot.targetDigBlock.position) : null,
+    });
+
+    if (state.goto) {
+      const GoalNear = (pf.goals as any).GoalNear;
+      const existingGoal = (bot as any).pathfinder.goal;
+      const goalX = state.goto.x | 0;
+      const goalY = state.goto.y | 0;
+      const goalZ = state.goto.z | 0;
+      if (
+        !existingGoal ||
+        existingGoal.x !== goalX ||
+        existingGoal.y !== goalY ||
+        existingGoal.z !== goalZ
+      ) {
+        (bot as any).pathfinder.setGoal(new GoalNear(goalX, goalY, goalZ, 1));
+        this.#reportOutcome("goto", true, "navigation_started");
+      }
+    }
+
+    if (state.break) {
+      this.#handleBreak(bot, state.break);
+    }
+
+    if (state.attack !== undefined && state.attack !== null) {
+      this.#handleAttack(bot, state.attack);
+    }
+
+    if (state.craft) {
+      this.#handleCraft(bot, state.craft);
+      this.#state = { ...this.#state, craft: null };
+    }
+
+    if (state.equip) {
+      this.#handleEquip(bot, state.equip);
+      this.#state = { ...this.#state, equip: null };
+    }
+
+    if (state.consume) {
+      this.#handleConsume(bot, state.consume);
+      this.#state = { ...this.#state, consume: null };
+    }
+
+    if (state.place) {
+      this.#handlePlace(bot, state.place);
+      this.#state = { ...this.#state, place: null };
+    }
+
+    const reality = this.#buildReality(bot);
+    this.#diagnostic("controller.reality", {
+      goto_distance: reality.arrivalDistance ?? null,
+      digging: Boolean(reality.diggingBlock),
+      digging_block: reality.diggingBlock ?? null,
+      attacking_entity: reality.attackingEntity ?? null,
+    });
+    this.emit("reality", reality);
+  }
+
+  #handleBreak(bot: MineflayerBot, target: NonNullable<ControllerState["break"]>): void {
+    const targetPosition = vec3(target.x, target.y, target.z);
+    const controllerSequence = this.#actionSequences.break ?? 0n;
+    const actionKey = this.#actionKey("break", controllerSequence, target);
+    if (this.#terminalActions.has(actionKey)) return;
+
+    const dist = bot.entity!.position.distanceTo(targetPosition);
+    if (dist > 4.5) {
+      this.#diagnostic("controller.break_disposition", {
+        disposition: "waiting_for_range",
+        target: this.#blockPosition(targetPosition),
+        distance: dist,
+      });
+      return;
+    }
+
+    const block = bot.blockAt(targetPosition);
+    if (!block || block.name === "air") {
+      this.#reportTerminalOutcome("break", actionKey, controllerSequence, false, "target_block_unavailable");
+      return;
+    }
+
+    if (!bot.canSeeBlock(block) || !bot.canDigBlock(block)) {
+      this.#reportTerminalOutcome("break", actionKey, controllerSequence, false, "target_not_diggable");
+      return;
+    }
+
+    if (!bot.targetDigBlock && !this.#startedActions.has(actionKey)) {
+      const sessionEpoch = this.#controllerSessionEpoch;
+      this.#startedActions.add(actionKey);
+      bot.dig(block, false, "raycast").then(
+        () => {
+          if (this.#controllerSessionEpoch !== sessionEpoch) return;
+          this.#reportTerminalOutcome("break", actionKey, controllerSequence, true, "dig_completed");
+        },
+        (error: unknown) => {
+          if (this.#controllerSessionEpoch !== sessionEpoch) return;
+          this.#reportTerminalOutcome("break", actionKey, controllerSequence, false, String(error));
+        },
+      );
+    }
+  }
+
+  #handleAttack(bot: MineflayerBot, targetEntityId: number): void {
+    const controllerSequence = this.#actionSequences.attack ?? 0n;
+    const actionKey = this.#actionKey("attack", controllerSequence, targetEntityId);
+    if (this.#terminalActions.has(actionKey)) return;
+
+    const entity = bot.entities[targetEntityId];
+    if (!entity) {
+      this.#reportTerminalOutcome("attack", actionKey, controllerSequence, false, "target_entity_unavailable");
+      return;
+    }
+
+    const dist = bot.entity!.position.distanceTo(entity.position);
+    if (dist > 3.5) {
+      this.#diagnostic("controller.attack_disposition", {
+        disposition: "waiting_for_range",
+        target_entity_id: targetEntityId,
+        distance: dist,
+      });
+      return;
+    }
+
+    try {
+      bot.lookAt(entity.position.offset(0, entity.height ?? 1, 0));
+      bot.attack(entity);
+      this.#reportTerminalOutcome("attack", actionKey, controllerSequence, true, "attack_sent");
+    } catch (error) {
+      this.#reportTerminalOutcome("attack", actionKey, controllerSequence, false, String(error));
+    }
+  }
+
+  #actionKey(kind: ControllerActionOutcome["kind"], controllerSequence: bigint, target: unknown): string {
+    return `${kind}:${controllerSequence}:${JSON.stringify(target)}`;
+  }
+
+  #reportTerminalOutcome(
+    kind: ControllerActionOutcome["kind"],
+    actionKey: string,
+    controllerSequence: bigint,
+    succeeded: boolean,
+    detail: string,
+  ): void {
+    this.#startedActions.delete(actionKey);
+    if (this.#terminalActions.has(actionKey)) return;
+    this.#terminalActions.add(actionKey);
+    this.#reportOutcome(kind, succeeded, detail, controllerSequence, actionKey);
+  }
+
+  #handleCraft(bot: MineflayerBot, target: NonNullable<ControllerState["craft"]>): void {
+    const itemID = bot.registry.itemsByName[target.itemName]?.id;
+    if (itemID === undefined) {
+      this.#reportOutcome("craft", false, "unknown_item");
+      return;
+    }
+    const recipes = bot.recipesFor(itemID, null, null, null);
+    if (!recipes || recipes.length === 0) {
+      this.#reportOutcome("craft", false, "recipe_unavailable");
+      return;
+    }
+    bot.craft(recipes[0], target.count).then(
+      () => this.#reportOutcome("craft", true, "craft_completed"),
+      (error: unknown) => this.#reportOutcome("craft", false, String(error)),
+    );
+  }
+
+  #handleEquip(bot: MineflayerBot, itemName: string): void {
+    const item = bot.inventory.items().find((entry) => entry.name === itemName);
+    if (!item) {
+      this.#reportOutcome("equip", false, "item_unavailable");
+      return;
+    }
+    if (bot.heldItem?.name === itemName) {
+      this.#reportOutcome("equip", true, "already_equipped");
+      return;
+    }
+    bot.equip(item, "hand").then(
+      () => this.#reportOutcome("equip", true, "equip_completed"),
+      (error: unknown) => this.#reportOutcome("equip", false, String(error)),
+    );
+  }
+
+  #handleConsume(bot: MineflayerBot, itemName: string): void {
+    const item = bot.inventory.items().find((entry) => entry.name === itemName);
+    if (!item) {
+      this.#reportOutcome("consume", false, "item_unavailable");
+      return;
+    }
+    bot.equip(item, "hand")
+      .then(() => bot.consume())
+      .then(
+        () => this.#reportOutcome("consume", true, "consume_completed"),
+        (error: unknown) => this.#reportOutcome("consume", false, String(error)),
+      );
+  }
+
+  #handlePlace(bot: MineflayerBot, target: NonNullable<ControllerState["place"]>): void {
+    const refBlock = bot.blockAt(vec3(target.x, target.y, target.z));
+    if (!refBlock) {
+      this.#reportOutcome("place", false, "reference_block_unavailable");
+      return;
+    }
+    const faceVec = vec3(target.fx, target.fy, target.fz);
+    const targetItem = bot.inventory.items().find((i) => i.name === refBlock.name);
+    if (!targetItem) {
+      this.#reportOutcome("place", false, "placement_item_unavailable");
+      return;
+    }
+    bot.equip(targetItem, "hand")
+      .then(() => bot.placeBlock(refBlock, faceVec))
+      .then(
+        () => this.#reportOutcome("place", true, "place_completed"),
+        (error: unknown) => this.#reportOutcome("place", false, String(error)),
+      );
+  }
+
+  #reportOutcome(
+    kind: ControllerActionOutcome["kind"],
+    succeeded: boolean,
+    detail: string,
+    controllerSequence = this.#actionSequences[kind] ?? 0n,
+    deduplicationKey = `${kind}:${controllerSequence}`,
+  ): void {
+    if (controllerSequence === 0n) return;
+    if (this.#reportedOutcomes.has(deduplicationKey)) return;
+    this.#reportedOutcomes.add(deduplicationKey);
+    detail = boundedControllerDetail(detail);
+    this.#diagnostic("controller.action_outcome", { kind, success: succeeded, detail });
+    this.emit("actionOutcome", { controllerSequence, kind, succeeded, detail });
+  }
+
+  #diagnostic(event: string, details: Record<string, unknown> = {}): void {
+    console.info(JSON.stringify({
+      event,
+      profile_id: this.#diagnosticProfileID,
+      username: this.#diagnosticUsername,
+      sequence: this.#lastAppliedControllerSequence.toString(),
+      controller_state: this.#controllerStateSummary(),
+      action_sequences: this.#actionSequenceSummary(),
+      ...details,
+    }));
+  }
+
+  #controllerStateSummary(): ControllerState {
+    return {
+      goto: this.#state.goto ?? null,
+      break: this.#state.break ?? null,
+      attack: this.#state.attack ?? null,
+      craft: this.#state.craft ?? null,
+      equip: this.#state.equip ?? null,
+      consume: this.#state.consume ?? null,
+      place: this.#state.place ?? null,
+    };
+  }
+
+  #actionSequenceSummary(): Record<string, string> {
+    const sequences: Record<string, string> = {};
+    for (const [kind, sequence] of Object.entries(this.#actionSequences)) {
+      if (sequence !== undefined) sequences[kind] = sequence.toString();
+    }
+    return sequences;
+  }
+
+  #blockPosition(position: { x: number; y: number; z: number }): { x: number; y: number; z: number } {
+    return { x: position.x | 0, y: position.y | 0, z: position.z | 0 };
+  }
+
+  #buildReality(bot: MineflayerBot): RealityState {
+    const reality: RealityState = {};
+
+    if (this.#state.goto) {
+      const gt = this.#state.goto;
+      reality.arrivalDistance = bot.entity!.position.distanceTo(
+        vec3(gt.x, gt.y, gt.z),
+      );
+      reality.gotoBlock = { x: gt.x | 0, y: gt.y | 0, z: gt.z | 0 };
+    }
+
+    if (bot.targetDigBlock) {
+      const block = bot.targetDigBlock.position;
+      reality.diggingBlock = { x: block.x | 0, y: block.y | 0, z: block.z | 0 };
+    }
+
+    if (this.#state.attack !== undefined && this.#state.attack !== null) {
+      reality.attackingEntity = this.#state.attack;
+    }
+
+    if (bot.heldItem) {
+      reality.equippedItem = bot.heldItem.name;
+    }
+
+    return reality;
   }
 
   #wireTelemetry(bot: MineflayerBot): void {
@@ -248,7 +689,6 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       (packet: { x: number; z: number; data?: Buffer; chunkData?: Buffer }) => {
         if (bot !== this.#bot) return;
 
-        // Get the length of the Buffer in bytes
         const buffer = packet.chunkData || packet.data;
 
         if (!buffer) {
@@ -257,11 +697,6 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
           );
           return;
         }
-
-        // const sizeInBytes = buffer.length;
-        // console.log(
-        //   `Chunk at ${packet.x}, ${packet.z} is ${sizeInBytes} bytes`,
-        // );
 
         this.emit(
           "chunkLoaded",
@@ -301,8 +736,6 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       }) => {
         if (bot !== this.#bot) return;
 
-        // console.log("BLOCK_CHANGE received!");
-
         this.emit(
           "blockUpdated",
           packet.location.x,
@@ -318,7 +751,7 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       (packet: {
         chunkCoordinates: { x: number; y: number; z: number };
         notTrustEdges?: boolean;
-        records: number[]; 
+        records: number[];
       }) => {
         if (bot !== this.#bot) return;
 
@@ -476,7 +909,8 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       this.#pendingEntities.added.clear();
       this.#pendingEntities.removed.clear();
       this.#pendingEntities.moved.clear();
-      if (added.length === 0 && removed.length === 0 && moved.length === 0) return;
+      if (added.length === 0 && removed.length === 0 && moved.length === 0)
+        return;
       this.emit("entitiesChanged", added, removed, moved);
     }, 200);
   }
@@ -572,14 +1006,13 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
     bot._client.on(
       "packet",
       (
-        data: any,
-        meta: {
+        _data: any,
+        _meta: {
           name: string;
           state: string;
         },
       ) => {
-        // console.log(`\n[PACKET RECEIVED] Name: ${meta.name}`);
-        // console.dir(data, { depth: 4, colors: true });
+        // packet debug logging omitted for production
       },
     );
   }
@@ -597,4 +1030,9 @@ export class MineflayerAdapter extends EventEmitter implements BotAdapter {
       count: item.count,
     };
   }
+}
+
+function boundedControllerDetail(detail: string): string {
+  if (detail.length <= ControllerDiagnosticDetailMaxLength) return detail;
+  return `${detail.slice(0, ControllerDiagnosticDetailMaxLength - controllerDetailTruncationSuffix.length)}${controllerDetailTruncationSuffix}`;
 }

@@ -21,6 +21,8 @@ const (
 	CSession
 	CInventory
 	CEffects
+	CUtilityAI
+	CControllerSync
 	ComponentCount
 )
 
@@ -43,6 +45,8 @@ var componentNames = [...]string{
 	"Session",
 	"Inventory",
 	"Effects",
+	"UtilityAI",
+	"ControllerSync",
 }
 
 type ProfileID [16]byte
@@ -101,39 +105,39 @@ func (p SessionPhase) String() string {
 }
 
 type Session struct {
-	Phase          SessionPhase
-	AttemptID      uint64
-	PlayerEntityID int32
-	Failure        string
+	Phase           SessionPhase
+	AttemptID       uint64
+	PlayerEntityID  int32
+	Failure         string
 	RemoteSessionID string
 	LastSequence    uint64
 }
 
-type ItemStack struct { 
-	ID int32 
-	Name string 
+type ItemStack struct {
+	ID       int32
+	Name     string
 	Metadata int32
-	Count int32 
+	Count    int32
 }
 
-type InventorySlot struct { 
-	Slot int32 
-	Item *ItemStack 
+type InventorySlot struct {
+	Slot int32
+	Item *ItemStack
 }
 
-type Inventory struct { 
-	SelectedHotbarSlot int32 
-	Slots []InventorySlot
+type Inventory struct {
+	SelectedHotbarSlot int32
+	Slots              []InventorySlot
 }
 
-type Effect struct { 
-	ID int32 
-	Name string 
-	Amplifier int32 
-	DurationTicks int32 
+type Effect struct {
+	ID            int32
+	Name          string
+	Amplifier     int32
+	DurationTicks int32
 }
 
-type Effects struct { Values []Effect }
+type Effects struct{ Values []Effect }
 
 type Health struct {
 	Current float64
@@ -142,7 +146,7 @@ type Health struct {
 
 type Hunger struct {
 	Current float64
-	Max float64
+	Max     float64
 }
 
 var (
@@ -157,6 +161,8 @@ var (
 		CSession,
 		CInventory,
 		CEffects,
+		CUtilityAI,
+		CControllerSync,
 	)
 )
 

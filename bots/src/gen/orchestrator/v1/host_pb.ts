@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file orchestrator/v1/host.proto.
  */
 export const file_orchestrator_v1_host: GenFile = /*@__PURE__*/
-  fileDesc("ChpvcmNoZXN0cmF0b3IvdjEvaG9zdC5wcm90bxIPb3JjaGVzdHJhdG9yLnYxIpcCCgxIb3N0RW52ZWxvcGUSKwoFaGVsbG8YASABKAsyGi5vcmNoZXN0cmF0b3IudjEuSG9zdEhlbGxvSAASMwoJY29uZmlndXJlGAIgASgLMh4ub3JjaGVzdHJhdG9yLnYxLkhvc3RDb25maWd1cmVIABIxCghzaHV0ZG93bhgDIAEoCzIdLm9yY2hlc3RyYXRvci52MS5Ib3N0U2h1dGRvd25IABI2CgtvYnNlcnZhdGlvbhgEIAEoCzIfLm9yY2hlc3RyYXRvci52MS5Cb3RPYnNlcnZhdGlvbkgAEi8KB2NvbW1hbmQYBSABKAsyHC5vcmNoZXN0cmF0b3IudjEuR290b0NvbW1hbmRIAEIJCgdwYXlsb2FkIjQKCUhvc3RIZWxsbxINCgV0b2tlbhgBIAEoCRIYChBwcm90b2NvbF92ZXJzaW9uGAIgASgNIlQKDUhvc3RDb25maWd1cmUSEgoKZ2VuZXJhdGlvbhgBIAEoBBIvCgRib3RzGAIgAygLMiEub3JjaGVzdHJhdG9yLnYxLkJvdENvbmZpZ3VyYXRpb24iDgoMSG9zdFNodXRkb3duInMKEEJvdENvbmZpZ3VyYXRpb24SEgoKcHJvZmlsZV9pZBgBIAEoDBIQCgh1c2VybmFtZRgCIAEoCRIMCgRob3N0GAMgASgJEgwKBHBvcnQYBCABKA0SDAoEYXV0aBgFIAEoCRIPCgd2ZXJzaW9uGAYgASgJIpoHCg5Cb3RPYnNlcnZhdGlvbhISCgpwcm9maWxlX2lkGAEgASgMEhIKCnNlc3Npb25faWQYAiABKAkSEAoIc2VxdWVuY2UYAyABKAQSGwoTb2JzZXJ2ZWRfYXRfdW5peF9tcxgEIAEoAxI7Cg5zdGF0dXNfY2hhbmdlZBgKIAEoCzIhLm9yY2hlc3RyYXRvci52MS5Cb3RTdGF0dXNDaGFuZ2VkSAASLgoHc3Bhd25lZBgLIAEoCzIbLm9yY2hlc3RyYXRvci52MS5Cb3RTcGF3bmVkSAASPAoOc3RhdGVfc25hcHNob3QYDCABKAsyIi5vcmNoZXN0cmF0b3IudjEuSG9zdFN0YXRlU25hcHNob3RIABI8Cg52aXRhbHNfY2hhbmdlZBgNIAEoCzIiLm9yY2hlc3RyYXRvci52MS5Ib3N0Vml0YWxzQ2hhbmdlZEgAEj4KD2VmZmVjdHNfY2hhbmdlZBgOIAEoCzIjLm9yY2hlc3RyYXRvci52MS5Ib3N0RWZmZWN0c0NoYW5nZWRIABJAChBwb3NpdGlvbl9jaGFuZ2VkGA8gASgLMiQub3JjaGVzdHJhdG9yLnYxLkhvc3RQb3NpdGlvbkNoYW5nZWRIABJCChFpbnZlbnRvcnlfY2hhbmdlZBgQIAEoCzIlLm9yY2hlc3RyYXRvci52MS5Ib3N0SW52ZW50b3J5Q2hhbmdlZEgAEjgKDGNodW5rX2xvYWRlZBgRIAEoCzIgLm9yY2hlc3RyYXRvci52MS5Ib3N0Q2h1bmtMb2FkZWRIABI8Cg5jaHVua191bmxvYWRlZBgSIAEoCzIiLm9yY2hlc3RyYXRvci52MS5Ib3N0Q2h1bmtVbmxvYWRlZEgAEjoKDWJsb2NrX3VwZGF0ZWQYEyABKAsyIS5vcmNoZXN0cmF0b3IudjEuSG9zdEJsb2NrVXBkYXRlZEgAEkcKFG11bHRpX2Jsb2Nrc191cGRhdGVkGBQgASgLMicub3JjaGVzdHJhdG9yLnYxLkhvc3RNdWx0aUJsb2Nrc1VwZGF0ZWRIABI4Cg5jb21tYW5kX3Jlc3VsdBgVIAEoCzIeLm9yY2hlc3RyYXRvci52MS5Db21tYW5kUmVzdWx0SAASQAoQZW50aXRpZXNfY2hhbmdlZBgWIAEoCzIkLm9yY2hlc3RyYXRvci52MS5Ib3N0RW50aXRpZXNDaGFuZ2VkSABCCQoHcGF5bG9hZCJWChBCb3RTdGF0dXNDaGFuZ2VkEjIKBXN0YXRlGAEgASgOMiMub3JjaGVzdHJhdG9yLnYxLkJvdENvbm5lY3Rpb25TdGF0ZRIOCgZkZXRhaWwYAiABKAkiOgoKQm90U3Bhd25lZBIsCgVzdGF0ZRgBIAEoCzIdLm9yY2hlc3RyYXRvci52MS5Ib3N0Qm90U3RhdGUiQQoRSG9zdFN0YXRlU25hcHNob3QSLAoFc3RhdGUYASABKAsyHS5vcmNoZXN0cmF0b3IudjEuSG9zdEJvdFN0YXRlIkAKEUhvc3RWaXRhbHNDaGFuZ2VkEisKBnZpdGFscxgBIAEoCzIbLm9yY2hlc3RyYXRvci52MS5Ib3N0Vml0YWxzIkgKEkhvc3RFZmZlY3RzQ2hhbmdlZBIyCgdlZmZlY3RzGAEgAygLMiEub3JjaGVzdHJhdG9yLnYxLkhvc3RQb3Rpb25FZmZlY3QiRgoTSG9zdFBvc2l0aW9uQ2hhbmdlZBIvCghwb3NpdGlvbhgBIAEoCzIdLm9yY2hlc3RyYXRvci52MS5Ib3N0UG9zaXRpb24ijQEKFEhvc3RJbnZlbnRvcnlDaGFuZ2VkEjEKBXNsb3RzGAEgAygLMiIub3JjaGVzdHJhdG9yLnYxLkhvc3RJbnZlbnRvcnlTbG90EhwKFHNlbGVjdGVkX2hvdGJhcl9zbG90GAIgASgFEiQKHHNlbGVjdGVkX2hvdGJhcl9zbG90X2NoYW5nZWQYAyABKAgi5gEKDEhvc3RCb3RTdGF0ZRIrCgZ2aXRhbHMYASABKAsyGy5vcmNoZXN0cmF0b3IudjEuSG9zdFZpdGFscxIyCgdlZmZlY3RzGAIgAygLMiEub3JjaGVzdHJhdG9yLnYxLkhvc3RQb3Rpb25FZmZlY3QSLwoIcG9zaXRpb24YAyABKAsyHS5vcmNoZXN0cmF0b3IudjEuSG9zdFBvc2l0aW9uEjEKCWludmVudG9yeRgEIAEoCzIeLm9yY2hlc3RyYXRvci52MS5Ib3N0SW52ZW50b3J5EhEKCWdhbWVfbW9kZRgFIAEoBSJOCgpIb3N0Vml0YWxzEg4KBmhlYWx0aBgBIAEoARIMCgRmb29kGAIgASgFEhIKCnNhdHVyYXRpb24YAyABKAESDgoGb3h5Z2VuGAQgASgFIlcKEEhvc3RQb3Rpb25FZmZlY3QSCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIRCglhbXBsaWZpZXIYAyABKAUSFgoOZHVyYXRpb25fdGlja3MYBCABKAUimgEKDEhvc3RQb3NpdGlvbhIRCglkaW1lbnNpb24YASABKAkSCQoBeBgCIAEoARIJCgF5GAMgASgBEgkKAXoYBCABKAESCwoDeWF3GAUgASgBEg0KBXBpdGNoGAYgASgBEhIKCnZlbG9jaXR5X3gYByABKAESEgoKdmVsb2NpdHlfeRgIIAEoARISCgp2ZWxvY2l0eV96GAkgASgBImAKDUhvc3RJbnZlbnRvcnkSHAoUc2VsZWN0ZWRfaG90YmFyX3Nsb3QYASABKAUSMQoFc2xvdHMYAiADKAsyIi5vcmNoZXN0cmF0b3IudjEuSG9zdEludmVudG9yeVNsb3QiTwoRSG9zdEludmVudG9yeVNsb3QSDAoEc2xvdBgBIAEoBRIsCgRpdGVtGAIgASgLMh4ub3JjaGVzdHJhdG9yLnYxLkhvc3RJdGVtU3RhY2siSgoNSG9zdEl0ZW1TdGFjaxIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEhAKCG1ldGFkYXRhGAMgASgFEg0KBWNvdW50GAQgASgFImAKD0hvc3RDaHVua0xvYWRlZBIPCgdjaHVua194GAEgASgFEg8KB2NodW5rX3oYAiABKAUSDAoEZGF0YRgDIAEoDBINCgVtaW5feRgEIAEoBRIOCgZoZWlnaHQYBSABKAUiNQoRSG9zdENodW5rVW5sb2FkZWQSDwoHY2h1bmtfeBgBIAEoBRIPCgdjaHVua196GAIgASgFIkUKEEhvc3RCbG9ja1VwZGF0ZWQSCQoBeBgBIAEoBRIJCgF5GAIgASgFEgkKAXoYAyABKAUSEAoIc3RhdGVfaWQYBCABKAUioAEKFkhvc3RNdWx0aUJsb2Nrc1VwZGF0ZWQSRAoHcmVjb3JkcxgBIAMoCzIzLm9yY2hlc3RyYXRvci52MS5Ib3N0TXVsdGlCbG9ja3NVcGRhdGVkLkJsb2NrUmVjb3JkGkAKC0Jsb2NrUmVjb3JkEgkKAXgYASABKAUSCQoBeRgCIAEoBRIJCgF6GAMgASgFEhAKCHN0YXRlX2lkGAQgASgFIlQKC0dvdG9Db21tYW5kEhIKCnByb2ZpbGVfaWQYASABKAkSEAoIc2VxdWVuY2UYAiABKAQSCQoBeBgDIAEoBRIJCgF5GAQgASgFEgkKAXoYBSABKAUiZQoNQ29tbWFuZFJlc3VsdBISCgpwcm9maWxlX2lkGAEgASgJEhAKCHNlcXVlbmNlGAIgASgEEi4KBnN0YXR1cxgDIAEoDjIeLm9yY2hlc3RyYXRvci52MS5Db21tYW5kU3RhdHVzImoKCkhvc3RFbnRpdHkSEQoJZW50aXR5X2lkGAEgASgFEgwKBG5hbWUYAiABKAkSCQoBeBgDIAEoARIJCgF5GAQgASgBEgkKAXoYBSABKAESCwoDeWF3GAYgASgCEg0KBXBpdGNoGAcgASgCIn4KE0hvc3RFbnRpdGllc0NoYW5nZWQSKgoFYWRkZWQYASADKAsyGy5vcmNoZXN0cmF0b3IudjEuSG9zdEVudGl0eRIPCgdyZW1vdmVkGAIgAygFEioKBW1vdmVkGAMgAygLMhsub3JjaGVzdHJhdG9yLnYxLkhvc3RFbnRpdHkq6wEKEkJvdENvbm5lY3Rpb25TdGF0ZRIkCiBCT1RfQ09OTkVDVElPTl9TVEFURV9VTlNQRUNJRklFRBAAEiMKH0JPVF9DT05ORUNUSU9OX1NUQVRFX0NPTk5FQ1RJTkcQARIiCh5CT1RfQ09OTkVDVElPTl9TVEFURV9DT05ORUNURUQQAhIlCiFCT1RfQ09OTkVDVElPTl9TVEFURV9ESVNDT05ORUNURUQQAxIfChtCT1RfQ09OTkVDVElPTl9TVEFURV9LSUNLRUQQBBIeChpCT1RfQ09OTkVDVElPTl9TVEFURV9FUlJPUhAFKmgKDUNvbW1hbmRTdGF0dXMSHgoaQ09NTUFORF9TVEFUVVNfVU5TUEVDSUZJRUQQABIcChhDT01NQU5EX1NUQVRVU19DT01QTEVURUQQARIZChVDT01NQU5EX1NUQVRVU19GQUlMRUQQAkJEWkJtaW5lY3JhZnRfb3JjaGVzdHJhdG9yL2ludGVybmFsL2dlbi9vcmNoZXN0cmF0b3IvdjE7b3JjaGVzdHJhdG9ydjFiBnByb3RvMw");
+  fileDesc("ChpvcmNoZXN0cmF0b3IvdjEvaG9zdC5wcm90bxIPb3JjaGVzdHJhdG9yLnYxIrUFCgxIb3N0RW52ZWxvcGUSKwoFaGVsbG8YASABKAsyGi5vcmNoZXN0cmF0b3IudjEuSG9zdEhlbGxvSAASMwoJY29uZmlndXJlGAIgASgLMh4ub3JjaGVzdHJhdG9yLnYxLkhvc3RDb25maWd1cmVIABIxCghzaHV0ZG93bhgDIAEoCzIdLm9yY2hlc3RyYXRvci52MS5Ib3N0U2h1dGRvd25IABI2CgtvYnNlcnZhdGlvbhgEIAEoCzIfLm9yY2hlc3RyYXRvci52MS5Cb3RPYnNlcnZhdGlvbkgAEjMKB2NvbW1hbmQYBSABKAsyHC5vcmNoZXN0cmF0b3IudjEuR290b0NvbW1hbmRCAhgBSAASPAoOYXR0YWNrX2NvbW1hbmQYBiABKAsyHi5vcmNoZXN0cmF0b3IudjEuQXR0YWNrQ29tbWFuZEICGAFIABI9CgticmVha19ibG9jaxgHIAEoCzIiLm9yY2hlc3RyYXRvci52MS5CcmVha0Jsb2NrQ29tbWFuZEICGAFIABIyCgVlcXVpcBgIIAEoCzIdLm9yY2hlc3RyYXRvci52MS5FcXVpcENvbW1hbmRCAhgBSAASMgoFY3JhZnQYCSABKAsyHS5vcmNoZXN0cmF0b3IudjEuQ3JhZnRDb21tYW5kQgIYAUgAEj0KC3BsYWNlX2Jsb2NrGAogASgLMiIub3JjaGVzdHJhdG9yLnYxLlBsYWNlQmxvY2tDb21tYW5kQgIYAUgAEjwKEGNvbnRyb2xsZXJfc3RhdGUYCyABKAsyIC5vcmNoZXN0cmF0b3IudjEuQ29udHJvbGxlclN0YXRlSAASNgoNcmVhbGl0eV9zdGF0ZRgMIAEoCzIdLm9yY2hlc3RyYXRvci52MS5SZWFsaXR5U3RhdGVIAEIJCgdwYXlsb2FkIjQKCUhvc3RIZWxsbxINCgV0b2tlbhgBIAEoCRIYChBwcm90b2NvbF92ZXJzaW9uGAIgASgNIlQKDUhvc3RDb25maWd1cmUSEgoKZ2VuZXJhdGlvbhgBIAEoBBIvCgRib3RzGAIgAygLMiEub3JjaGVzdHJhdG9yLnYxLkJvdENvbmZpZ3VyYXRpb24iDgoMSG9zdFNodXRkb3duInMKEEJvdENvbmZpZ3VyYXRpb24SEgoKcHJvZmlsZV9pZBgBIAEoDBIQCgh1c2VybmFtZRgCIAEoCRIMCgRob3N0GAMgASgJEgwKBHBvcnQYBCABKA0SDAoEYXV0aBgFIAEoCRIPCgd2ZXJzaW9uGAYgASgJIpoHCg5Cb3RPYnNlcnZhdGlvbhISCgpwcm9maWxlX2lkGAEgASgMEhIKCnNlc3Npb25faWQYAiABKAkSEAoIc2VxdWVuY2UYAyABKAQSGwoTb2JzZXJ2ZWRfYXRfdW5peF9tcxgEIAEoAxI7Cg5zdGF0dXNfY2hhbmdlZBgKIAEoCzIhLm9yY2hlc3RyYXRvci52MS5Cb3RTdGF0dXNDaGFuZ2VkSAASLgoHc3Bhd25lZBgLIAEoCzIbLm9yY2hlc3RyYXRvci52MS5Cb3RTcGF3bmVkSAASPAoOc3RhdGVfc25hcHNob3QYDCABKAsyIi5vcmNoZXN0cmF0b3IudjEuSG9zdFN0YXRlU25hcHNob3RIABI8Cg52aXRhbHNfY2hhbmdlZBgNIAEoCzIiLm9yY2hlc3RyYXRvci52MS5Ib3N0Vml0YWxzQ2hhbmdlZEgAEj4KD2VmZmVjdHNfY2hhbmdlZBgOIAEoCzIjLm9yY2hlc3RyYXRvci52MS5Ib3N0RWZmZWN0c0NoYW5nZWRIABJAChBwb3NpdGlvbl9jaGFuZ2VkGA8gASgLMiQub3JjaGVzdHJhdG9yLnYxLkhvc3RQb3NpdGlvbkNoYW5nZWRIABJCChFpbnZlbnRvcnlfY2hhbmdlZBgQIAEoCzIlLm9yY2hlc3RyYXRvci52MS5Ib3N0SW52ZW50b3J5Q2hhbmdlZEgAEjgKDGNodW5rX2xvYWRlZBgRIAEoCzIgLm9yY2hlc3RyYXRvci52MS5Ib3N0Q2h1bmtMb2FkZWRIABI8Cg5jaHVua191bmxvYWRlZBgSIAEoCzIiLm9yY2hlc3RyYXRvci52MS5Ib3N0Q2h1bmtVbmxvYWRlZEgAEjoKDWJsb2NrX3VwZGF0ZWQYEyABKAsyIS5vcmNoZXN0cmF0b3IudjEuSG9zdEJsb2NrVXBkYXRlZEgAEkcKFG11bHRpX2Jsb2Nrc191cGRhdGVkGBQgASgLMicub3JjaGVzdHJhdG9yLnYxLkhvc3RNdWx0aUJsb2Nrc1VwZGF0ZWRIABI4Cg5jb21tYW5kX3Jlc3VsdBgVIAEoCzIeLm9yY2hlc3RyYXRvci52MS5Db21tYW5kUmVzdWx0SAASQAoQZW50aXRpZXNfY2hhbmdlZBgWIAEoCzIkLm9yY2hlc3RyYXRvci52MS5Ib3N0RW50aXRpZXNDaGFuZ2VkSABCCQoHcGF5bG9hZCJWChBCb3RTdGF0dXNDaGFuZ2VkEjIKBXN0YXRlGAEgASgOMiMub3JjaGVzdHJhdG9yLnYxLkJvdENvbm5lY3Rpb25TdGF0ZRIOCgZkZXRhaWwYAiABKAkiOgoKQm90U3Bhd25lZBIsCgVzdGF0ZRgBIAEoCzIdLm9yY2hlc3RyYXRvci52MS5Ib3N0Qm90U3RhdGUiQQoRSG9zdFN0YXRlU25hcHNob3QSLAoFc3RhdGUYASABKAsyHS5vcmNoZXN0cmF0b3IudjEuSG9zdEJvdFN0YXRlIkAKEUhvc3RWaXRhbHNDaGFuZ2VkEisKBnZpdGFscxgBIAEoCzIbLm9yY2hlc3RyYXRvci52MS5Ib3N0Vml0YWxzIkgKEkhvc3RFZmZlY3RzQ2hhbmdlZBIyCgdlZmZlY3RzGAEgAygLMiEub3JjaGVzdHJhdG9yLnYxLkhvc3RQb3Rpb25FZmZlY3QiRgoTSG9zdFBvc2l0aW9uQ2hhbmdlZBIvCghwb3NpdGlvbhgBIAEoCzIdLm9yY2hlc3RyYXRvci52MS5Ib3N0UG9zaXRpb24ijQEKFEhvc3RJbnZlbnRvcnlDaGFuZ2VkEjEKBXNsb3RzGAEgAygLMiIub3JjaGVzdHJhdG9yLnYxLkhvc3RJbnZlbnRvcnlTbG90EhwKFHNlbGVjdGVkX2hvdGJhcl9zbG90GAIgASgFEiQKHHNlbGVjdGVkX2hvdGJhcl9zbG90X2NoYW5nZWQYAyABKAgi5gEKDEhvc3RCb3RTdGF0ZRIrCgZ2aXRhbHMYASABKAsyGy5vcmNoZXN0cmF0b3IudjEuSG9zdFZpdGFscxIyCgdlZmZlY3RzGAIgAygLMiEub3JjaGVzdHJhdG9yLnYxLkhvc3RQb3Rpb25FZmZlY3QSLwoIcG9zaXRpb24YAyABKAsyHS5vcmNoZXN0cmF0b3IudjEuSG9zdFBvc2l0aW9uEjEKCWludmVudG9yeRgEIAEoCzIeLm9yY2hlc3RyYXRvci52MS5Ib3N0SW52ZW50b3J5EhEKCWdhbWVfbW9kZRgFIAEoBSJOCgpIb3N0Vml0YWxzEg4KBmhlYWx0aBgBIAEoARIMCgRmb29kGAIgASgFEhIKCnNhdHVyYXRpb24YAyABKAESDgoGb3h5Z2VuGAQgASgFIlcKEEhvc3RQb3Rpb25FZmZlY3QSCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIRCglhbXBsaWZpZXIYAyABKAUSFgoOZHVyYXRpb25fdGlja3MYBCABKAUimgEKDEhvc3RQb3NpdGlvbhIRCglkaW1lbnNpb24YASABKAkSCQoBeBgCIAEoARIJCgF5GAMgASgBEgkKAXoYBCABKAESCwoDeWF3GAUgASgBEg0KBXBpdGNoGAYgASgBEhIKCnZlbG9jaXR5X3gYByABKAESEgoKdmVsb2NpdHlfeRgIIAEoARISCgp2ZWxvY2l0eV96GAkgASgBImAKDUhvc3RJbnZlbnRvcnkSHAoUc2VsZWN0ZWRfaG90YmFyX3Nsb3QYASABKAUSMQoFc2xvdHMYAiADKAsyIi5vcmNoZXN0cmF0b3IudjEuSG9zdEludmVudG9yeVNsb3QiTwoRSG9zdEludmVudG9yeVNsb3QSDAoEc2xvdBgBIAEoBRIsCgRpdGVtGAIgASgLMh4ub3JjaGVzdHJhdG9yLnYxLkhvc3RJdGVtU3RhY2siSgoNSG9zdEl0ZW1TdGFjaxIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEhAKCG1ldGFkYXRhGAMgASgFEg0KBWNvdW50GAQgASgFImAKD0hvc3RDaHVua0xvYWRlZBIPCgdjaHVua194GAEgASgFEg8KB2NodW5rX3oYAiABKAUSDAoEZGF0YRgDIAEoDBINCgVtaW5feRgEIAEoBRIOCgZoZWlnaHQYBSABKAUiNQoRSG9zdENodW5rVW5sb2FkZWQSDwoHY2h1bmtfeBgBIAEoBRIPCgdjaHVua196GAIgASgFIkUKEEhvc3RCbG9ja1VwZGF0ZWQSCQoBeBgBIAEoBRIJCgF5GAIgASgFEgkKAXoYAyABKAUSEAoIc3RhdGVfaWQYBCABKAUioAEKFkhvc3RNdWx0aUJsb2Nrc1VwZGF0ZWQSRAoHcmVjb3JkcxgBIAMoCzIzLm9yY2hlc3RyYXRvci52MS5Ib3N0TXVsdGlCbG9ja3NVcGRhdGVkLkJsb2NrUmVjb3JkGkAKC0Jsb2NrUmVjb3JkEgkKAXgYASABKAUSCQoBeRgCIAEoBRIJCgF6GAMgASgFEhAKCHN0YXRlX2lkGAQgASgFIlQKC0dvdG9Db21tYW5kEhIKCnByb2ZpbGVfaWQYASABKAkSEAoIc2VxdWVuY2UYAiABKAQSCQoBeBgDIAEoBRIJCgF5GAQgASgFEgkKAXoYBSABKAUiTwoNQXR0YWNrQ29tbWFuZBISCgpwcm9maWxlX2lkGAEgASgJEhAKCHNlcXVlbmNlGAIgASgEEhgKEHRhcmdldF9lbnRpdHlfaWQYAyABKAUiWgoRQnJlYWtCbG9ja0NvbW1hbmQSEgoKcHJvZmlsZV9pZBgBIAEoCRIQCghzZXF1ZW5jZRgCIAEoBBIJCgF4GAMgASgFEgkKAXkYBCABKAUSCQoBehgFIAEoBSJHCgxFcXVpcENvbW1hbmQSEgoKcHJvZmlsZV9pZBgBIAEoCRIQCghzZXF1ZW5jZRgCIAEoBBIRCglpdGVtX25hbWUYAyABKAkiVgoMQ3JhZnRDb21tYW5kEhIKCnByb2ZpbGVfaWQYASABKAkSEAoIc2VxdWVuY2UYAiABKAQSEQoJaXRlbV9uYW1lGAMgASgJEg0KBWNvdW50GAQgASgFIooBChFQbGFjZUJsb2NrQ29tbWFuZBISCgpwcm9maWxlX2lkGAEgASgJEhAKCHNlcXVlbmNlGAIgASgEEgkKAXgYAyABKAUSCQoBeRgEIAEoBRIJCgF6GAUgASgFEg4KBmZhY2VfeBgGIAEoBRIOCgZmYWNlX3kYByABKAUSDgoGZmFjZV96GAggASgFImUKDUNvbW1hbmRSZXN1bHQSEgoKcHJvZmlsZV9pZBgBIAEoCRIQCghzZXF1ZW5jZRgCIAEoBBIuCgZzdGF0dXMYAyABKA4yHi5vcmNoZXN0cmF0b3IudjEuQ29tbWFuZFN0YXR1cyJqCgpIb3N0RW50aXR5EhEKCWVudGl0eV9pZBgBIAEoBRIMCgRuYW1lGAIgASgJEgkKAXgYAyABKAESCQoBeRgEIAEoARIJCgF6GAUgASgBEgsKA3lhdxgGIAEoAhINCgVwaXRjaBgHIAEoAiJ+ChNIb3N0RW50aXRpZXNDaGFuZ2VkEioKBWFkZGVkGAEgAygLMhsub3JjaGVzdHJhdG9yLnYxLkhvc3RFbnRpdHkSDwoHcmVtb3ZlZBgCIAMoBRIqCgVtb3ZlZBgDIAMoCzIbLm9yY2hlc3RyYXRvci52MS5Ib3N0RW50aXR5IicKBFZlYzMSCQoBeBgBIAEoARIJCgF5GAIgASgBEgkKAXoYAyABKAEiKAoFVmVjM2kSCQoBeBgBIAEoBRIJCgF5GAIgASgFEgkKAXoYAyABKAUiLQoJQ3JhZnRTcGVjEhEKCWl0ZW1fbmFtZRgBIAEoCRINCgVjb3VudBgCIAEoBSJcCglQbGFjZVNwZWMSCQoBeBgBIAEoBRIJCgF5GAIgASgFEgkKAXoYAyABKAUSDgoGZmFjZV94GAQgASgFEg4KBmZhY2VfeRgFIAEoBRIOCgZmYWNlX3oYBiABKAUioQEKDUFjdGlvbk91dGNvbWUSGwoTY29udHJvbGxlcl9zZXF1ZW5jZRgBIAEoBBIzCgRraW5kGAIgASgOMiUub3JjaGVzdHJhdG9yLnYxLkNvbnRyb2xsZXJBY3Rpb25LaW5kEi4KBnN0YXR1cxgDIAEoDjIeLm9yY2hlc3RyYXRvci52MS5Db21tYW5kU3RhdHVzEg4KBmRldGFpbBgEIAEoCSKRBAoPQ29udHJvbGxlclN0YXRlEhIKCnByb2ZpbGVfaWQYASABKAwSEAoIc2VxdWVuY2UYAiABKAQSMQoMZ29fdG9fdGFyZ2V0GAMgASgLMhYub3JjaGVzdHJhdG9yLnYxLlZlYzNpSACIAQESMQoMYnJlYWtfdGFyZ2V0GAQgASgLMhYub3JjaGVzdHJhdG9yLnYxLlZlYzNpSAGIAQESGgoNYXR0YWNrX3RhcmdldBgFIAEoBUgCiAEBEjUKDGNyYWZ0X3RhcmdldBgGIAEoCzIaLm9yY2hlc3RyYXRvci52MS5DcmFmdFNwZWNIA4gBARIZCgxlcXVpcF90YXJnZXQYByABKAlIBIgBARI1CgxwbGFjZV90YXJnZXQYCCABKAsyGi5vcmNoZXN0cmF0b3IudjEuUGxhY2VTcGVjSAWIAQESGwoOY29uc3VtZV90YXJnZXQYCSABKAlIBogBARI2CgxjbGVhcl9maWVsZHMYCiADKA4yIC5vcmNoZXN0cmF0b3IudjEuQ29udHJvbGxlckZpZWxkQg8KDV9nb190b190YXJnZXRCDwoNX2JyZWFrX3RhcmdldEIQCg5fYXR0YWNrX3RhcmdldEIPCg1fY3JhZnRfdGFyZ2V0Qg8KDV9lcXVpcF90YXJnZXRCDwoNX3BsYWNlX3RhcmdldEIRCg9fY29uc3VtZV90YXJnZXQinwMKDFJlYWxpdHlTdGF0ZRISCgpwcm9maWxlX2lkGAEgASgMEhAKCHNlcXVlbmNlGAIgASgEEh0KEGFycml2YWxfZGlzdGFuY2UYAyABKAFIAIgBARIyCg1kaWdnaW5nX2Jsb2NrGAQgASgLMhYub3JjaGVzdHJhdG9yLnYxLlZlYzNpSAGIAQESHQoQYXR0YWNraW5nX2VudGl0eRgFIAEoBUgCiAEBEhoKDWVxdWlwcGVkX2l0ZW0YBiABKAlIA4gBARIwCgtnb3RvX3RhcmdldBgHIAEoCzIWLm9yY2hlc3RyYXRvci52MS5WZWMzaUgEiAEBEjcKD2FjdGlvbl9vdXRjb21lcxgIIAMoCzIeLm9yY2hlc3RyYXRvci52MS5BY3Rpb25PdXRjb21lEhIKCnNlc3Npb25faWQYCSABKAlCEwoRX2Fycml2YWxfZGlzdGFuY2VCEAoOX2RpZ2dpbmdfYmxvY2tCEwoRX2F0dGFja2luZ19lbnRpdHlCEAoOX2VxdWlwcGVkX2l0ZW1CDgoMX2dvdG9fdGFyZ2V0KusBChJCb3RDb25uZWN0aW9uU3RhdGUSJAogQk9UX0NPTk5FQ1RJT05fU1RBVEVfVU5TUEVDSUZJRUQQABIjCh9CT1RfQ09OTkVDVElPTl9TVEFURV9DT05ORUNUSU5HEAESIgoeQk9UX0NPTk5FQ1RJT05fU1RBVEVfQ09OTkVDVEVEEAISJQohQk9UX0NPTk5FQ1RJT05fU1RBVEVfRElTQ09OTkVDVEVEEAMSHwobQk9UX0NPTk5FQ1RJT05fU1RBVEVfS0lDS0VEEAQSHgoaQk9UX0NPTk5FQ1RJT05fU1RBVEVfRVJST1IQBSpoCg1Db21tYW5kU3RhdHVzEh4KGkNPTU1BTkRfU1RBVFVTX1VOU1BFQ0lGSUVEEAASHAoYQ09NTUFORF9TVEFUVVNfQ09NUExFVEVEEAESGQoVQ09NTUFORF9TVEFUVVNfRkFJTEVEEAIqqgIKD0NvbnRyb2xsZXJGaWVsZBIgChxDT05UUk9MTEVSX0ZJRUxEX1VOU1BFQ0lGSUVEEAASIAocQ09OVFJPTExFUl9GSUVMRF9HT1RPX1RBUkdFVBABEiEKHUNPTlRST0xMRVJfRklFTERfQlJFQUtfVEFSR0VUEAISIgoeQ09OVFJPTExFUl9GSUVMRF9BVFRBQ0tfVEFSR0VUEAMSIQodQ09OVFJPTExFUl9GSUVMRF9DUkFGVF9UQVJHRVQQBBIhCh1DT05UUk9MTEVSX0ZJRUxEX0VRVUlQX1RBUkdFVBAFEiEKHUNPTlRST0xMRVJfRklFTERfUExBQ0VfVEFSR0VUEAYSIwofQ09OVFJPTExFUl9GSUVMRF9DT05TVU1FX1RBUkdFVBAHKq4CChRDb250cm9sbGVyQWN0aW9uS2luZBImCiJDT05UUk9MTEVSX0FDVElPTl9LSU5EX1VOU1BFQ0lGSUVEEAASHwobQ09OVFJPTExFUl9BQ1RJT05fS0lORF9HT1RPEAESIAocQ09OVFJPTExFUl9BQ1RJT05fS0lORF9CUkVBSxACEiAKHENPTlRST0xMRVJfQUNUSU9OX0tJTkRfQ1JBRlQQAxIiCh5DT05UUk9MTEVSX0FDVElPTl9LSU5EX0NPTlNVTUUQBBIgChxDT05UUk9MTEVSX0FDVElPTl9LSU5EX1BMQUNFEAUSIQodQ09OVFJPTExFUl9BQ1RJT05fS0lORF9BVFRBQ0sQBhIgChxDT05UUk9MTEVSX0FDVElPTl9LSU5EX0VRVUlQEAdCRFpCbWluZWNyYWZ0X29yY2hlc3RyYXRvci9pbnRlcm5hbC9nZW4vb3JjaGVzdHJhdG9yL3YxO29yY2hlc3RyYXRvcnYxYgZwcm90bzM");
 
 /**
  * HostEnvelope is the sole payload carried over the local framed socket.
@@ -47,10 +47,61 @@ export type HostEnvelope = Message<"orchestrator.v1.HostEnvelope"> & {
     case: "observation";
   } | {
     /**
-     * @generated from field: orchestrator.v1.GotoCommand command = 5;
+     * Deprecated control envelopes retained solely so older frames decode.
+     * New control is carried only by controller_state.
+     *
+     * @generated from field: orchestrator.v1.GotoCommand command = 5 [deprecated = true];
+     * @deprecated
      */
     value: GotoCommand;
     case: "command";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.AttackCommand attack_command = 6 [deprecated = true];
+     * @deprecated
+     */
+    value: AttackCommand;
+    case: "attackCommand";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.BreakBlockCommand break_block = 7 [deprecated = true];
+     * @deprecated
+     */
+    value: BreakBlockCommand;
+    case: "breakBlock";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.EquipCommand equip = 8 [deprecated = true];
+     * @deprecated
+     */
+    value: EquipCommand;
+    case: "equip";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.CraftCommand craft = 9 [deprecated = true];
+     * @deprecated
+     */
+    value: CraftCommand;
+    case: "craft";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.PlaceBlockCommand place_block = 10 [deprecated = true];
+     * @deprecated
+     */
+    value: PlaceBlockCommand;
+    case: "placeBlock";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.ControllerState controller_state = 11;
+     */
+    value: ControllerState;
+    case: "controllerState";
+  } | {
+    /**
+     * @generated from field: orchestrator.v1.RealityState reality_state = 12;
+     */
+    value: RealityState;
+    case: "realityState";
   } | { case: undefined; value?: undefined };
 };
 
@@ -821,6 +872,181 @@ export const GotoCommandSchema: GenMessage<GotoCommand> = /*@__PURE__*/
   messageDesc(file_orchestrator_v1_host, 24);
 
 /**
+ * @generated from message orchestrator.v1.AttackCommand
+ */
+export type AttackCommand = Message<"orchestrator.v1.AttackCommand"> & {
+  /**
+   * @generated from field: string profile_id = 1;
+   */
+  profileId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: int32 target_entity_id = 3;
+   */
+  targetEntityId: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.AttackCommand.
+ * Use `create(AttackCommandSchema)` to create a new message.
+ */
+export const AttackCommandSchema: GenMessage<AttackCommand> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 25);
+
+/**
+ * @generated from message orchestrator.v1.BreakBlockCommand
+ */
+export type BreakBlockCommand = Message<"orchestrator.v1.BreakBlockCommand"> & {
+  /**
+   * @generated from field: string profile_id = 1;
+   */
+  profileId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: int32 x = 3;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 4;
+   */
+  y: number;
+
+  /**
+   * @generated from field: int32 z = 5;
+   */
+  z: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.BreakBlockCommand.
+ * Use `create(BreakBlockCommandSchema)` to create a new message.
+ */
+export const BreakBlockCommandSchema: GenMessage<BreakBlockCommand> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 26);
+
+/**
+ * @generated from message orchestrator.v1.EquipCommand
+ */
+export type EquipCommand = Message<"orchestrator.v1.EquipCommand"> & {
+  /**
+   * @generated from field: string profile_id = 1;
+   */
+  profileId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: string item_name = 3;
+   */
+  itemName: string;
+};
+
+/**
+ * Describes the message orchestrator.v1.EquipCommand.
+ * Use `create(EquipCommandSchema)` to create a new message.
+ */
+export const EquipCommandSchema: GenMessage<EquipCommand> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 27);
+
+/**
+ * @generated from message orchestrator.v1.CraftCommand
+ */
+export type CraftCommand = Message<"orchestrator.v1.CraftCommand"> & {
+  /**
+   * @generated from field: string profile_id = 1;
+   */
+  profileId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: string item_name = 3;
+   */
+  itemName: string;
+
+  /**
+   * @generated from field: int32 count = 4;
+   */
+  count: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.CraftCommand.
+ * Use `create(CraftCommandSchema)` to create a new message.
+ */
+export const CraftCommandSchema: GenMessage<CraftCommand> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 28);
+
+/**
+ * @generated from message orchestrator.v1.PlaceBlockCommand
+ */
+export type PlaceBlockCommand = Message<"orchestrator.v1.PlaceBlockCommand"> & {
+  /**
+   * @generated from field: string profile_id = 1;
+   */
+  profileId: string;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: int32 x = 3;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 4;
+   */
+  y: number;
+
+  /**
+   * @generated from field: int32 z = 5;
+   */
+  z: number;
+
+  /**
+   * @generated from field: int32 face_x = 6;
+   */
+  faceX: number;
+
+  /**
+   * @generated from field: int32 face_y = 7;
+   */
+  faceY: number;
+
+  /**
+   * @generated from field: int32 face_z = 8;
+   */
+  faceZ: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.PlaceBlockCommand.
+ * Use `create(PlaceBlockCommandSchema)` to create a new message.
+ */
+export const PlaceBlockCommandSchema: GenMessage<PlaceBlockCommand> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 29);
+
+/**
  * @generated from message orchestrator.v1.CommandResult
  */
 export type CommandResult = Message<"orchestrator.v1.CommandResult"> & {
@@ -845,7 +1071,7 @@ export type CommandResult = Message<"orchestrator.v1.CommandResult"> & {
  * Use `create(CommandResultSchema)` to create a new message.
  */
 export const CommandResultSchema: GenMessage<CommandResult> = /*@__PURE__*/
-  messageDesc(file_orchestrator_v1_host, 25);
+  messageDesc(file_orchestrator_v1_host, 30);
 
 /**
  * @generated from message orchestrator.v1.HostEntity
@@ -892,7 +1118,7 @@ export type HostEntity = Message<"orchestrator.v1.HostEntity"> & {
  * Use `create(HostEntitySchema)` to create a new message.
  */
 export const HostEntitySchema: GenMessage<HostEntity> = /*@__PURE__*/
-  messageDesc(file_orchestrator_v1_host, 26);
+  messageDesc(file_orchestrator_v1_host, 31);
 
 /**
  * @generated from message orchestrator.v1.HostEntitiesChanged
@@ -919,7 +1145,276 @@ export type HostEntitiesChanged = Message<"orchestrator.v1.HostEntitiesChanged">
  * Use `create(HostEntitiesChangedSchema)` to create a new message.
  */
 export const HostEntitiesChangedSchema: GenMessage<HostEntitiesChanged> = /*@__PURE__*/
-  messageDesc(file_orchestrator_v1_host, 27);
+  messageDesc(file_orchestrator_v1_host, 32);
+
+/**
+ * @generated from message orchestrator.v1.Vec3
+ */
+export type Vec3 = Message<"orchestrator.v1.Vec3"> & {
+  /**
+   * @generated from field: double x = 1;
+   */
+  x: number;
+
+  /**
+   * @generated from field: double y = 2;
+   */
+  y: number;
+
+  /**
+   * @generated from field: double z = 3;
+   */
+  z: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.Vec3.
+ * Use `create(Vec3Schema)` to create a new message.
+ */
+export const Vec3Schema: GenMessage<Vec3> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 33);
+
+/**
+ * @generated from message orchestrator.v1.Vec3i
+ */
+export type Vec3i = Message<"orchestrator.v1.Vec3i"> & {
+  /**
+   * @generated from field: int32 x = 1;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 2;
+   */
+  y: number;
+
+  /**
+   * @generated from field: int32 z = 3;
+   */
+  z: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.Vec3i.
+ * Use `create(Vec3iSchema)` to create a new message.
+ */
+export const Vec3iSchema: GenMessage<Vec3i> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 34);
+
+/**
+ * @generated from message orchestrator.v1.CraftSpec
+ */
+export type CraftSpec = Message<"orchestrator.v1.CraftSpec"> & {
+  /**
+   * @generated from field: string item_name = 1;
+   */
+  itemName: string;
+
+  /**
+   * @generated from field: int32 count = 2;
+   */
+  count: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.CraftSpec.
+ * Use `create(CraftSpecSchema)` to create a new message.
+ */
+export const CraftSpecSchema: GenMessage<CraftSpec> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 35);
+
+/**
+ * @generated from message orchestrator.v1.PlaceSpec
+ */
+export type PlaceSpec = Message<"orchestrator.v1.PlaceSpec"> & {
+  /**
+   * @generated from field: int32 x = 1;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 2;
+   */
+  y: number;
+
+  /**
+   * @generated from field: int32 z = 3;
+   */
+  z: number;
+
+  /**
+   * @generated from field: int32 face_x = 4;
+   */
+  faceX: number;
+
+  /**
+   * @generated from field: int32 face_y = 5;
+   */
+  faceY: number;
+
+  /**
+   * @generated from field: int32 face_z = 6;
+   */
+  faceZ: number;
+};
+
+/**
+ * Describes the message orchestrator.v1.PlaceSpec.
+ * Use `create(PlaceSpecSchema)` to create a new message.
+ */
+export const PlaceSpecSchema: GenMessage<PlaceSpec> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 36);
+
+/**
+ * @generated from message orchestrator.v1.ActionOutcome
+ */
+export type ActionOutcome = Message<"orchestrator.v1.ActionOutcome"> & {
+  /**
+   * @generated from field: uint64 controller_sequence = 1;
+   */
+  controllerSequence: bigint;
+
+  /**
+   * @generated from field: orchestrator.v1.ControllerActionKind kind = 2;
+   */
+  kind: ControllerActionKind;
+
+  /**
+   * @generated from field: orchestrator.v1.CommandStatus status = 3;
+   */
+  status: CommandStatus;
+
+  /**
+   * @generated from field: string detail = 4;
+   */
+  detail: string;
+};
+
+/**
+ * Describes the message orchestrator.v1.ActionOutcome.
+ * Use `create(ActionOutcomeSchema)` to create a new message.
+ */
+export const ActionOutcomeSchema: GenMessage<ActionOutcome> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 37);
+
+/**
+ * @generated from message orchestrator.v1.ControllerState
+ */
+export type ControllerState = Message<"orchestrator.v1.ControllerState"> & {
+  /**
+   * @generated from field: bytes profile_id = 1;
+   */
+  profileId: Uint8Array;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: optional orchestrator.v1.Vec3i go_to_target = 3;
+   */
+  goToTarget?: Vec3i;
+
+  /**
+   * @generated from field: optional orchestrator.v1.Vec3i break_target = 4;
+   */
+  breakTarget?: Vec3i;
+
+  /**
+   * @generated from field: optional int32 attack_target = 5;
+   */
+  attackTarget?: number;
+
+  /**
+   * @generated from field: optional orchestrator.v1.CraftSpec craft_target = 6;
+   */
+  craftTarget?: CraftSpec;
+
+  /**
+   * @generated from field: optional string equip_target = 7;
+   */
+  equipTarget?: string;
+
+  /**
+   * @generated from field: optional orchestrator.v1.PlaceSpec place_target = 8;
+   */
+  placeTarget?: PlaceSpec;
+
+  /**
+   * @generated from field: optional string consume_target = 9;
+   */
+  consumeTarget?: string;
+
+  /**
+   * @generated from field: repeated orchestrator.v1.ControllerField clear_fields = 10;
+   */
+  clearFields: ControllerField[];
+};
+
+/**
+ * Describes the message orchestrator.v1.ControllerState.
+ * Use `create(ControllerStateSchema)` to create a new message.
+ */
+export const ControllerStateSchema: GenMessage<ControllerState> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 38);
+
+/**
+ * @generated from message orchestrator.v1.RealityState
+ */
+export type RealityState = Message<"orchestrator.v1.RealityState"> & {
+  /**
+   * @generated from field: bytes profile_id = 1;
+   */
+  profileId: Uint8Array;
+
+  /**
+   * @generated from field: uint64 sequence = 2;
+   */
+  sequence: bigint;
+
+  /**
+   * @generated from field: optional double arrival_distance = 3;
+   */
+  arrivalDistance?: number;
+
+  /**
+   * @generated from field: optional orchestrator.v1.Vec3i digging_block = 4;
+   */
+  diggingBlock?: Vec3i;
+
+  /**
+   * @generated from field: optional int32 attacking_entity = 5;
+   */
+  attackingEntity?: number;
+
+  /**
+   * @generated from field: optional string equipped_item = 6;
+   */
+  equippedItem?: string;
+
+  /**
+   * @generated from field: optional orchestrator.v1.Vec3i goto_target = 7;
+   */
+  gotoTarget?: Vec3i;
+
+  /**
+   * @generated from field: repeated orchestrator.v1.ActionOutcome action_outcomes = 8;
+   */
+  actionOutcomes: ActionOutcome[];
+
+  /**
+   * @generated from field: string session_id = 9;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message orchestrator.v1.RealityState.
+ * Use `create(RealityStateSchema)` to create a new message.
+ */
+export const RealityStateSchema: GenMessage<RealityState> = /*@__PURE__*/
+  messageDesc(file_orchestrator_v1_host, 39);
 
 /**
  * @generated from enum orchestrator.v1.BotConnectionState
@@ -987,4 +1482,106 @@ export enum CommandStatus {
  */
 export const CommandStatusSchema: GenEnum<CommandStatus> = /*@__PURE__*/
   enumDesc(file_orchestrator_v1_host, 1);
+
+/**
+ * @generated from enum orchestrator.v1.ControllerField
+ */
+export enum ControllerField {
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_GOTO_TARGET = 1;
+   */
+  GOTO_TARGET = 1,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_BREAK_TARGET = 2;
+   */
+  BREAK_TARGET = 2,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_ATTACK_TARGET = 3;
+   */
+  ATTACK_TARGET = 3,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_CRAFT_TARGET = 4;
+   */
+  CRAFT_TARGET = 4,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_EQUIP_TARGET = 5;
+   */
+  EQUIP_TARGET = 5,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_PLACE_TARGET = 6;
+   */
+  PLACE_TARGET = 6,
+
+  /**
+   * @generated from enum value: CONTROLLER_FIELD_CONSUME_TARGET = 7;
+   */
+  CONSUME_TARGET = 7,
+}
+
+/**
+ * Describes the enum orchestrator.v1.ControllerField.
+ */
+export const ControllerFieldSchema: GenEnum<ControllerField> = /*@__PURE__*/
+  enumDesc(file_orchestrator_v1_host, 2);
+
+/**
+ * @generated from enum orchestrator.v1.ControllerActionKind
+ */
+export enum ControllerActionKind {
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_GOTO = 1;
+   */
+  GOTO = 1,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_BREAK = 2;
+   */
+  BREAK = 2,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_CRAFT = 3;
+   */
+  CRAFT = 3,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_CONSUME = 4;
+   */
+  CONSUME = 4,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_PLACE = 5;
+   */
+  PLACE = 5,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_ATTACK = 6;
+   */
+  ATTACK = 6,
+
+  /**
+   * @generated from enum value: CONTROLLER_ACTION_KIND_EQUIP = 7;
+   */
+  EQUIP = 7,
+}
+
+/**
+ * Describes the enum orchestrator.v1.ControllerActionKind.
+ */
+export const ControllerActionKindSchema: GenEnum<ControllerActionKind> = /*@__PURE__*/
+  enumDesc(file_orchestrator_v1_host, 3);
 

@@ -398,3 +398,87 @@ func (v *PerceptionView) Get(profileID ProfileID) []PerceivedEntity {
 
 	return out
 }
+
+// ActionOutcomeStatus is the terminal status reported by the controller for a
+// correlated action. It mirrors the host wire status without importing the
+// transport-generated enum into the engine model.
+type ActionOutcomeStatus uint8
+
+const (
+	ActionOutcomeUnspecified ActionOutcomeStatus = iota
+	ActionOutcomeCompleted
+	ActionOutcomeFailed
+)
+
+// ActionOutcome is one controller result. Detail is the existing host wire
+// detail field; the current protocol has no separate reason field.
+type ActionOutcome struct {
+	ControllerSequence uint64
+	Action             ControllerAction
+	Status             ActionOutcomeStatus
+	Detail             string
+}
+
+type RealityState struct {
+	ArrivalDistance          *float64
+	DiggingBlock             *BlockPosition
+	AttackingEntity          *int32
+	EquippedItem             *string
+	GotoTarget               *BlockPosition
+	ActionOutcomes           []ActionOutcome
+	ActionFailed             bool
+	Failure                  string
+	ActionFailureCorrelation uint64
+}
+
+type RealityView struct {
+	states map[ProfileID]RealityState
+}
+
+func (v *RealityView) Set(profileID ProfileID, s RealityState) {
+	if v.states == nil {
+		v.states = make(map[ProfileID]RealityState)
+	}
+	v.states[profileID] = s
+}
+
+func (v *RealityView) Get(profileID ProfileID) (RealityState, bool) {
+	s, ok := v.states[profileID]
+	return s, ok
+}
+
+// Clear removes feedback belonging to a previous host session.
+func (v *RealityView) Clear(profileID ProfileID) {
+	delete(v.states, profileID)
+}
+
+type PerceptionBlock struct {
+	Position    BlockPosition
+	Name        string
+	Distance    float64
+	Angle       float64
+	VisibleFace BlockPosition
+}
+
+type PerceptionBlockView struct {
+	blocks map[ProfileID][]PerceptionBlock
+}
+
+func (v *PerceptionBlockView) Set(profileID ProfileID, blocks []PerceptionBlock) {
+	if v.blocks == nil {
+		v.blocks = make(map[ProfileID][]PerceptionBlock)
+	}
+	stored := make([]PerceptionBlock, len(blocks))
+	copy(stored, blocks)
+	v.blocks[profileID] = stored
+}
+
+func (v *PerceptionBlockView) Get(profileID ProfileID) []PerceptionBlock {
+	_s := v.blocks[profileID]
+	if _s == nil {
+		return nil
+	}
+	out := make([]PerceptionBlock, len(_s))
+	copy(out, _s)
+	return out
+}

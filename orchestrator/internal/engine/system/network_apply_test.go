@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"reflect"
 	"sync"
 	"testing"
 
@@ -86,6 +87,154 @@ func TestNetworkApplySystemRejectsStaleHostObservations(t *testing.T) {
 	}
 }
 
+func TestNetworkApplySystemResetsUtilityStateForNewRemoteSession(t *testing.T) {
+	world := enginecore.NewWorld()
+	profileID := model.ProfileID{0x05}
+	stageMirroredBot(t, world, profileID)
+	view := world.MirroredBotViews()[0]
+	view.Sessions[0] = model.Session{Phase: model.SessionPlayReady, RemoteSessionID: "old-session", LastSequence: 8}
+	view.UtilityAIs[0] = model.UtilityAIState{
+		CurrentGoal:    model.Fight,
+		Phase:          model.GoalPhaseExecuting,
+		LastExitReason: model.GoalExitFailed,
+	}
+	view.ControllerSyncs[0] = model.ControllerSyncState{ControllerSequence: 8}
+
+	err := (NetworkApplySystem{}).Run(&scheduler.RunContext{Context: context.Background(), World: world, Data: &TickData{Network: network.Batch{Events: []network.Event{
+		{ProfileID: profileID, Kind: network.EventHostSnapshot, RemoteSessionID: "new-session", Sequence: 1, Snapshot: &network.HostSnapshot{}},
+	}}}, Logger: discardLogger()})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+
+	view = world.MirroredBotViews()[0]
+	if got := view.UtilityAIs[0]; !reflect.DeepEqual(got, model.UtilityAIState{}) {
+		t.Fatalf("UtilityAIState after new session = %#v, want zero value", got)
+	}
+	if got := view.ControllerSyncs[0]; got != (model.ControllerSyncState{}) {
+		t.Fatalf("ControllerSyncState after new session = %#v, want zero value", got)
+	}
+}
+
+func TestNetworkApplySystemClearsOldRealityFeedbackForNewRemoteSession(t *testing.T) {
+	world := enginecore.NewWorld()
+	profileID := model.ProfileID{0x06}
+	stageMirroredBot(t, world, profileID)
+	view := world.MirroredBotViews()[0]
+	view.Sessions[0] = model.Session{Phase: model.SessionPlayReady, RemoteSessionID: "old-session", LastSequence: 8}
+	target := model.BlockPosition{X: 3, Y: 64, Z: 1}
+	world.Resources().RealityView().Set(profileID, model.RealityState{
+		GotoTarget:               &target,
+		ArrivalDistance:          float64Ptr(1),
+		DiggingBlock:             &target,
+		ActionFailed:             true,
+		Failure:                  "old failure",
+		ActionFailureCorrelation: 1,
+	})
+
+	err := (NetworkApplySystem{}).Run(&scheduler.RunContext{
+		Context: context.Background(),
+		World:   world,
+		Data: &TickData{Network: network.Batch{Events: []network.Event{
+			{ProfileID: profileID, Kind: network.EventHostSnapshot, RemoteSessionID: "new-session", Sequence: 1, Snapshot: &network.HostSnapshot{}},
+		}}},
+		Logger: discardLogger(),
+	})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got, ok := world.Resources().RealityView().Get(profileID); ok {
+		t.Fatalf("reality after new session = %#v, want cleared", got)
+	}
+
+	view = world.MirroredBotViews()[0]
+	view.UtilityAIs[0] = model.UtilityAIState{
+		CurrentGoal: model.Idle,
+		Phase:       model.GoalPhaseExecuting,
+	}
+	view.ControllerSyncs[0] = model.ControllerSyncState{
+		Desired:  model.ControllerState{GotoTarget: &target},
+		LastSent: model.ControllerState{GotoTarget: &target},
+	}
+	outbox := network.NewOutbox()
+	runGoalSelector(t, &GoalSelectorSystem{}, world, outbox, 2)
+	if got := world.MirroredBotViews()[0].UtilityAIs[0]; got.Phase == model.GoalPhaseBlocked {
+		t.Fatalf("old-session reality affected first new-session action: %#v", got)
+	}
+}
+
+func TestNetworkApplySystemStoresActionFailureRealityFeedback(t *testing.T) {
+	world := enginecore.NewWorld()
+	profileID := model.ProfileID{0x08}
+	stageMirroredBot(t, world, profileID)
+	world.MirroredBotViews()[0].Sessions[0] = model.Session{Phase: model.SessionPlayReady, RemoteSessionID: "session-a"}
+
+	err := (NetworkApplySystem{}).Run(&scheduler.RunContext{
+		Context: context.Background(),
+		World:   world,
+		Data: &TickData{Network: network.Batch{Events: []network.Event{{
+			ProfileID:       profileID,
+			Kind:            network.EventRealityState,
+			RemoteSessionID: "session-a",
+			RealityState: &network.RealityState{
+				ActionFailed:             true,
+				Failure:                  "cannot craft",
+				ActionFailureCorrelation: 42,
+			},
+		}}}},
+		Logger: discardLogger(),
+	})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	got, ok := world.Resources().RealityView().Get(profileID)
+	if !ok || !got.ActionFailed || got.Failure != "cannot craft" || got.ActionFailureCorrelation != 42 {
+		t.Fatalf("stored reality = %#v, want mapped action failure", got)
+	}
+}
+
+func TestNetworkApplySystemRejectsCrossSessionRealitySequenceCollision(t *testing.T) {
+	world := enginecore.NewWorld()
+	profileID := model.ProfileID{0x09}
+	stageMirroredBot(t, world, profileID)
+	view := world.MirroredBotViews()[0]
+	view.Sessions[0] = model.Session{Phase: model.SessionPlayReady, RemoteSessionID: "new-session"}
+	world.Resources().RealityView().Set(profileID, model.RealityState{ActionFailed: true, Failure: "current-session"})
+	err := (NetworkApplySystem{}).Run(&scheduler.RunContext{Context: context.Background(), World: world, Data: &TickData{Network: network.Batch{Events: []network.Event{{
+		ProfileID: profileID, Kind: network.EventRealityState, RemoteSessionID: "old-session", Sequence: 7,
+		RealityState: &network.RealityState{ActionOutcomes: []model.ActionOutcome{{ControllerSequence: 7, Action: model.ControllerActionCraft, Status: model.ActionOutcomeFailed}}},
+	}}}}, Logger: discardLogger()})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got, ok := world.Resources().RealityView().Get(profileID); !ok || got.Failure != "current-session" {
+		t.Fatalf("stale reality cleared current-session state: %#v", got)
+	}
+	craft := model.CraftTarget{ItemName: "oak_planks", Count: 4}
+	view.Inventorys[0] = model.Inventory{Slots: []model.InventorySlot{{Slot: 0, Item: &model.ItemStack{Name: "oak_log", Count: 1}}}}
+	view.UtilityAIs[0] = model.UtilityAIState{CurrentGoal: model.CraftTool, Phase: model.GoalPhaseExecuting, Target: model.GoalTarget{Kind: model.GoalTargetItem, Item: "oak_planks"}}
+	view.ControllerSyncs[0] = model.ControllerSyncState{Desired: model.ControllerState{CraftTarget: &craft}, LastSent: model.ControllerState{CraftTarget: &craft}, InFlightOneShot: model.InFlightOneShot{Action: model.ControllerActionCraft, Correlation: 7, Goal: model.CraftTool, Target: model.GoalTarget{Kind: model.GoalTargetItem, Item: "oak_planks"}}}
+	runGoalSelector(t, &GoalSelectorSystem{}, world, network.NewOutbox(), 1)
+	if got := world.MirroredBotViews()[0].ControllerSyncs[0].InFlightOneShot; got.Correlation != 7 {
+		t.Fatalf("old-session outcome altered new in-flight action: %#v", got)
+	}
+
+	err = (NetworkApplySystem{}).Run(&scheduler.RunContext{Context: context.Background(), World: world, Data: &TickData{Network: network.Batch{Events: []network.Event{{
+		ProfileID: profileID, Kind: network.EventRealityState, RemoteSessionID: "new-session", Sequence: 7,
+		RealityState: &network.RealityState{ActionOutcomes: []model.ActionOutcome{{ControllerSequence: 7, Action: model.ControllerActionCraft, Status: model.ActionOutcomeCompleted}}},
+	}}}}, Logger: discardLogger()})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got, ok := world.Resources().RealityView().Get(profileID); !ok || len(got.ActionOutcomes) != 1 || got.ActionOutcomes[0].Status != model.ActionOutcomeCompleted {
+		t.Fatalf("new-session reality = %#v, want matching outcome", got)
+	}
+	runGoalSelector(t, &GoalSelectorSystem{}, world, network.NewOutbox(), 2)
+	if got := world.MirroredBotViews()[0].ControllerSyncs[0].InFlightOneShot; got.Action != model.ControllerActionNone {
+		t.Fatalf("matching new-session outcome did not apply: %#v", got)
+	}
+}
+
 func TestNetworkApplySystemLogsApplyOutcomes(t *testing.T) {
 	world := enginecore.NewWorld()
 	profileID := model.ProfileID{0x07}
@@ -103,7 +252,7 @@ func TestNetworkApplySystemLogsApplyOutcomes(t *testing.T) {
 	}
 
 	messages := sink.messages()
-	want := []string{"ecs.status", "ecs.status_drop", "ecs.apply", "ecs.apply_drop"}
+	want := []string{"ecs.status", "ecs.status_drop", "ecs.apply", "ecs.apply_drop", "ecs.state"}
 	if len(messages) != len(want) {
 		t.Fatalf("messages = %v, want %v", messages, want)
 	}
@@ -148,6 +297,13 @@ func TestBootstrapSystemCreatesMirroredBotAndEmitsStartIntent(t *testing.T) {
 	if intents := outbox.Drain(); len(intents) != 1 || intents[0].Kind != network.IntentStartHost {
 		t.Fatalf("intents = %#v", intents)
 	}
+	view := world.MirroredBotViews()[0]
+	if got := view.UtilityAIs[0]; !reflect.DeepEqual(got, model.UtilityAIState{}) {
+		t.Fatalf("bootstrap utility state = %#v, want zero value", got)
+	}
+	if got := view.ControllerSyncs[0]; got != (model.ControllerSyncState{}) {
+		t.Fatalf("bootstrap controller sync = %#v, want zero value", got)
+	}
 }
 
 func stageMirroredBot(t testing.TB, world *enginecore.World, profileID model.ProfileID) {
@@ -163,6 +319,8 @@ func stageMirroredBot(t testing.TB, world *enginecore.World, profileID model.Pro
 	bundle.Set(model.CGameMode, model.GameModeSurvival)
 	bundle.Set(model.CInventory, model.Inventory{})
 	bundle.Set(model.CEffects, model.Effects{})
+	bundle.Set(model.CUtilityAI, model.UtilityAIState{})
+	bundle.Set(model.CControllerSync, model.ControllerSyncState{})
 	commands := enginecore.NewCommandBuffer(0)
 	commands.Stage(enginecore.CreateCommand{Bundle: bundle})
 	world.Stage(commands.Envelopes(), []model.Mask{model.MirroredBotMask})
@@ -170,3 +328,5 @@ func stageMirroredBot(t testing.TB, world *enginecore.World, profileID model.Pro
 		t.Fatalf("Sync(): %v", err)
 	}
 }
+
+func float64Ptr(value float64) *float64 { return &value }

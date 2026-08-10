@@ -50,3 +50,18 @@ func TestHostSupervisorRejectsInvalidHelloToken(t *testing.T) {
 		t.Fatal("serve() accepted an invalid token")
 	}
 }
+
+func TestHostSupervisorRejectsLegacyControlIntent(t *testing.T) {
+	host, err := NewHostSupervisor(context.Background(), HostConfig{Host: "localhost", Port: 25565, Auth: "offline", Version: "1.21.11", NodeBinary: "node", HostScript: "host.ts"}, network.NewInbox(), nil)
+	if err != nil {
+		t.Fatalf("NewHostSupervisor() error = %v", err)
+	}
+
+	// 7 is the historical place-block queue value. Control now flows only
+	// through IntentControllerState, so a legacy queue value must never be
+	// silently accepted or written to the host socket.
+	err = host.Apply(context.Background(), []network.Intent{{Kind: network.IntentKind(7)}})
+	if err == nil {
+		t.Fatal("Apply() accepted a legacy control intent")
+	}
+}

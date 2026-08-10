@@ -27,6 +27,10 @@ type MirroredBotView struct {
 	Inventorys []model.Inventory
 
 	Effectss []model.Effects
+
+	UtilityAIs []model.UtilityAI
+
+	ControllerSyncs []model.ControllerSync
 }
 
 func (w *World) MirroredBotViews() []MirroredBotView {
@@ -56,6 +60,10 @@ func (w *World) MirroredBotViews() []MirroredBotView {
 			Inventorys: table.columns[uint8(model.CInventory)].(*Column[model.Inventory]).Data,
 
 			Effectss: table.columns[uint8(model.CEffects)].(*Column[model.Effects]).Data,
+
+			UtilityAIs: table.columns[uint8(model.CUtilityAI)].(*Column[model.UtilityAI]).Data,
+
+			ControllerSyncs: table.columns[uint8(model.CControllerSync)].(*Column[model.ControllerSync]).Data,
 		})
 	}
 	return result

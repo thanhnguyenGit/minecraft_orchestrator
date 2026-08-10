@@ -34,7 +34,7 @@ func BuildScheduler() (*scheduler.ExecutionPlan, error) {
 		return nil, err
 	}
 
-	if err := builder.AddSystem(PhaseSimulation, &RandomWanderSystem{}); err != nil {
+	if err := builder.AddSystem(PhaseSimulation, &GoalSelectorSystem{}); err != nil {
 		return nil, err
 	}
 

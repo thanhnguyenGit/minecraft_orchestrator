@@ -20,6 +20,7 @@ const (
 	EventBlockStateChange
 	EventMultiBlocksUpdated
 	EventEntityChanges
+	EventRealityState
 )
 
 func (k EventKind) String() string {
@@ -46,6 +47,8 @@ func (k EventKind) String() string {
 		return "multi_blocks_updated"
 	case EventEntityChanges:
 		return "entity_changes"
+	case EventRealityState:
+		return "reality_state"
 	default:
 		return fmt.Sprintf("EventKind(%d)", k)
 	}
@@ -127,11 +130,24 @@ type Event struct {
 	Effects         *model.Effects
 	Inventory       *model.Inventory
 
-	ChunkLoad        *ChunkLoad
-	ChunkUnload      *model.ChunkPosition
-	BlockStateChange *BlockStateChange
+	ChunkLoad          *ChunkLoad
+	ChunkUnload        *model.ChunkPosition
+	BlockStateChange   *BlockStateChange
 	MultiBlocksUpdated *MultiBlocksUpdated
-	EntityChanges   *EntityChanges
+	EntityChanges      *EntityChanges
+	RealityState       *RealityState
+}
+
+type RealityState struct {
+	ArrivalDistance          *float64
+	DiggingBlock             *model.BlockPosition
+	AttackingEntity          *int32
+	EquippedItem             *string
+	GotoTarget               *model.BlockPosition
+	ActionOutcomes           []model.ActionOutcome
+	ActionFailed             bool
+	Failure                  string
+	ActionFailureCorrelation uint64
 }
 
 type Entity struct {
@@ -152,10 +168,40 @@ type Batch struct {
 	Events []Event
 }
 
-type GotoCommand struct {
-	Sequence uint64
-	X        int32
-	Y        int32
-	Z        int32
+type ControllerState struct {
+	Sequence      uint64
+	GoToTarget    *model.BlockPosition
+	BreakTarget   *model.BlockPosition
+	AttackTarget  *int32
+	CraftTarget   *CraftSpec
+	EquipTarget   *string
+	PlaceTarget   *PlaceSpec
+	ConsumeTarget *string
+	ClearFields   []ControllerField
 }
 
+type ControllerField uint8
+
+const (
+	ControllerFieldGotoTarget ControllerField = iota + 1
+	ControllerFieldBreakTarget
+	ControllerFieldAttackTarget
+	ControllerFieldCraftTarget
+	ControllerFieldEquipTarget
+	ControllerFieldPlaceTarget
+	ControllerFieldConsumeTarget
+)
+
+type CraftSpec struct {
+	ItemName string
+	Count    int32
+}
+
+type PlaceSpec struct {
+	X     int32
+	Y     int32
+	Z     int32
+	FaceX int32
+	FaceY int32
+	FaceZ int32
+}
